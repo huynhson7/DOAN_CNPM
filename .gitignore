@@ -1,0 +1,15 @@
+# CẤU HÌNH CHO BACKEND (C# .NET)
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.db
+appsettings.Development.json
+
+# CẤU HÌNH CHO FRONTEND & HỆ THỐNG
+node_modules/
+.vscode/
+.env
+.DS_Store
+Thumbs.db
