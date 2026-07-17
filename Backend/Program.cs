@@ -6,14 +6,17 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 
-// 1. Cấu hình Database (Từ chặng 1)
+// Bổ sung Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Cấu hình Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Cấu hình bảo mật JWT (Từ chặng 2)
+// Cấu hình JWT
 var jwtKey = builder.Configuration["Jwt:Key"];
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
 
@@ -34,10 +37,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Bổ bật giao diện Swagger khi chạy ở chế độ Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
 
-// Kích hoạt hàng rào bảo mật (Bắt buộc phải đặt trước MapControllers)
 app.UseAuthentication();
 app.UseAuthorization();
 
