@@ -46,7 +46,7 @@
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm nhân viên...">
+                <input type="text" id="timKiemNV" placeholder="Tìm kiếm nhân viên...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -73,29 +73,8 @@
                             <th>Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>NV001</td>
-                            <td>Nguyễn Văn Tân</td>
-                            <td>0901234567</td>
-                            <td><span class="role-badge role-manager">Quản lý Cửa hàng</span></td>
-                            <td><span class="badge badge-active">Đang làm việc</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Khóa TK"><i class="fas fa-lock"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>NV002</td>
-                            <td>Trần Thị Bích</td>
-                            <td>0987654321</td>
-                            <td><span class="role-badge role-staff">NV Bán Hàng</span></td>
-                            <td><span class="badge badge-active">Đang làm việc</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Khóa TK"><i class="fas fa-lock"></i></button>
-                            </td>
-                        </tr>
+                    <tbody id="bangNhanVien">
+                        <!-- JS sẽ đổ dữ liệu vào đây -->
                     </tbody>
                 </table>
             </div>
@@ -119,36 +98,36 @@
                             <div class="form-row">
                                 <div class="input-group half-width">
                                     <label>Mã NV <span style="color:red">*</span></label>
-                                    <input type="text" placeholder="NV003" required maxlength="15">
+                                    <input type="text" id="maNV" placeholder="NV003" required maxlength="15">
                                 </div>
                                 <div class="input-group half-width">
                                     <label>SĐT <span style="color:red">*</span></label>
-                                    <input type="tel" placeholder="09xxxx" required maxlength="15">
+                                    <input type="tel" id="soDT" placeholder="09xxxx" required maxlength="15">
                                 </div>
                             </div>
                             
                             <div class="input-group">
                                 <label>Họ và Tên Nhân Viên <span style="color:red">*</span></label>
-                                <input type="text" placeholder="Nhập họ tên đầy đủ..." required maxlength="50">
+                                <input type="text" id="tenNV" placeholder="Nhập họ tên đầy đủ..." required maxlength="50">
                             </div>
 
                             <div class="form-row">
                                 <div class="input-group half-width">
                                     <label>Giới Tính</label>
-                                    <select>
+                                    <select id="gioiTinh">
                                         <option value="Nam">Nam</option>
                                         <option value="Nữ">Nữ</option>
                                     </select>
                                 </div>
                                 <div class="input-group half-width">
                                     <label>Ngày Sinh</label>
-                                    <input type="date">
+                                    <input type="date" id="ngaySinh" required>
                                 </div>
                             </div>
 
                             <div class="input-group">
                                 <label>Địa Chỉ (Thường trú)</label>
-                                <input type="text" placeholder="Nhập địa chỉ..." maxlength="255">
+                                <input type="text" id="diaChiNV" placeholder="Nhập địa chỉ..." maxlength="255">
                             </div>
                         </div>
 
@@ -158,7 +137,7 @@
                             
                             <div class="input-group">
                                 <label>Tên Đăng Nhập <span style="color:red">*</span></label>
-                                <input type="text" placeholder="Ví dụ: tan.nguyen" required maxlength="50">
+                                <input type="text" id="tenDangNhap" placeholder="Ví dụ: tan.nguyen" required maxlength="50">
                             </div>
 
                             <div class="input-group password-group">
@@ -171,7 +150,7 @@
 
                             <div class="input-group">
                                 <label>Vai Trò / Khu Vực Phụ Trách</label>
-                                <select>
+                                <select id="vaiTroKhuVucPhuTrach">
                                     <option value="Quản lý Cửa hàng">Quản lý Cửa hàng</option>
                                     <option value="NV Bán Hàng">NV Bán Hàng</option>
                                     <option value="NV Kho">NV Kho</option>
@@ -180,9 +159,9 @@
 
                             <div class="input-group">
                                 <label>Trạng Thái Làm Việc</label>
-                                <select>
-                                    <option value="1">Đang làm việc</option>
-                                    <option value="0">Đã nghỉ việc</option>
+                                <select id="trangThaiLamViec">
+                                    <option value="Đang làm việc">Đang làm việc</option>
+                                    <option value="Đã nghỉ việc">Đã nghỉ việc</option>
                                 </select>
                             </div>
                         </div>
@@ -197,30 +176,7 @@
         </div>
     </div>
 
-    <script>
-        const nvModal = document.getElementById("nvModal");
-
-        function openNvModal() { nvModal.style.display = "flex"; }
-        function closeNvModal() { nvModal.style.display = "none"; }
-        
-        window.onclick = function(event) {
-            if (event.target === nvModal) closeNvModal();
-        }
-
-        // JS để Ẩn/Hiện mật khẩu
-        function togglePassword() {
-            const pwdInput = document.getElementById("nvPassword");
-            const icon = document.querySelector(".toggle-password");
-            if (pwdInput.type === "password") {
-                pwdInput.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                pwdInput.type = "password";
-                icon.classList.remove("fa-eye-slash");
-                icon.classList.add("fa-eye");
-            }
-        }
-    </script>
+    <!-- GỌI FILE JAVASCRIPT BÊN NGOÀI -->
+    <script src="nhanvien.js"></script>
 </body>
 </html>

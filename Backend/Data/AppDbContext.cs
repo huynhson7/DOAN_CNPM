@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+// Đảm bảo import thư mục chứa các file Model nếu chúng nằm ở thư mục khác
+// Ví dụ: using Backend.Models; 
 
 namespace Backend.Data
 {
@@ -7,11 +9,12 @@ namespace Backend.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-        public DbSet<NHOMSANPHAM> NHOMSANPHAM { get; set; }
-        public DbSet<VATLIEU> VATLIEU { get; set; }
-        public DbSet<MUCDICHSUDUNG> MUCDICHSUDUNG { get; set; }
-    }
 
-    // Sau này, các bảng dữ liệu (sản phẩm, vật liệu...) của Ninh làm 
-    // sẽ được khai báo ở đây dưới dạng DbSet
+        // Khai báo danh sách các bảng trong Database
+        public DbSet<NHANVIEN> NHANVIEN { get; set; }
+        public DbSet<NHOMSANPHAM> NHOMSANPHAM { get; set; }
+        public DbSet<MUCDICHSUDUNG> MUCDICHSUDUNG { get; set; }
+        public DbSet<VATLIEU> VATLIEU { get; set; }
+        public DbSet<NHACUNGCAP> NHACUNGCAP { get; set; }
+    }
 }

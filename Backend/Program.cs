@@ -16,6 +16,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// [THÊM MỚI] Cấu hình CORS: Cho phép Frontend (như cổng 5500) gọi API thoải mái
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
+
 // Cấu hình JWT
 var jwtKey = builder.Configuration["Jwt:Key"];
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
@@ -37,7 +49,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-// Bổ bật giao diện Swagger khi chạy ở chế độ Development
+// Bật giao diện Swagger khi chạy ở chế độ Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,6 +57,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// [THÊM MỚI] Kích hoạt CORS (Bắt buộc phải đặt TRƯỚC Authentication và Authorization)
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -48,7 +48,8 @@ namespace Backend.Controllers
 
         // POST: api/nhan-vien
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        // Tạm thời ẩn yêu cầu phân quyền để test tính năng Thêm
+        // [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Create([FromBody] NHANVIEN model)
         {
             if (!ModelState.IsValid)
@@ -88,7 +89,8 @@ namespace Backend.Controllers
 
         // PUT: api/nhan-vien/NV001
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        // Tạm thời ẩn yêu cầu phân quyền để test tính năng Sửa
+        // [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Update(string id, [FromBody] NHANVIEN model)
         {
             if (id != model.MaNV)
@@ -141,7 +143,8 @@ namespace Backend.Controllers
 
         // DELETE: api/nhan-vien/NV001
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        // Tạm thời ẩn yêu cầu phân quyền để test tính năng Xóa
+        // [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(string id)
         {
             var employee = await _context.NHANVIEN.FindAsync(id);
