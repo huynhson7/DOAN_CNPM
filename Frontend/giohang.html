@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - Luxury Furniture</title>
+    
+    <!-- Link đến file CSS dùng chung -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- CSS TÁCH RIÊNG CHO MODULE GIỎ HÀNG -->
+    <link rel="stylesheet" href="giohang.css">
+    
+    <!-- Font và Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navbar Đồng Nhất -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">LUXURY<span>FURNITURE</span></a>
+            
+            <div class="nav-links">
+                <a href="index.html" class="nav-item-trangchu">Trang Chủ</a>
+                
+                <!-- Mục Sản Phẩm dạng Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <div class="dropdown-content">
+                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
+                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    </div>
+                </div>
+                
+                <a href="#">Liên Hệ</a>
+            </div>
+            
+            <div class="nav-actions">
+                <!-- Icon Giỏ Hàng - ĐANG ACTIVE -->
+                <a href="giohang.html" class="cart-icon active" style="color: var(--accent-color);">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">2</span>
+                </a>
+                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Banner Trang -->
+    <div class="page-banner">
+        <h2>Giỏ Hàng Của Bạn</h2>
+        <p>Kiểm tra lại các sản phẩm trước khi tiến hành thanh toán</p>
+    </div>
+
+    <!-- Nội dung Giỏ Hàng -->
+    <main class="container">
+        <div class="cart-wrapper">
+            
+            <!-- Cột trái: Danh sách sản phẩm -->
+            <div class="cart-items">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Đơn giá</th>
+                            <th>Số lượng</th>
+                            <th>Thành tiền</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sản phẩm 1 -->
+                        <tr>
+                            <td>
+                                <div class="cart-product-info">
+                                    <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200" alt="Sofa">
+                                    <div class="cart-product-details">
+                                        <h4>Sofa Da Bò Ý Cao Cấp</h4>
+                                        <p>Vật liệu: Da thật, Chân Inox</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-weight: 600;">18,500,000 đ</td>
+                            <td>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn">-</button>
+                                    <input type="number" value="1">
+                                    <button class="qty-btn">+</button>
+                                </div>
+                            </td>
+                            <td style="font-weight: 700; color: var(--accent-color);">18,500,000 đ</td>
+                            <td>
+                                <button class="btn-action delete" title="Xóa khỏi giỏ"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                        <!-- Sản phẩm 2 -->
+                        <tr>
+                            <td>
+                                <div class="cart-product-info">
+                                    <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=200" alt="Ghế">
+                                    <div class="cart-product-details">
+                                        <h4>Ghế Tựa Thư Giãn Bắc Âu</h4>
+                                        <p>Vật liệu: Gỗ Sồi, Vải Nỉ</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-weight: 600;">4,200,000 đ</td>
+                            <td>
+                                <div class="quantity-selector">
+                                    <button class="qty-btn">-</button>
+                                    <input type="number" value="1">
+                                    <button class="qty-btn">+</button>
+                                </div>
+                            </td>
+                            <td style="font-weight: 700; color: var(--accent-color);">4,200,000 đ</td>
+                            <td>
+                                <button class="btn-action delete" title="Xóa khỏi giỏ"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Cột phải: Tổng kết đơn hàng -->
+            <div class="cart-summary">
+                <h3>Tổng Đơn Hàng</h3>
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span style="font-weight: 600;">22,700,000 đ</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span style="color: #2e7d32; font-weight: 600;">Miễn phí</span>
+                </div>
+                
+                <div class="summary-total">
+                    <span>Tổng cộng:</span>
+                    <span>22,700,000 đ</span>
+                </div>
+
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 15px; text-align: center;">
+                    (Đã bao gồm VAT nếu có)
+                </p>
+
+                <!-- Nút chuyển sang trang thanh toán -->
+                <a href="thanhtoan.html" class="btn-primary btn-checkout">
+                    Tiến Hành Thanh Toán <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
+        <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h3 style="margin-bottom: 15px; letter-spacing: 2px;">LUXURY FURNITURE</h3>
+                <p>Định hình không gian sống đẳng cấp và tinh tế.</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h4 style="margin-bottom: 15px;">Liên Hệ</h4>
+                <p>☎ Hotline: 090 123 4567</p>
+                <p>✉ Email: contact@luxuryfurniture.vn</p>
+                <p>📍 Showroom: Quận 1, TP. Hồ Chí Minh</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h4 style="margin-bottom: 15px;">Chính Sách</h4>
+                <p>🛡 Bảo mật thông tin</p>
+                <p>🔄 Đổi trả trong 7 ngày</p>
+                <p>🚚 Giao hàng miễn phí</p>
+            </div>
+        </div>
+        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; font-size: 14px;">
+            <p>&copy; 2026 Luxury Furniture. Mọi quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

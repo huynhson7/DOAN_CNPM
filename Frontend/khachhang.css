@@ -1,0 +1,36 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO QUẢN LÝ KHÁCH HÀNG
+========================================= */
+
+/* --- Badge Hạng Thành Viên --- */
+.member-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.5px;
+}
+
+.member-badge.vip {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(253, 160, 133, 0.3);
+}
+
+.member-badge.standard {
+    background-color: #f1f2f6;
+    color: #747d8c;
+    border: 1px solid #dfe4ea;
+}
+
+/* --- Nút Xem Lịch Sử Mua Hàng --- */
+.btn-action.history {
+    color: var(--accent-color);
+}
+
+.btn-action.history:hover {
+    background-color: rgba(188, 152, 126, 0.1);
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển - Luxury Admin</title>
+    
+    <!-- CHỈ GỌI DUY NHẤT 1 FILE CSS NÀY (HOÀN TOÀN ĐỘC LẬP) -->
+    <link rel="stylesheet" href="bangdieukhien.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Sidebar Admin -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-title">TỔNG QUAN</li>
+                <li><a href="bangdieukhien.html" class="active"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
+                
+                <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
+                <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+                <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
+                <li><a href="vatlieu.html"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+                <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
+                <li><a href="nhacungcap.html"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+                
+                <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
+                <li><a href="hoadon.html"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+                <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
+                <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+            </ul>
+        </div>
+        
+        <!-- Nút Đăng xuất -->
+        <a href="login.html" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </a>
+    </aside>
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm nhanh...">
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=222222&color=fff" alt="Admin">
+                <span>Quản trị viên</span>
+            </div>
+        </header>
+
+        <!-- Nội dung chính Bảng Điều Khiển -->
+        <div class="dashboard-wrapper">
+            <div class="page-header">
+                <h2>Tổng Quan Bảng Điều Khiển</h2>
+                <p>Dữ liệu được tổng hợp mới nhất tính đến thời điểm hiện tại.</p>
+            </div>
+
+            <!-- Các thẻ Thống Kê Nhanh -->
+            <div class="dashboard-overview">
+                <div class="stat-card">
+                    <i class="fas fa-wallet stat-icon"></i>
+                    <div class="stat-details">
+                        <h3>Tổng Doanh Thu</h3>
+                        <p class="stat-number">125.500.000 ₫</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <i class="fas fa-shopping-bag stat-icon"></i>
+                    <div class="stat-details">
+                        <h3>Đơn Hàng Mới</h3>
+                        <p class="stat-number">14</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <i class="fas fa-users stat-icon"></i>
+                    <div class="stat-details">
+                        <h3>Tổng Khách Hàng</h3>
+                        <p class="stat-number">320</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <i class="fas fa-couch stat-icon"></i>
+                    <div class="stat-details">
+                        <h3>Sản Phẩm Trong Kho</h3>
+                        <p class="stat-number">85</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khung lưới bên dưới -->
+            <div class="dashboard-bottom">
+                <!-- Cột trái: Đơn Hàng Mới Gần Đây -->
+                <div class="recent-orders">
+                    <h3>Đơn Hàng Mới Gần Đây</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Khách Hàng</th>
+                                <th>Ngày Đặt</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>HD099</strong></td>
+                                <td>Nguyễn Văn A</td>
+                                <td>18/07/2026</td>
+                                <td class="price-text">25.500.000 ₫</td>
+                                <td><span class="status-badge status-warning">Đang xử lý</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>HD098</strong></td>
+                                <td>Trần Thị B</td>
+                                <td>17/07/2026</td>
+                                <td class="price-text">12.800.000 ₫</td>
+                                <td><span class="status-badge status-success">Đã giao hàng</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>HD097</strong></td>
+                                <td>Lê Minh C</td>
+                                <td>16/07/2026</td>
+                                <td class="price-text">4.200.000 ₫</td>
+                                <td><span class="status-badge status-success">Đã giao hàng</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Cột phải: Sản phẩm bán chạy -->
+                <div class="top-products">
+                    <h3>Sản Phẩm Bán Chạy</h3>
+                    <ul>
+                        <li>
+                            <span><i class="fas fa-couch"></i> Sofa Da Bò Ý</span>
+                            <span class="sold-count">12 đã bán</span>
+                        </li>
+                        <li>
+                            <span><i class="fas fa-bed"></i> Giường Gỗ Sồi</span>
+                            <span class="sold-count">8 đã bán</span>
+                        </li>
+                        <li class="no-border">
+                            <span><i class="fas fa-chair"></i> Bàn Ăn Mặt Đá</span>
+                            <span class="sold-count">5 đã bán</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+/* =========================================
+   CSS ĐỒNG BỘ CHO INDEX.HTML
+========================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+/* Header & Navbar */
+.navbar { padding: 20px 40px; background: #fff; border-bottom: 1px solid #eee; }
+.nav-container { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 24px; font-weight: 700; text-decoration: none; color: #222; }
+.logo span { color: #b89a74; }
+.nav-links { display: flex; gap: 30px; }
+.nav-links a { text-decoration: none; color: #555; font-weight: 500; transition: 0.3s; }
+.nav-links a:hover, .nav-links a.active { color: #b89a74; }
+.nav-actions { display: flex; align-items: center; gap: 20px; }
+.cart-icon { color: #222; position: relative; font-size: 20px; }
+.btn-outline { border: 1px solid #222; padding: 8px 20px; text-decoration: none; color: #222; border-radius: 4px; }
+
+/* Hero Section */
+.hero-section {
+    height: 80vh;
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+}
+.hero-content h1 { font-size: 48px; margin-bottom: 20px; }
+.hero-content p { font-size: 18px; margin-bottom: 30px; }
+.hero-btn { background: #b89a74; color: #fff; padding: 15px 40px; text-decoration: none; border-radius: 4px; display: inline-block; }

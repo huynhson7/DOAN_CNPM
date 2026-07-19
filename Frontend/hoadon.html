@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Hóa Đơn - Luxury Admin</title>
+    <!-- CSS chung -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <!-- CSS TÁCH RIÊNG CHO MODULE HÓA ĐƠN -->
+    <link rel="stylesheet" href="hoadon.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-body">
+
+    <!-- Sidebar Admin -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-title">TỔNG QUAN</li>
+            <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
+            
+            <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
+            <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+            <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
+            <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+            <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
+            <li><a href="#"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+            
+            <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
+            <li><a href="hoadon.html" class="active"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm mã hóa đơn, tên khách hàng...">
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
+                <span>Quản trị viên</span>
+            </div>
+        </header>
+
+        <!-- Nội dung chính -->
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h2>Quản Lý Hóa Đơn Bán Hàng</h2>
+                <button class="btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> Tạo Hóa Đơn Mới</button>
+            </div>
+
+            <!-- Bộ lọc Hóa Đơn -->
+            <div class="invoice-filters">
+                <div class="input-group">
+                    <input type="date" title="Từ ngày">
+                </div>
+                <div class="input-group">
+                    <input type="date" title="Đến ngày">
+                </div>
+                <div class="input-group">
+                    <select>
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="paid">Đã thanh toán</option>
+                        <option value="pending">Chờ thanh toán</option>
+                    </select>
+                </div>
+                <button class="btn-outline"><i class="fas fa-filter"></i> Lọc</button>
+            </div>
+
+            <!-- Bảng danh sách hóa đơn chính -->
+            <div class="data-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã HĐ</th>
+                            <th>Ngày Lập</th>
+                            <th>Khách Hàng</th>
+                            <th>Nhân Viên Lập</th>
+                            <th>Tổng Tiền</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>HD-10025</strong></td>
+                            <td>18/07/2026</td>
+                            <td>Trần Quang Khải</td>
+                            <td>Nguyễn Văn Tân</td>
+                            <td class="price-text">24,500,000 đ</td>
+                            <td><span class="status-badge status-paid">Đã thanh toán</span></td>
+                            <td>
+                                <!-- Nút Xem chi tiết -->
+                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <!-- Nút In hóa đơn -->
+                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>HD-10026</strong></td>
+                            <td>18/07/2026</td>
+                            <td>Lê Thị Hoa</td>
+                            <td>Trần Thị Bích</td>
+                            <td class="price-text">8,200,000 đ</td>
+                            <td><span class="status-badge status-pending">Chờ thanh toán</span></td>
+                            <td>
+                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Dòng demo Đã hủy được thêm vào đây -->
+                        <tr>
+                            <td><strong>HD-10027</strong></td>
+                            <td>19/07/2026</td>
+                            <td>Nguyễn Văn A</td>
+                            <td>Hệ thống</td>
+                            <td class="price-text">15,000,000 đ</td>
+                            <td><span class="status-badge status-cancelled">Đã hủy</span></td>
+                            <td>
+                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL 1: CHI TIẾT VÀ IN HÓA ĐƠN (Đã được khôi phục) -->
+    <div id="hdModal" class="modal">
+        <div class="modal-content modal-large invoice-modal">
+            <div class="modal-header hide-on-print">
+                <h3>Chi Tiết Hóa Đơn #HD-10025</h3>
+                <span class="close-btn" onclick="closeHdModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body print-area">
+                <!-- Tiêu đề tờ hóa đơn -->
+                <div class="receipt-header">
+                    <div class="receipt-logo">LUXURY<span>FURNITURE</span></div>
+                    <p>Địa chỉ: 123 Đường Nội Thất, Quận 1, TP.HCM</p>
+                    <p>Hotline: 1900 8888</p>
+                    <h2 class="receipt-title">HÓA ĐƠN BÁN HÀNG</h2>
+                </div>
+
+                <!-- Thông tin Master -->
+                <div class="receipt-info-grid">
+                    <div class="info-box">
+                        <p><strong>Khách hàng:</strong> Trần Quang Khải</p>
+                        <p><strong>Điện thoại:</strong> 0912 345 678</p>
+                        <p><strong>Địa chỉ:</strong> 45 Lê Lợi, Q.1, TP.HCM</p>
+                    </div>
+                    <div class="info-box text-right">
+                        <p><strong>Mã HĐ:</strong> HD-10025</p>
+                        <p><strong>Ngày lập:</strong> 18/07/2026</p>
+                        <p><strong>Nhân viên:</strong> Nguyễn Văn Tân</p>
+                    </div>
+                </div>
+
+                <!-- Thông tin Detail (Danh sách sản phẩm) -->
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-right">Đơn Giá</th>
+                            <th class="text-right">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Sofa Da Bò Ý Cao Cấp</td>
+                            <td class="text-center">1</td>
+                            <td class="text-right">18,500,000</td>
+                            <td class="text-right">18,500,000</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Bàn Trà Mặt Đá Khung Inox</td>
+                            <td class="text-center">1</td>
+                            <td class="text-right">6,000,000</td>
+                            <td class="text-right">6,000,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Tổng kết tiền -->
+                <div class="receipt-summary">
+                    <div class="summary-row">
+                        <span>Cộng tiền hàng:</span>
+                        <span>24,500,000 đ</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Chiết khấu (0%):</span>
+                        <span>0 đ</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>TỔNG CỘNG:</span>
+                        <span>24,500,000 đ</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer hide-on-print">
+                <button class="btn-outline" onclick="closeHdModal()">Đóng</button>
+                <button class="btn-primary" style="width: auto;" onclick="window.print()"><i class="fas fa-print"></i> In Hóa Đơn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TẠO HÓA ĐƠN MỚI -->
+    <div id="createModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fas fa-cart-plus"></i> Lập Hóa Đơn Bán Hàng</h3>
+                <span class="close-btn" onclick="closeCreateModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <form id="createHdForm">
+                    <div class="form-grid">
+                        <!-- Cột 1: Thông tin chung -->
+                        <div class="form-column">
+                            <h4 class="form-section-title"><i class="fas fa-info-circle"></i> Thông Tin Chung</h4>
+                            
+                            <div class="input-group">
+                                <label>Khách Hàng <span style="color:red">*</span></label>
+                                <select required>
+                                    <option value="">-- Chọn Khách Hàng --</option>
+                                    <option value="KH01">Trần Quang Khải - 0912345678</option>
+                                    <option value="KH02">Lê Thị Hoa - 0988777666</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="input-group half-width">
+                                    <label>Ngày Lập</label>
+                                    <input type="date" value="2026-07-18" readonly style="background-color: #f5f5f5;">
+                                </div>
+                                <div class="input-group half-width">
+                                    <label>Nhân Viên</label>
+                                    <input type="text" value="Nguyễn Văn Tân" readonly style="background-color: #f5f5f5;">
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Ghi Chú</label>
+                                <textarea rows="2" placeholder="Nhập ghi chú giao hàng..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Cột 2: Chi tiết hóa đơn -->
+                        <div class="form-column">
+                            <h4 class="form-section-title"><i class="fas fa-couch"></i> Chi Tiết Sản Phẩm</h4>
+                            
+                            <!-- Khu vực chọn nhanh sản phẩm -->
+                            <div class="add-product-row">
+                                <select class="select-product">
+                                    <option value="">-- Chọn SP --</option>
+                                    <option value="SP01">Sofa Da Bò Ý</option>
+                                    <option value="SP02">Bàn Trà Khung Inox</option>
+                                </select>
+                                <input type="number" class="qty-input" placeholder="SL" min="1" value="1">
+                                <button type="button" class="btn-primary btn-add-sp"><i class="fas fa-plus"></i></button>
+                            </div>
+
+                            <!-- Bảng hiển thị các SP đã chọn -->
+                            <div class="selected-products-container">
+                                <table class="data-table small-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên SP</th>
+                                            <th>SL</th>
+                                            <th>Đơn Giá</th>
+                                            <th>Xóa</th>
+                                        </tr>
+                                    </thead>
+                                    <!-- Đã sửa lại bảng hiển thị SP được chọn -->
+                                    <tbody>
+                                        <tr>
+                                            <td>Sofa Da Bò Ý</td>
+                                            <td>1</td>
+                                            <td>18,500,000</td>
+                                            <td><button type="button" class="btn-action delete"><i class="fas fa-trash"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="total-preview">
+                                <span>Tổng Tiền Tạm Tính:</span>
+                                <span class="price-text">18,500,000 đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeCreateModal()">Hủy Bỏ</button>
+                <button type="submit" form="createHdForm" class="btn-primary" style="width: auto;">Hoàn Tất Tạo HĐ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ĐIỀU KHIỂN CẢ 2 MODAL -->
+    <script>
+        // 1. Quản lý Modal In/Xem Chi Tiết Hóa Đơn
+        const hdModal = document.getElementById("hdModal");
+        function openHdModal() { hdModal.style.display = "flex"; }
+        function closeHdModal() { hdModal.style.display = "none"; }
+
+        // HÀM MỚI: Mở modal và gọi lệnh in ngay lập tức
+        function openAndPrintHd() {
+            openHdModal();
+            setTimeout(function() {
+                window.print(); 
+            }, 300); 
+        }
+
+        // 2. Quản lý Modal Tạo Hóa Đơn Mới
+        const createModal = document.getElementById("createModal");
+        function openCreateModal() { createModal.style.display = "flex"; }
+        function closeCreateModal() { createModal.style.display = "none"; }
+        
+        // Bấm ra ngoài để đóng modal
+        window.onclick = function(event) {
+            if (event.target === hdModal) closeHdModal();
+            if (event.target === createModal) closeCreateModal();
+        }
+    </script>
+
+    <script>
+    // Bắt sự kiện gõ phím trên ô tìm kiếm
+    const searchInput = document.querySelector('input[placeholder^="Tìm kiếm"]');
+    if(searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            // Lấy tất cả các dòng trong bảng (bỏ qua dòng tiêu đề thead)
+            let rows = document.querySelectorAll('table tbody tr');
+            
+            rows.forEach(row => {
+                // Kiểm tra xem nội dung của dòng có chứa từ khóa không
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

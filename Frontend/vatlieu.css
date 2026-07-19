@@ -1,0 +1,32 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO QUẢN LÝ VẬT LIỆU
+========================================= */
+
+.material-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.material-name i {
+    color: var(--accent-color);
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.material-desc {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+    
+    /* Cắt chữ nếu dài quá 2 dòng để bảng không bị phình to */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2; /* Thêm thuộc tính chuẩn theo yêu cầu của VS Code */
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}

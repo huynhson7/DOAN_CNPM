@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Nhân Viên - Luxury Admin</title>
+    <!-- CSS dùng chung -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <!-- CSS TÁCH RIÊNG CHO MODULE NHÂN VIÊN -->
+    <link rel="stylesheet" href="nhanvien.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-body">
+
+    <!-- Sidebar Admin -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-title">TỔNG QUAN</li>
+            <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
+            
+            <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
+            <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+            <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
+            <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+            <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
+            <li><a href="#"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+            
+            <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
+            <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="nhanvien.html" class="active"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm nhân viên...">
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
+                <span>Quản trị viên</span>
+            </div>
+        </header>
+
+        <!-- Nội dung chính -->
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h2>Quản Lý Nhân Sự</h2>
+                <button class="btn-primary" onclick="openNvModal()"><i class="fas fa-user-plus"></i> Thêm Nhân Viên</button>
+            </div>
+
+            <div class="data-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ Tên</th>
+                            <th>SĐT</th>
+                            <th>Vai Trò / Khu Vực</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>NV001</td>
+                            <td>Nguyễn Văn Tân</td>
+                            <td>0901234567</td>
+                            <td><span class="role-badge role-manager">Quản lý Cửa hàng</span></td>
+                            <td><span class="badge badge-active">Đang làm việc</span></td>
+                            <td>
+                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <button class="btn-action delete" title="Khóa TK"><i class="fas fa-lock"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>NV002</td>
+                            <td>Trần Thị Bích</td>
+                            <td>0987654321</td>
+                            <td><span class="role-badge role-staff">NV Bán Hàng</span></td>
+                            <td><span class="badge badge-active">Đang làm việc</span></td>
+                            <td>
+                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <button class="btn-action delete" title="Khóa TK"><i class="fas fa-lock"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Thêm Nhân Viên -->
+    <div id="nvModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Thêm Hồ Sơ Nhân Viên</h3>
+                <span class="close-btn" onclick="closeNvModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <form id="nvForm">
+                    <div class="form-grid">
+                        <!-- Cột 1: Thông tin cá nhân -->
+                        <div class="form-column">
+                            <h4 class="form-section-title"><i class="fas fa-id-card"></i> Thông Tin Cá Nhân</h4>
+                            <div class="form-row">
+                                <div class="input-group half-width">
+                                    <label>Mã NV <span style="color:red">*</span></label>
+                                    <input type="text" placeholder="NV003" required maxlength="15">
+                                </div>
+                                <div class="input-group half-width">
+                                    <label>SĐT <span style="color:red">*</span></label>
+                                    <input type="tel" placeholder="09xxxx" required maxlength="15">
+                                </div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Họ và Tên Nhân Viên <span style="color:red">*</span></label>
+                                <input type="text" placeholder="Nhập họ tên đầy đủ..." required maxlength="50">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="input-group half-width">
+                                    <label>Giới Tính</label>
+                                    <select>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                    </select>
+                                </div>
+                                <div class="input-group half-width">
+                                    <label>Ngày Sinh</label>
+                                    <input type="date">
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Địa Chỉ (Thường trú)</label>
+                                <input type="text" placeholder="Nhập địa chỉ..." maxlength="255">
+                            </div>
+                        </div>
+
+                        <!-- Cột 2: Cấp tài khoản & Công việc -->
+                        <div class="form-column">
+                            <h4 class="form-section-title"><i class="fas fa-user-shield"></i> Tài Khoản & Vai Trò</h4>
+                            
+                            <div class="input-group">
+                                <label>Tên Đăng Nhập <span style="color:red">*</span></label>
+                                <input type="text" placeholder="Ví dụ: tan.nguyen" required maxlength="50">
+                            </div>
+
+                            <div class="input-group password-group">
+                                <label>Mật Khẩu Mặc Định <span style="color:red">*</span></label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="nvPassword" placeholder="Tạo mật khẩu cấp cho NV..." required maxlength="100">
+                                    <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Vai Trò / Khu Vực Phụ Trách</label>
+                                <select>
+                                    <option value="Quản lý Cửa hàng">Quản lý Cửa hàng</option>
+                                    <option value="NV Bán Hàng">NV Bán Hàng</option>
+                                    <option value="NV Kho">NV Kho</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Trạng Thái Làm Việc</label>
+                                <select>
+                                    <option value="1">Đang làm việc</option>
+                                    <option value="0">Đã nghỉ việc</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeNvModal()">Hủy Bỏ</button>
+                <button type="submit" form="nvForm" class="btn-primary" style="width: auto;">Lưu Nhân Viên</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const nvModal = document.getElementById("nvModal");
+
+        function openNvModal() { nvModal.style.display = "flex"; }
+        function closeNvModal() { nvModal.style.display = "none"; }
+        
+        window.onclick = function(event) {
+            if (event.target === nvModal) closeNvModal();
+        }
+
+        // JS để Ẩn/Hiện mật khẩu
+        function togglePassword() {
+            const pwdInput = document.getElementById("nvPassword");
+            const icon = document.querySelector(".toggle-password");
+            if (pwdInput.type === "password") {
+                pwdInput.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                pwdInput.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+</body>
+</html>

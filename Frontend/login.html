@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng Nhập - Cửa Hàng Nội Thất Hiện Đại</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="login-page">
+
+    <div class="login-container">
+        <h2>Chào mừng trở lại</h2>
+        <p class="subtitle">Đăng nhập để khám phá không gian sống mới</p>
+        
+        <form id="loginForm">
+            <!-- Tên đăng nhập -->
+            <div class="input-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" id="username" placeholder="Nhập tên đăng nhập của bạn" required>
+            </div>
+            
+            <!-- Mật khẩu -->
+            <div class="input-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <!-- Tính năng: Quên mật khẩu -->
+            <div class="forgot-password">
+                <a href="forgot-password.html">Quên mật khẩu?</a>
+            </div>
+
+            <!-- Phân quyền (ComboBox) -->
+            <div class="input-group">
+                <label for="role">Quyền đăng nhập</label>
+                <select id="role" name="role" required>
+                    <option value="customer">Khách hàng</option>
+                    <option value="employee">Nhân viên</option>
+                    <option value="manager">Quản Lý</option>
+                </select>
+            </div>
+            
+            <!-- Nút Đăng nhập -->
+            <button type="submit" class="btn-primary">Đăng Nhập</button>
+
+            <!-- Nút Google Login -->
+            <div class="divider"><span>Hoặc</span></div>
+            <button type="button" class="btn-google" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                Tiếp tục với Google
+            </button>
+
+            <!-- Tính năng: Đăng ký -->
+            <div class="auth-links">
+                <p>Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Script xử lý -->
+    <script src="login.js"></script>
+    <script>
+        function loginWithGoogle() {
+            // Sau này bạn sẽ viết logic gọi Firebase tại đây
+            alert("Tính năng Đăng nhập Google đang được phát triển!");
+        }
+    </script>
+</body>
+</html>

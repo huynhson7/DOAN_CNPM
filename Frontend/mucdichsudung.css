@@ -1,0 +1,56 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO MỤC ĐÍCH SỬ DỤNG
+========================================= */
+
+.purpose-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.space-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.space-tags .tag {
+    background-color: #f1f2f6;
+    color: #576574;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #dfe4ea;
+    transition: all 0.2s ease;
+}
+
+.space-tags .tag i {
+    color: var(--accent-color);
+    font-size: 12px;
+}
+
+.space-tags .tag:hover {
+    background-color: #eccc68;
+    color: #2f3542;
+    border-color: #eccc68;
+    cursor: default;
+}
+
+.space-tags .tag:hover i {
+    color: #2f3542;
+}
+
+/* =========================================
+   FIX LỖI GIAO DIỆN FORM MODAL
+========================================= */
+
+/* Cố định khung nhập liệu Ghi chú bổ sung (Textarea) không bị tràn */
+.input-group textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box; /* Bắt buộc để padding/border không làm phình chiều ngang */
+    resize: vertical; /* Khóa chiều ngang, chỉ cho phép kéo giãn chiều dọc */
+}

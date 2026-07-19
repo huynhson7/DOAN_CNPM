@@ -1,0 +1,193 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO QUẢN LÝ HÓA ĐƠN
+========================================= */
+
+/* --- Bộ lọc hóa đơn --- */
+.invoice-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+    align-items: center;
+}
+
+.invoice-filters .input-group {
+    margin-bottom: 0; 
+    flex: 1;
+}
+
+.invoice-filters .input-group input, 
+.invoice-filters .input-group select {
+    padding: 10px 14px;
+}
+
+.invoice-filters .btn-outline {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Badge trạng thái thanh toán --- */
+.badge-paid { 
+    background-color: rgba(0, 192, 0, 0.1); 
+    color: rgb(0, 192, 0); 
+}
+
+.badge-pending { 
+    background-color: #fff3e0; 
+    color: #e65100; 
+}
+
+.price-text {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+.btn-action.view { color: #1abc9c; }
+.btn-action.view:hover { background-color: #e8f8f5; }
+.btn-action.print { color: #7f8c8d; }
+.btn-action.print:hover { background-color: #f2f4f4; }
+
+/* =========================================
+   GIAO DIỆN BIÊN LAI BÊN TRONG MODAL
+========================================= */
+.invoice-modal {
+    background-color: #fcfcfc;
+}
+
+.print-area {
+    padding: 30px 40px;
+}
+
+.receipt-header {
+    text-align: center;
+    border-bottom: 2px dashed #ddd;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.receipt-logo {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.receipt-logo span {
+    color: var(--accent-color);
+}
+
+.receipt-header p {
+    margin: 5px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.receipt-title {
+    font-size: 22px;
+    margin-top: 20px;
+    margin-bottom: 0;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+}
+
+.receipt-info-grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    font-size: 14px;
+    color: #333;
+}
+
+.receipt-info-grid .info-box p {
+    margin: 6px 0;
+}
+
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+/* Bảng chi tiết sản phẩm hóa đơn */
+.receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+
+.receipt-table th {
+    background-color: #f0f0f0;
+    padding: 10px;
+    font-size: 13px;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+}
+
+.receipt-table td {
+    padding: 12px 10px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+}
+
+/* Phần tổng tiền */
+.receipt-summary {
+    width: 300px;
+    margin-left: auto;
+    font-size: 15px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    color: #555;
+}
+
+.total-row {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+    border-top: 2px solid #ddd;
+    padding-top: 12px;
+    margin-top: 5px;
+}
+
+/* =========================================
+   THIẾT LẬP KHI BẤM NÚT "IN HÓA ĐƠN"
+========================================= */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    .print-area, .print-area * {
+        visibility: visible;
+    }
+    
+    .print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+    }
+    
+    .hide-on-print {
+        display: none !important;
+    }
+    
+    .modal {
+        position: absolute;
+        background: none;
+    }
+    
+    .modal-content {
+        box-shadow: none;
+        width: 100%;
+        max-width: 100%;
+    }
+}

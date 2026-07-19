@@ -1,0 +1,37 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO QUẢN LÝ NHÀ CUNG CẤP
+========================================= */
+
+.supplier-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.supplier-name i {
+    color: var(--accent-color);
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.supplier-desc {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.6;
+    
+    /* Bỏ giới hạn 2 dòng, cho phép văn bản tự động xuống dòng và hiển thị đầy đủ */
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Fix lỗi giao diện Textarea cho Modal */
+.input-group textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box; 
+    resize: vertical; 
+}

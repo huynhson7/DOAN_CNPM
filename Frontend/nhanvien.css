@@ -1,0 +1,61 @@
+/* =========================================
+   CSS ĐẶC THÙ CHO QUẢN LÝ NHÂN VIÊN
+========================================= */
+
+/* --- Tiêu đề các phần trong Form --- */
+.form-section-title {
+    font-size: 15px;
+    color: var(--accent-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Badge phân loại vai trò (Role) --- */
+.role-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.role-manager {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+}
+
+.role-staff {
+    background-color: #f3e5f5;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+/* --- Ô nhập mật khẩu có icon Ẩn/Hiện --- */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 40px; /* Chừa chỗ cho icon con mắt */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    color: #999;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}

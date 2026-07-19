@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Quản Trị - Cửa Hàng Nội Thất</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-body">
+
+    <!-- Thanh Menu Bên Trái (Sidebar) -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-title">TỔNG QUAN</li>
+            <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
+            
+            <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
+            <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+            <li><a href="#" class="active"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
+            <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+            <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
+            <li><a href="#"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+            
+            <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
+            <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="#"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+        </div>
+    </aside>
+
+    <!-- Khu Vực Nội Dung Chính -->
+    <main class="main-content">
+        <!-- Thanh Header phía trên -->
+        <header class="top-header">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm nhanh...">
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
+                <span>Quản trị viên</span>
+            </div>
+        </header>
+
+        <!-- Khung chứa dữ liệu Master Data: NHÓM SẢN PHẨM -->
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h2>Quản Lý Nhóm Sản Phẩm</h2>
+               <button class="btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Thêm Nhóm Mới</button>
+            </div>
+
+            <div class="data-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã Nhóm</th>
+                            <th>Tên Nhóm Sản Phẩm</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dữ liệu mẫu (Giả lập dữ liệu từ Database) -->
+                        <tr>
+                            <td>NSP01</td>
+                            <td>Nội thất Phòng Khách</td>
+                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td>
+                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>NSP02</td>
+                            <td>Nội thất Phòng Ngủ</td>
+                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td>
+                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>NSP03</td>
+                            <td>Nội thất Ngoài Trời</td>
+                            <td><span class="badge badge-inactive">Tạm ngưng</span></td>
+                            <td>
+                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Thêm/Sửa Nhóm Sản Phẩm -->
+    <div id="nhomSanPhamModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thêm Nhóm Sản Phẩm Mới</h3>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <form id="nhomSanPhamForm">
+                    <!-- Ràng buộc theo PDM: MaNhomSP varchar(15) -->
+                    <div class="input-group">
+                        <label for="maNhomSP">Mã Nhóm Sản Phẩm <span style="color:red">*</span></label>
+                        <input type="text" id="maNhomSP" placeholder="VD: NSP04" required maxlength="15">
+                    </div>
+                    
+                    <!-- Ràng buộc theo PDM: TenNhomSP national varchar(100) -->
+                    <div class="input-group">
+                        <label for="tenNhomSP">Tên Nhóm Sản Phẩm <span style="color:red">*</span></label>
+                        <input type="text" id="tenNhomSP" placeholder="VD: Nội thất Văn Phòng" required maxlength="100">
+                    </div>
+                    
+                    <!-- Ràng buộc theo PDM: TrangThai int -->
+                    <div class="input-group">
+                        <label for="trangThaiNhom">Trạng Thái</label>
+                        <select id="trangThaiNhom">
+                            <option value="1">Hoạt động</option>
+                            <option value="0">Tạm ngưng</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal()">Hủy Bỏ</button>
+                <button type="submit" form="nhomSanPhamForm" class="btn-primary">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script điều khiển Modal -->
+    <script>
+        const modal = document.getElementById("nhomSanPhamModal");
+
+        function openModal() {
+            modal.style.display = "flex"; // Hiển thị modal
+        }
+
+        function closeModal() {
+            modal.style.display = "none"; // Ẩn modal
+        }
+
+        // Đóng modal khi click ra ngoài vùng nền tối
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+
+    <!-- Modal Thêm/Sửa SẢN PHẨM (Kích thước lớn) -->
+    <div id="sanPhamModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Thêm Sản Phẩm Mới</h3>
+                <span class="close-btn" onclick="closeSanPhamModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <form id="sanPhamForm">
+                    <div class="form-grid">
+                        
+                        <!-- CỘT 1: Thông tin cơ bản -->
+                        <div class="form-column">
+                            <!-- Khớp PDM: MaSP varchar(15) -->
+                            <div class="input-group">
+                                <label for="maSP">Mã Sản Phẩm <span style="color:red">*</span></label>
+                                <input type="text" id="maSP" placeholder="VD: SP001" required maxlength="15">
+                            </div>
+                            
+                            <!-- Khớp PDM: TenSP national varchar(100) -->
+                            <div class="input-group">
+                                <label for="tenSP">Tên Sản Phẩm <span style="color:red">*</span></label>
+                                <input type="text" id="tenSP" placeholder="VD: Sofa Da Bò Ý" required maxlength="100">
+                            </div>
+
+                            <div class="form-row">
+                                <!-- Khớp PDM: DonViTinh national varchar(50) -->
+                                <div class="input-group half-width">
+                                    <label for="donViTinh">Đơn Vị Tính</label>
+                                    <input type="text" id="donViTinh" placeholder="VD: Cái, Bộ" maxlength="50">
+                                </div>
+                                <!-- Khớp PDM: SoLuongTon int -->
+                                <div class="input-group half-width">
+                                    <label for="soLuongTon">Số Lượng Tồn</label>
+                                    <input type="number" id="soLuongTon" value="0" min="0">
+                                </div>
+                            </div>
+
+                            <!-- Khớp PDM: GiaBan decimal(18,2) -->
+                            <div class="input-group">
+                                <label for="giaBan">Giá Bán (VNĐ) <span style="color:red">*</span></label>
+                                <input type="number" id="giaBan" placeholder="VD: 25500000" required min="0" step="1000">
+                            </div>
+
+                            <!-- Khớp PDM: TrangThai int -->
+                            <div class="input-group">
+                                <label for="trangThaiSP">Trạng Thái</label>
+                                <select id="trangThaiSP">
+                                    <option value="1">Đang kinh doanh</option>
+                                    <option value="0">Ngừng kinh doanh</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CỘT 2: Phân loại & Mô tả -->
+                        <div class="form-column">
+                            <div class="form-row">
+                                <!-- Khóa ngoại: MaNhomSP -->
+                                <div class="input-group half-width">
+                                    <label for="maNhomSP_fk">Nhóm SP <span style="color:red">*</span></label>
+                                    <select id="maNhomSP_fk" required>
+                                        <option value="">-- Chọn Nhóm --</option>
+                                        <option value="NSP01">Phòng Khách</option>
+                                        <option value="NSP02">Phòng Ngủ</option>
+                                    </select>
+                                </div>
+                                <!-- Khóa ngoại: MaMD -->
+                                <div class="input-group half-width">
+                                    <label for="maMD_fk">Mục Đích SD <span style="color:red">*</span></label>
+                                    <select id="maMD_fk" required>
+                                        <option value="">-- Chọn MĐ --</option>
+                                        <option value="MD01">Gia đình</option>
+                                        <option value="MD02">Văn phòng</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Quan hệ N-N với VATLIEU qua bảng lam_nen -->
+                            <div class="input-group">
+                                <label>Vật Liệu Cấu Thành (Bảng lam_nen)</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" value="VL01"> Gỗ Sồi</label>
+                                    <label><input type="checkbox" value="VL02"> Da Bò</label>
+                                    <label><input type="checkbox" value="VL03"> Kim Loại</label>
+                                </div>
+                            </div>
+
+                            <!-- Khớp PDM: HinhAnh varchar(500) -->
+                            <div class="input-group">
+                                <label for="hinhAnh">Hình Ảnh (Tên file / URL)</label>
+                                <input type="text" id="hinhAnh" placeholder="VD: sofa-da-bo.jpg" maxlength="500">
+                            </div>
+
+                            <!-- Khớp PDM: MoTa text -->
+                            <div class="input-group">
+                                <label for="moTa">Mô Tả Sản Phẩm</label>
+                                <textarea id="moTa" rows="4" placeholder="Nhập mô tả chi tiết nội thất..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeSanPhamModal()">Hủy Bỏ</button>
+                <button type="submit" form="sanPhamForm" class="btn-primary">Lưu Sản Phẩm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script thêm cho Modal Sản Phẩm -->
+    <script>
+        const spModal = document.getElementById("sanPhamModal");
+
+        function openSanPhamModal() {
+            spModal.style.display = "flex";
+        }
+
+        function closeSanPhamModal() {
+            spModal.style.display = "none";
+        }
+
+        // Cập nhật sự kiện click ra ngoài để đóng cả 2 modal
+        window.onclick = function(event) {
+            if (event.target === modal) closeModal();
+            if (event.target === spModal) closeSanPhamModal();
+        }
+    </script>
+
+</body>
+</html>

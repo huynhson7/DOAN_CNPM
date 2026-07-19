@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - Luxury Furniture</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navbar Đồng Nhất -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">LUXURY<span>FURNITURE</span></a>
+            
+            <div class="nav-links">
+                <a href="index.html" class="nav-item-trangchu">Trang Chủ</a>
+                
+                <!-- Mục Sản Phẩm dạng Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <div class="dropdown-content">
+                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
+                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    </div>
+                </div>
+                
+                <a href="#">Liên Hệ</a>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="giohang.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">2</span>
+                </a>
+                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="padding: 40px 0;">
+        <h2 style="margin-bottom: 30px;">Thông Tin Thanh Toán</h2>
+        
+        <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+            
+            <!-- Cột trái: Form thông tin khách hàng -->
+            <div class="data-card" style="padding: 25px;">
+                <div class="input-group">
+                    <label>Họ và Tên</label>
+                    <input type="text" placeholder="Nhập họ tên của bạn">
+                </div>
+                <div class="input-group">
+                    <label>Số Điện Thoại</label>
+                    <input type="tel" placeholder="090xxx...">
+                </div>
+                <div class="input-group">
+                    <label>Địa chỉ giao hàng</label>
+                    <textarea rows="3" placeholder="Số nhà, đường, phường/xã..."></textarea>
+                </div>
+            </div>
+
+            <!-- Cột phải: Tổng đơn hàng -->
+            <div class="data-card" style="padding: 25px; height: fit-content;">
+                <h3>Đơn hàng của bạn</h3>
+                <hr style="margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Sofa Da Bò Ý x 1</span>
+                    <span>25.500.000 ₫</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; margin-top: 15px; color: var(--accent-color);">
+                    <span>Tổng cộng:</span>
+                    <span>25.500.000 ₫</span>
+                </div>
+                <button class="btn-primary" style="margin-top: 25px;">Đặt Hàng Ngay</button>
+            </div>
+        </div>
+    </main>
+
+  <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
+    <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 15px; letter-spacing: 2px;">LUXURY FURNITURE</h3>
+            <p>Định hình không gian sống đẳng cấp và tinh tế.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Liên Hệ</h4>
+            <p>☎ Hotline: 090 123 4567</p>
+            <p>✉ Email: contact@luxuryfurniture.vn</p>
+            <p>📍 Showroom: Quận 1, TP. Hồ Chí Minh</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Chính Sách</h4>
+            <p>🛡 Bảo mật thông tin</p>
+            <p>🔄 Đổi trả trong 7 ngày</p>
+            <p>🚚 Giao hàng miễn phí</p>
+        </div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; font-size: 14px;">
+        <p>&copy; 2026 Luxury Furniture. Mọi quyền được bảo lưu.</p>
+    </div>
+</footer>
+
+</body>
+</html>

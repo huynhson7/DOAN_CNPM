@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - Cửa Hàng Nội Thất Hiện Đại</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Icon từ FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navbar Đồng Nhất Cho Mọi Trang -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">LUXURY<span>FURNITURE</span></a>
+            
+            <!-- Menu Chính (Liên kết với bảng MUCDICHSUDUNG / NHOMSANPHAM trong PDM) -->
+            <div class="nav-links">
+                <a href="index.html" class="nav-item-trangchu active">Trang Chủ</a>
+                
+                <!-- Mục Sản Phẩm dạng Dropdown -->
+                <div class="dropdown">
+                    <!-- href="#" giúp ấn vào không bị chuyển trang -->
+                    <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <div class="dropdown-content">
+                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
+                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    </div>
+                </div>
+                
+                <!-- Đã xóa mục Khuyến Mãi theo mô hình PDM -->
+                <a href="#">Liên Hệ</a>
+            </div>
+            
+            <!-- Khu vực thao tác -->
+            <div class="nav-actions">
+                <!-- Icon Giỏ Hàng -->
+                <a href="giohang.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">2</span>
+                </a>
+                <!-- Nút Đăng Nhập -->
+                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Khu vực Banner chính (Hero Section) -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Định Hình Không Gian Sống Của Bạn</h1>
+            <p>Khám phá bộ sưu tập nội thất cao cấp mang phong cách tối giản và tinh tế.</p>
+            <a href="sanpham.html" class="btn-primary hero-btn">Mua sắm ngay</a>
+        </div>
+    </section>
+
+    <!-- Khu vực Sản Phẩm Nổi Bật -->
+    <section class="featured-products">
+        <div class="container">
+            <h2 class="section-title">Sản Phẩm Nổi Bật</h2>
+            <p class="section-subtitle">Những mẫu thiết kế được yêu thích nhất trong tháng</p>
+            
+            <div class="product-grid">
+                <!-- Thẻ Sản phẩm 1 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500" alt="Sofa Cao Cấp">
+                        <div class="product-actions">
+                            <button class="btn-icon" title="Thêm vào giỏ"><i class="fas fa-cart-plus"></i></button>
+                            <button class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">Phòng khách</span>
+                        <h3 class="product-name">Sofa Da Bò Ý Cao Cấp</h3>
+                        <p class="product-price">25.500.000 ₫</p>
+                    </div>
+                </div>
+
+                <!-- Thẻ Sản phẩm 2 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500" alt="Giường ngủ">
+                        <div class="product-actions">
+                            <button class="btn-icon" title="Thêm vào giỏ"><i class="fas fa-cart-plus"></i></button>
+                            <button class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">Phòng ngủ</span>
+                        <h3 class="product-name">Giường Ngủ Gỗ Sồi Kích Thước Queen</h3>
+                        <p class="product-price">12.800.000 ₫</p>
+                    </div>
+                </div>
+
+                <!-- Thẻ Sản phẩm 3 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=500" alt="Ghế tựa">
+                        <div class="product-actions">
+                            <button class="btn-icon" title="Thêm vào giỏ"><i class="fas fa-cart-plus"></i></button>
+                            <button class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">Phòng khách</span>
+                        <h3 class="product-name">Ghế Tựa Thư Giãn Phong Cách Bắc Âu</h3>
+                        <p class="product-price">4.200.000 ₫</p>
+                    </div>
+                </div>
+                
+                <!-- Thẻ Sản phẩm 4 -->
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=500" alt="Bàn ăn">
+                        <div class="product-actions">
+                            <button class="btn-icon" title="Thêm vào giỏ"><i class="fas fa-cart-plus"></i></button>
+                            <button class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">Phòng ăn</span>
+                        <h3 class="product-name">Bàn Ăn Mặt Đá Cẩm Thạch 6 Ghế</h3>
+                        <p class="product-price">18.900.000 ₫</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
+    <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 15px; letter-spacing: 2px;">LUXURY FURNITURE</h3>
+            <p>Định hình không gian sống đẳng cấp và tinh tế.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Liên Hệ</h4>
+            <p>☎ Hotline: 090 123 4567</p>
+            <p>✉ Email: contact@luxuryfurniture.vn</p>
+            <p>📍 Showroom: Quận 1, TP. Hồ Chí Minh</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Chính Sách</h4>
+            <p>🛡 Bảo mật thông tin</p>
+            <p>🔄 Đổi trả trong 7 ngày</p>
+            <p>🚚 Giao hàng miễn phí</p>
+        </div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; font-size: 14px;">
+        <p>&copy; 2026 Luxury Furniture. Mọi quyền được bảo lưu.</p>
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sản Phẩm - Luxury Furniture</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navbar Đồng Nhất -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">LUXURY<span>FURNITURE</span></a>
+            
+            <div class="nav-links">
+                <a href="index.html" class="nav-item-trangchu">Trang Chủ</a>
+                
+                <!-- Mục Sản Phẩm dạng Dropdown - ĐANG ACTIVE -->
+                <div class="dropdown">
+                    <a href="#" class="dropbtn active">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <div class="dropdown-content">
+                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
+                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    </div>
+                </div>
+                
+                <a href="#">Liên Hệ</a>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="giohang.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">2</span>
+                </a>
+                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Đường dẫn Breadcrumb -->
+    <div class="breadcrumb-container">
+        <div class="container">
+            <p><a href="index.html">Trang chủ</a> / <a href="sanpham.html">Sản phẩm</a> / Ghế Tựa Thư Giãn Phong Cách Bắc Âu</p>
+        </div>
+    </div>
+
+    <!-- Khu vực Chi Tiết Sản Phẩm -->
+    <main class="container">
+        <section class="product-detail-section">
+            <!-- Cột trái: Ảnh Sản Phẩm -->
+            <div class="product-gallery">
+                <div class="main-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800" alt="Ghế tựa" id="main-product-img">
+                </div>
+                <div class="thumbnail-list">
+                    <img src="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=500" class="active-thumb" onclick="changeImage(this)">
+                    <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=500" onclick="changeImage(this)">
+                    <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500" onclick="changeImage(this)">
+                </div>
+            </div>
+
+            <!-- Cột phải: Thông tin chi tiết từ PDM -->
+            <div class="product-info-detail">
+                <span class="category-tag">Phòng khách</span>
+                <h1 class="product-title">Ghế Tựa Thư Giãn Phong Cách Bắc Âu</h1>
+                
+                <div class="product-meta">
+                    <span><i class="fas fa-layer-group"></i> Nhóm: Ghế Đơn</span>
+                    <span><i class="fas fa-couch"></i> Vật liệu: Gỗ sồi tự nhiên & Vải Nỉ cao cấp</span>
+                    <span class="stock in-stock"><i class="fas fa-check-circle"></i> Còn hàng</span>
+                </div>
+
+                <p class="product-price-large">4.200.000 ₫</p>
+                
+                <p class="product-short-desc">
+                    Mẫu ghế tựa thư giãn mang phong cách Bắc Âu (Scandinavian) sở hữu đường nét tinh tế, tối giản nhưng vô cùng sang trọng. Phần khung được chế tác từ gỗ sồi bền bỉ, đệm bọc vải nỉ cao cấp mang lại cảm giác êm ái tuyệt đối sau ngày làm việc căng thẳng.
+                </p>
+
+                <hr class="divider">
+
+                <!-- Thao tác mua hàng -->
+                <div class="add-to-cart-action">
+                    <div class="quantity-selector">
+                        <button class="qty-btn minus" onclick="updateQty(-1)">-</button>
+                        <input type="number" id="product-quantity" value="1" min="1">
+                        <button class="qty-btn plus" onclick="updateQty(1)">+</button>
+                    </div>
+                    <button class="btn-primary add-cart-btn">
+                        <i class="fas fa-shopping-bag"></i> Thêm Vào Giỏ Hàng
+                    </button>
+                </div>
+
+                <!-- Cam kết chất lượng dịch vụ -->
+                <ul class="product-features">
+                    <li><i class="fas fa-truck"></i> Giao hàng miễn phí trong nội thành bán kính 10km.</li>
+                    <li><i class="fas fa-shield-alt"></i> Bảo hành chính hãng 24 tháng cho phần khung gỗ.</li>
+                    <li><i class="fas fa-undo"></i> Đổi trả dễ dàng trong vòng 7 ngày nếu lỗi sản xuất.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+   <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
+    <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 15px; letter-spacing: 2px;">LUXURY FURNITURE</h3>
+            <p>Định hình không gian sống đẳng cấp và tinh tế.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Liên Hệ</h4>
+            <p>☎ Hotline: 090 123 4567</p>
+            <p>✉ Email: contact@luxuryfurniture.vn</p>
+            <p>📍 Showroom: Quận 1, TP. Hồ Chí Minh</p>
+        </div>
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 15px;">Chính Sách</h4>
+            <p>🛡 Bảo mật thông tin</p>
+            <p>🔄 Đổi trả trong 7 ngày</p>
+            <p>🚚 Giao hàng miễn phí</p>
+        </div>
+    </div>
+    <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; font-size: 14px;">
+        <p>&copy; 2026 Luxury Furniture. Mọi quyền được bảo lưu.</p>
+    </div>
+</footer>
+
+    <!-- Script tương tác ảnh & số lượng cơ bản -->
+    <script>
+        function changeImage(element) {
+            document.getElementById('main-product-img').src = element.src;
+            let thumbs = document.querySelectorAll('.thumbnail-list img');
+            thumbs.forEach(thumb => thumb.classList.remove('active-thumb'));
+            element.classList.add('active-thumb');
+        }
+
+        function updateQty(change) {
+            let qtyInput = document.getElementById('product-quantity');
+            let currentQty = parseInt(qtyInput.value);
+            let newQty = currentQty + change;
+            if (newQty >= 1) {
+                qtyInput.value = newQty;
+            }
+        }
+    </script>
+</body>
+</html>
