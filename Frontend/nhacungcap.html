@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Nhà Cung Cấp - Luxury Admin</title>
-    <!-- CSS chung -->
+    <!-- CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <!-- CSS TÁCH RIÊNG CHO MODULE NHÀ CUNG CẤP -->
     <link rel="stylesheet" href="nhacungcap.css">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body class="admin-body">
 
     <!-- Sidebar Admin -->
@@ -23,19 +25,22 @@
         <ul class="sidebar-menu">
             <li class="menu-title">TỔNG QUAN</li>
             <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
-            
+
             <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
             <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
             <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
-            <li><a href="vatlieu.html"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+            <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
             <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
             <li><a href="nhacungcap.html" class="active"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
-            
+
             <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
-            <li><a href="hoadon.html"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
-            <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
             <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
         </ul>
+        <div class="sidebar-footer">
+            <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+        </div>
     </aside>
 
     <main class="main-content">
@@ -43,7 +48,7 @@
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm tên, mã nhà cung cấp...">
+                <input type="text" id="timKiemNCC" placeholder="Tìm kiếm nhà cung cấp...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -54,40 +59,23 @@
         <!-- Nội dung chính -->
         <div class="content-wrapper">
             <div class="page-header">
-                <h2>Danh Mục Nhà Cung Cấp</h2>
-                <button class="btn-primary" onclick="openNccModal()"><i class="fas fa-plus"></i> Thêm Nhà Cung Cấp Mới</button>
+                <h2>Quản Lý Nhà Cung Cấp</h2>
+                <button class="btn-primary" onclick="openNccModal()"><i class="fas fa-plus"></i> Thêm Nhà Cung
+                    Cấp</button>
             </div>
 
-            <!-- Bảng danh sách nhà cung cấp -->
             <div class="data-card">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">Mã NCC</th>
-                            <th style="width: 30%;">Tên Nhà Cung Cấp</th>
-                            <th style="width: 45%;">Mô Tả Nhà Cung Cấp</th>
-                            <th style="width: 10%; text-align: center;">Thao Tác</th>
+                            <th style="width: 20%;">Mã NCC</th>
+                            <th style="width: 35%;">Tên Nhà Cung Cấp</th>
+                            <th style="width: 30%;">Mô Tả / Ghi Chú</th>
+                            <th style="width: 15%;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>NCC01</strong></td>
-                            <td><span class="supplier-name"><i class="fas fa-building"></i> Công ty Gỗ An Cường</span></td>
-                            <td class="supplier-desc">SĐT: 0909 123 456 - Email: contact@ancuong.com - Địa chỉ: Quận 3, TP.HCM. Chuyên cung cấp các loại gỗ công nghiệp, gỗ tự nhiên cao cấp.</td>
-                            <td style="text-align: center;">
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>NCC02</strong></td>
-                            <td><span class="supplier-name"><i class="fas fa-industry"></i> Gốm Sứ Minh Long</span></td>
-                            <td class="supplier-desc">SĐT: 0918 987 654 - Email: sales@minhlong.com - Địa chỉ: Thuận An, Bình Dương. Chuyên cung cấp các phụ kiện trang trí, bình hoa gốm sứ cao cấp.</td>
-                            <td style="text-align: center;">
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
+                    <tbody id="bangNhaCungCap">
+                        <!-- JS nhacungcap.js sẽ đổ dữ liệu động vào đây -->
                     </tbody>
                 </table>
             </div>
@@ -98,45 +86,39 @@
     <div id="nccModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-truck"></i> Thông Tin Nhà Cung Cấp</h3>
+                <h3>Thêm Nhà Cung Cấp</h3>
                 <span class="close-btn" onclick="closeNccModal()">&times;</span>
             </div>
-            
+
             <div class="modal-body">
                 <form id="nccForm">
                     <div class="input-group">
                         <label>Mã Nhà Cung Cấp <span style="color:red">*</span></label>
-                        <input type="text" placeholder="VD: NCC03" required>
+                        <input type="text" id="maNCC" placeholder="Ví dụ: NCC001" required maxlength="255">
                     </div>
 
                     <div class="input-group">
                         <label>Tên Nhà Cung Cấp <span style="color:red">*</span></label>
-                        <input type="text" placeholder="Nhập tên đối tác/công ty..." required>
+                        <input type="text" id="tenNCC" placeholder="Nhập tên nhà cung cấp..." required maxlength="100">
                     </div>
 
                     <div class="input-group">
-                        <label>Mô Tả Nhà Cung Cấp</label>
-                        <textarea rows="4" placeholder="Nhập mô tả chi tiết, số điện thoại, email, địa chỉ liên hệ..."></textarea>
+                        <label>Mô Tả / Ghi Chú</label>
+                        <!-- Sử dụng input text hoặc đổi thành textarea tùy ý bạn, ở đây dùng luôn cấu trúc input đồng bộ với dự án -->
+                        <input type="text" id="moTaNCC" placeholder="Nhập mô tả ngắn gọn..." maxlength="500">
                     </div>
                 </form>
             </div>
-            
+
             <div class="modal-footer">
                 <button class="btn-outline" onclick="closeNccModal()">Hủy Bỏ</button>
-                <button type="submit" form="nccForm" class="btn-primary" style="width: auto;">Lưu Thông Tin</button>
+                <button type="submit" form="nccForm" class="btn-primary" style="width: auto;">Lưu Nhà Cung Cấp</button>
             </div>
         </div>
     </div>
 
-    <script>
-        const nccModal = document.getElementById("nccModal");
-
-        function openNccModal() { nccModal.style.display = "flex"; }
-        function closeNccModal() { nccModal.style.display = "none"; }
-        
-        window.onclick = function(event) {
-            if (event.target === nccModal) closeNccModal();
-        }
-    </script>
+    <!-- GỌI FILE JAVASCRIPT BÊN NGOÀI -->
+    <script src="nhacungcap.js"></script>
 </body>
+
 </html>

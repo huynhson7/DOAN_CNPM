@@ -48,7 +48,7 @@ namespace Backend.Controllers
 
         // POST: api/nha-cung-cap
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        //[Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Create([FromBody] NHACUNGCAP model)
         {
             if (!ModelState.IsValid)
@@ -88,7 +88,7 @@ namespace Backend.Controllers
 
         // PUT: api/nha-cung-cap/NCC001
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        //[Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Update(string id, [FromBody] NHACUNGCAP model)
         {
             if (id != model.MaNcc)
@@ -133,7 +133,7 @@ namespace Backend.Controllers
 
         // DELETE: api/nha-cung-cap/NCC001
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        //[Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Delete(string id)
         {
             var supplier = await _context.NHACUNGCAP.FindAsync(id);
