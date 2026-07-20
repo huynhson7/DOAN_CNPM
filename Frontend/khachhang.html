@@ -64,36 +64,16 @@
                     <thead>
                         <tr>
                             <th>Mã KH</th>
+                            <th>Tên Đăng Nhập</th>
                             <th>Họ Tên</th>
                             <th>Số Điện Thoại</th>
                             <th>Địa Chỉ</th>
-                            <th>Hạng Thành Viên</th>
+                            <th>Trạng Thái</th>
                             <th>Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>KH01</strong></td>
-                            <td>Trần Quang Khải</td>
-                            <td>0912 345 678</td>
-                            <td>45 Lê Lợi, Q.1, TP.HCM</td>
-                            <td><span class="member-badge vip"><i class="fas fa-crown"></i> VIP</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa thông tin"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action history" title="Lịch sử mua hàng"><i class="fas fa-shopping-bag"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>KH02</strong></td>
-                            <td>Lê Thị Hoa</td>
-                            <td>0988 777 666</td>
-                            <td>12 Nguyễn Trãi, Q.5, TP.HCM</td>
-                            <td><span class="member-badge standard">Thành Viên</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa thông tin"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action history" title="Lịch sử mua hàng"><i class="fas fa-shopping-bag"></i></button>
-                            </td>
-                        </tr>
+                    <tbody id="bangKhachHang">
+                        <!-- JS sẽ đổ dữ liệu vào đây -->
                     </tbody>
                 </table>
             </div>
@@ -112,57 +92,56 @@
                 <form id="khForm">
                     <div class="input-group">
                         <label>Mã Khách Hàng <span style="color:red">*</span></label>
-                        <input type="text" placeholder="Hệ thống tự tạo hoặc nhập thủ công (VD: KH03)" required>
+                        <input type="text" id="maKhachHang" placeholder="Nhập mã (VD: KH01)" required>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 15px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label>Tên Đăng Nhập</label>
+                            <input type="text" id="tenDangNhap" placeholder="Nhập username...">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label>Mật Khẩu</label>
+                            <input type="password" id="matKhau" placeholder="Nhập mật khẩu...">
+                        </div>
                     </div>
 
                     <div class="input-group">
                         <label>Họ và Tên <span style="color:red">*</span></label>
-                        <input type="text" placeholder="Nhập họ tên đầy đủ..." required>
+                        <input type="text" id="tenKhachHang" placeholder="Nhập họ tên đầy đủ..." required>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Số Điện Thoại <span style="color:red">*</span></label>
-                            <input type="tel" placeholder="09xxxx..." required>
+                            <input type="tel" id="sdtKhachHang" placeholder="Chỉ nhập 10 số (VD: 0912345678)" required>
+                            <!-- Thẻ báo lỗi HTTP 409 và Regex -->
+                            <span id="sdtError" style="color: red; display: none; font-size: 0.9em; margin-top: 5px; font-weight: 500;"></span>
                         </div>
                         <div class="input-group" style="flex: 1;">
-                            <label>Giới Tính</label>
-                            <select>
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                                <option value="Khác">Khác</option>
+                            <label>Trạng Thái</label>
+                            <select id="trangThai">
+                                <option value="1">Đang hoạt động</option>
+                                <option value="0">Tạm khóa</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>Địa Chỉ Liên Hệ</label>
-                        <textarea rows="2" placeholder="Số nhà, tên đường, quận/huyện..."></textarea>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Ghi Chú (Sở thích, yêu cầu đặc biệt...)</label>
-                        <textarea rows="2" placeholder="Ghi chú về khách hàng này..."></textarea>
+                        <textarea id="diaChiKhachHang" rows="2" placeholder="Số nhà, tên đường, quận/huyện..."></textarea>
                     </div>
                 </form>
             </div>
             
             <div class="modal-footer">
-                <button class="btn-outline" onclick="closeKhModal()">Hủy Bỏ</button>
-                <button type="submit" form="khForm" class="btn-primary" style="width: auto;">Lưu Thay Đổi</button>
+                <button type="button" class="btn-outline" onclick="closeKhModal()">Hủy Bỏ</button>
+                <button type="submit" form="khForm" class="btn-primary" style="width: auto;">Lưu Khách Hàng</button>
             </div>
         </div>
     </div>
 
-    <script>
-        const khModal = document.getElementById("khModal");
-
-        function openKhModal() { khModal.style.display = "flex"; }
-        function closeKhModal() { khModal.style.display = "none"; }
-        
-        window.onclick = function(event) {
-            if (event.target === khModal) closeKhModal();
-        }
-    </script>
+    <!-- Gọi file JS tách rời -->
+    <script src="khachhang.js"></script>
 </body>
 </html>
