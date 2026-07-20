@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Quản Trị - Cửa Hàng Nội Thất</title>
+    <title>Quản Lý Sản Phẩm - Luxury Admin</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css"> <!-- Dùng chung CSS của Khách hàng/Nhân viên -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="admin-body">
 
-    <!-- Thanh Menu Bên Trái (Sidebar) -->
+    <!-- Sidebar Admin -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
@@ -19,32 +20,34 @@
             <li class="menu-title">TỔNG QUAN</li>
             <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
             
+            <!-- Đã thêm lại mục Xem Cửa Hàng (sanpham.html) -->
+            <li><a href="sanpham.html"><i class="fas fa-store"></i> Xem Cửa Hàng</a></li>
+            
             <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
-            <!-- Nút gọi Modal SCRUM 16 (Form thêm sản phẩm) -->
-            <li><a href="#" onclick="openSpModal()"><i class="fas fa-couch"></i> Thêm Sản Phẩm</a></li>
-            <li><a href="#" class="active"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
+            <!-- Các id để Javascript ẩn/hiện theo quyền -->
+            <li id="menu-admin-sanpham"><a href="admin_sanpham.html" class="active"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+            <li id="menu-admin-nhom"><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
             <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
             <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
             <li><a href="#"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
             
             <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
             <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
-            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
-            <li><a href="#"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+            <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
         </ul>
         <div class="sidebar-footer">
             <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
         </div>
     </aside>
 
-    <!-- Khu Vực Nội Dung Chính -->
+    <!-- Nội dung chính -->
     <main class="main-content">
-        <!-- Thanh Header phía trên -->
+        <!-- Header -->
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <!-- Đã thêm id="searchInput" -->
-                <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh...">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm tên, mã sản phẩm...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -52,38 +55,37 @@
             </div>
         </header>
 
-        <!-- Khung chứa dữ liệu -->
+        <!-- Khung chứa dữ liệu Bảng -->
         <div class="content-wrapper">
             <div class="page-header">
-                <h2>Quản Lý Nhóm Sản Phẩm</h2>
-               <button class="btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Thêm Nhóm Mới</button>
+                <h2>Danh Sách Sản Phẩm</h2>
+                <!-- Nút Thêm Sản Phẩm bật Modal -->
+                <button class="btn-primary" onclick="openSpModal()"><i class="fas fa-plus"></i> Thêm Sản Phẩm</button>
             </div>
 
+            <!-- Bảng danh sách sản phẩm -->
             <div class="data-card">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Mã Nhóm</th>
-                            <th>Tên Nhóm Sản Phẩm</th>
+                            <th>Mã SP</th>
+                            <th>Hình Ảnh</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Giá Bán</th>
+                            <th>Tồn Kho</th>
                             <th>Trạng Thái</th>
                             <th>Thao Tác</th>
                         </tr>
                     </thead>
-                    <!-- Đã thêm id="bangDuLieu" -->
                     <tbody id="bangDuLieu">
+                        <!-- Dữ liệu mẫu chờ API GET của Ninh -->
                         <tr>
-                            <td>NSP01</td>
-                            <td>Nội thất Phòng Khách</td>
-                            <td><span class="badge badge-active">Hoạt động</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>NSP02</td>
-                            <td>Nội thất Phòng Ngủ</td>
-                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td><strong>SP01</strong></td>
+                            <td><i class="fas fa-image" style="color:#ccc; font-size:24px;"></i></td>
+                            <td>Sofa Góc Chữ L Da Bò Ý</td>
+                            <td>12,500,000 ₫</td>
+                            <td>15</td>
+                            <td><span class="badge badge-active">Đang bán</span></td>
                             <td>
                                 <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
                                 <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
@@ -94,39 +96,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Modal Thêm/Sửa Nhóm Sản Phẩm -->
-    <div id="nhomSanPhamModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Thêm Nhóm Sản Phẩm Mới</h3>
-                <span class="close-btn" onclick="closeModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="nhomSanPhamForm">
-                    <div class="input-group">
-                        <label for="maNhomSP_form">Mã Nhóm Sản Phẩm <span style="color:red">*</span></label>
-                        <input type="text" id="maNhomSP_form" placeholder="VD: NSP04" required maxlength="15">
-                    </div>
-                    <div class="input-group">
-                        <label for="tenNhomSP_form">Tên Nhóm Sản Phẩm <span style="color:red">*</span></label>
-                        <input type="text" id="tenNhomSP_form" placeholder="VD: Nội thất Văn Phòng" required maxlength="100">
-                    </div>
-                    <div class="input-group">
-                        <label for="trangThaiNhom">Trạng Thái</label>
-                        <select id="trangThaiNhom">
-                            <option value="1">Hoạt động</option>
-                            <option value="0">Tạm ngưng</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-outline" onclick="closeModal()">Hủy Bỏ</button>
-                <button type="submit" form="nhomSanPhamForm" class="btn-primary">Lưu Thay Đổi</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal Thêm Sản Phẩm (Dành cho Admin - SCRUM 16) -->
     <div id="spModal" class="modal" style="display: none;">
@@ -141,24 +110,24 @@
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Mã Sản Phẩm <span style="color:red">*</span></label>
-                            <input type="text" id="maSP" placeholder="VD: SP01" required>
+                            <input type="text" id="maSP" placeholder="VD: SP01" style="width: 100%; box-sizing: border-box;" required>
                         </div>
                         <div class="input-group" style="flex: 2;">
                             <label>Tên Sản Phẩm <span style="color:red">*</span></label>
-                            <input type="text" id="tenSP" placeholder="Nhập tên sản phẩm..." required>
+                            <input type="text" id="tenSP" placeholder="Nhập tên sản phẩm..." style="width: 100%; box-sizing: border-box;" required>
                         </div>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Nhóm Sản Phẩm <span style="color:red">*</span></label>
-                            <select id="maNhomSP" required>
+                            <select id="maNhomSP" style="width: 100%; box-sizing: border-box;" required>
                                 <option value="">-- Đang tải... --</option>
                             </select>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Mục Đích Sử Dụng <span style="color:red">*</span></label>
-                            <select id="maMD" required>
+                            <select id="maMD" style="width: 100%; box-sizing: border-box;" required>
                                 <option value="">-- Đang tải... --</option>
                             </select>
                         </div>
@@ -167,28 +136,28 @@
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Giá Bán (VNĐ) <span style="color:red">*</span></label>
-                            <input type="number" id="giaBan" placeholder="0" required>
+                            <input type="number" id="giaBan" placeholder="0" style="width: 100%; box-sizing: border-box;" required>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Số Lượng Tồn</label>
-                            <input type="number" id="soLuongTon" placeholder="0" value="0">
+                            <input type="number" id="soLuongTon" placeholder="0" value="0" style="width: 100%; box-sizing: border-box;">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Đơn Vị Tính</label>
-                            <input type="text" id="donViTinh" placeholder="Cái, Bộ...">
+                            <input type="text" id="donViTinh" placeholder="Cái, Bộ..." style="width: 100%; box-sizing: border-box;">
                         </div>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Vật Liệu (Giữ Ctrl/Cmd để chọn nhiều) <span style="color:red">*</span></label>
-                            <select id="maVatLieu" multiple required style="height: 100px;">
+                            <select id="maVatLieu" multiple required style="height: 100px; width: 100%; box-sizing: border-box;">
                                 <option value="">-- Đang tải... --</option>
                             </select>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Nhà Cung Cấp (Giữ Ctrl/Cmd để chọn nhiều) <span style="color:red">*</span></label>
-                            <select id="maNCC" multiple required style="height: 100px;">
+                            <select id="maNCC" multiple required style="height: 100px; width: 100%; box-sizing: border-box;">
                                 <option value="">-- Đang tải... --</option>
                             </select>
                         </div>
@@ -196,17 +165,17 @@
 
                     <div class="input-group">
                         <label>Mô Tả Sản Phẩm</label>
-                        <textarea id="moTa" rows="3" placeholder="Chi tiết sản phẩm..."></textarea>
+                        <textarea id="moTa" rows="3" placeholder="Chi tiết sản phẩm..." style="width: 100%; box-sizing: border-box;"></textarea>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 2;">
                             <label>Hình Ảnh (Tên file)</label>
-                            <input type="text" id="hinhAnh" placeholder="sofa_01.jpg">
+                            <input type="text" id="hinhAnh" placeholder="sofa_01.jpg" style="width: 100%; box-sizing: border-box;">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Trạng Thái</label>
-                            <select id="trangThai">
+                            <select id="trangThai" style="width: 100%; box-sizing: border-box;">
                                 <option value="1">Đang bán</option>
                                 <option value="0">Ngừng kinh doanh</option>
                             </select>
@@ -217,29 +186,22 @@
             
             <div class="modal-footer">
                 <button type="button" class="btn-outline" onclick="closeSpModal()">Hủy Bỏ</button>
-                <button type="submit" form="spForm" class="btn-primary">Lưu Sản Phẩm</button>
+                <button type="submit" form="spForm" class="btn-primary" style="width: auto;">Lưu Sản Phẩm</button>
             </div>
         </div>
     </div>
 
-    <!-- Script điều khiển Đóng/Mở các Modal -->
+    <!-- Script điều khiển Modal -->
     <script>
-        const modalNhomSP = document.getElementById("nhomSanPhamModal");
         const modalSP = document.getElementById("spModal");
-
-        function openModal() { modalNhomSP.style.display = "flex"; }
-        function closeModal() { modalNhomSP.style.display = "none"; }
-
         function openSpModal() { modalSP.style.display = "flex"; }
         function closeSpModal() { modalSP.style.display = "none"; }
-
         window.onclick = function(event) {
-            if (event.target === modalNhomSP) closeModal();
             if (event.target === modalSP) closeSpModal();
         }
     </script>
 
-    <!-- Gắn file JS -->
+    <!-- Gọi file JS xử lý API và phân quyền -->
     <script src="admin_sanpham.js"></script>
 </body>
 </html>
