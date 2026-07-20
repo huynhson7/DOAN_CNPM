@@ -5,9 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Sản Phẩm - Luxury Admin</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="admin.css"> <!-- Dùng chung CSS của Khách hàng/Nhân viên -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Tùy chỉnh Modal lớn có thanh cuộn mượt mà, không bị che nút */
+        .modal-large {
+            max-width: 800px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-body {
+            overflow-y: auto;
+            max-height: calc(90vh - 130px);
+            padding: 25px;
+        }
+        /* Style cho input file chọn ảnh */
+        .input-file-custom {
+            padding: 8px 12px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="admin-body">
 
@@ -19,12 +44,9 @@
         <ul class="sidebar-menu">
             <li class="menu-title">TỔNG QUAN</li>
             <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
-            
-            <!-- Đã thêm lại mục Xem Cửa Hàng (sanpham.html) -->
             <li><a href="sanpham.html"><i class="fas fa-store"></i> Xem Cửa Hàng</a></li>
             
             <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
-            <!-- Các id để Javascript ẩn/hiện theo quyền -->
             <li id="menu-admin-sanpham"><a href="admin_sanpham.html" class="active"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
             <li id="menu-admin-nhom"><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
             <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
@@ -43,7 +65,6 @@
 
     <!-- Nội dung chính -->
     <main class="main-content">
-        <!-- Header -->
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
@@ -55,15 +76,12 @@
             </div>
         </header>
 
-        <!-- Khung chứa dữ liệu Bảng -->
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Danh Sách Sản Phẩm</h2>
-                <!-- Nút Thêm Sản Phẩm bật Modal -->
                 <button class="btn-primary" onclick="openSpModal()"><i class="fas fa-plus"></i> Thêm Sản Phẩm</button>
             </div>
 
-            <!-- Bảng danh sách sản phẩm -->
             <div class="data-card">
                 <table class="data-table">
                     <thead>
@@ -78,26 +96,14 @@
                         </tr>
                     </thead>
                     <tbody id="bangDuLieu">
-                        <!-- Dữ liệu mẫu chờ API GET của Ninh -->
-                        <tr>
-                            <td><strong>SP01</strong></td>
-                            <td><i class="fas fa-image" style="color:#ccc; font-size:24px;"></i></td>
-                            <td>Sofa Góc Chữ L Da Bò Ý</td>
-                            <td>12,500,000 ₫</td>
-                            <td>15</td>
-                            <td><span class="badge badge-active">Đang bán</span></td>
-                            <td>
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
+                        <!-- Dữ liệu từ API SQL -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Modal Thêm Sản Phẩm (Dành cho Admin - SCRUM 16) -->
+    <!-- Modal Thêm Sản Phẩm (Đã bổ sung thanh cuộn) -->
     <div id="spModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
             <div class="modal-header">
@@ -122,13 +128,13 @@
                         <div class="input-group" style="flex: 1;">
                             <label>Nhóm Sản Phẩm <span style="color:red">*</span></label>
                             <select id="maNhomSP" style="width: 100%; box-sizing: border-box;" required>
-                                <option value="">-- Đang tải... --</option>
+                                <option value="">-- Chọn Nhóm Sản Phẩm --</option>
                             </select>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Mục Đích Sử Dụng <span style="color:red">*</span></label>
                             <select id="maMD" style="width: 100%; box-sizing: border-box;" required>
-                                <option value="">-- Đang tải... --</option>
+                                <option value="">-- Chọn Mục Đích Sử Dụng --</option>
                             </select>
                         </div>
                     </div>
@@ -136,7 +142,7 @@
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 1;">
                             <label>Giá Bán (VNĐ) <span style="color:red">*</span></label>
-                            <input type="number" id="giaBan" placeholder="0" style="width: 100%; box-sizing: border-box;" required>
+                            <input type="text" id="giaBan" placeholder="0" style="width: 100%; box-sizing: border-box;" required>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Số Lượng Tồn</label>
@@ -170,8 +176,8 @@
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 2;">
-                            <label>Hình Ảnh (Tên file)</label>
-                            <input type="text" id="hinhAnh" placeholder="sofa_01.jpg" style="width: 100%; box-sizing: border-box;">
+                            <label>Hình Ảnh (Chọn file từ máy)</label>
+                            <input type="file" id="hinhAnhFile" class="input-file-custom" accept=".jpg, .png, .webp">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Trạng Thái</label>
@@ -201,7 +207,7 @@
         }
     </script>
 
-    <!-- Gọi file JS xử lý API và phân quyền -->
+    <!-- Gọi file JS xử lý API -->
     <script src="admin_sanpham.js"></script>
 </body>
 </html>
