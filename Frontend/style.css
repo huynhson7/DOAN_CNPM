@@ -468,19 +468,23 @@ body {
 /* Nút thao tác ẩn trên ảnh */
 .product-actions {
     position: absolute;
-    bottom: -50px;
+    bottom: -80px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: center;
     gap: 10px;
-    transition: bottom 0.3s ease;
+    transition: all 0.3s ease-in-out;
     padding: 15px;
     background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    opacity: 0;
+    visibility: hidden;
 }
 
 .product-card:hover .product-actions {
     bottom: 0;
+    opacity: 1;
+    visibility: visible;
 }
 
 .btn-icon {
@@ -654,6 +658,7 @@ body {
     gap: 10px;
     font-weight: 600;
     font-size: 14px;
+    margin-bottom: 0px;
 }
 .user-profile img { width: 35px; border-radius: 50%; }
 

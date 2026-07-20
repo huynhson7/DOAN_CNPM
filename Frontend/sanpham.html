@@ -33,6 +33,27 @@
             gap: 15px;
             margin-bottom: 20px;
         }
+        /* CSS căn chỉnh khu vực bên phải chứa Select và Nút Thêm */
+        .right-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .btn-add-product {
+            display: none; /* Mặc định ẩn, sẽ dùng JS bật lên nếu là admin */
+            background-color: #1a1a1a;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-add-product:hover {
+            background-color: #333;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -97,18 +118,26 @@
         </aside>
 
         <main class="shop-main">
-            <!-- Header sửa đổi: Thêm ô tìm kiếm -->
+            <!-- Header sửa đổi: Đã chèn nút Thêm Sản Phẩm -->
             <div class="shop-header">
                 <div class="search-product-box">
                     <i class="fas fa-search" style="color: #888;"></i>
                     <input type="text" placeholder="Tìm kiếm sản phẩm...">
                 </div>
-                <select class="sort-select">
-                    <option>Sắp xếp mặc định</option>
-                    <option>Thứ tự theo giá: thấp đến cao</option>
-                    <option>Thứ tự theo giá: cao xuống thấp</option>
-                    <option>Mới nhất</option>
-                </select>
+                
+                <div class="right-controls">
+                    <select class="sort-select">
+                        <option>Sắp xếp mặc định</option>
+                        <option>Thứ tự theo giá: thấp đến cao</option>
+                        <option>Thứ tự theo giá: cao xuống thấp</option>
+                        <option>Mới nhất</option>
+                    </select>
+                    
+                    <!-- Nút Thêm Sản Phẩm (Link tới trang admin) -->
+                    <a href="admin_sanpham.html" id="btn-admin-add-product" class="btn-add-product">
+                        <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                    </a>
+                </div>
             </div>
 
             <div class="product-grid">
@@ -191,5 +220,22 @@
         </div>
     </footer>
 
+    <!-- Script kiểm tra quyền hiển thị nút Thêm Sản Phẩm -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Lấy quyền user từ localStorage
+            const userRole = localStorage.getItem('userRole');
+            
+            // Tìm nút Thêm sản phẩm
+            const btnAddProduct = document.getElementById('btn-admin-add-product');
+            
+            // Nếu là admin thì đổi display thành inline-block để hiển thị
+            if (userRole === 'admin') {
+                if (btnAddProduct) {
+                    btnAddProduct.style.display = 'inline-block';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
