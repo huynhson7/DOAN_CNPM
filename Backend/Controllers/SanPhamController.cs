@@ -2,6 +2,9 @@ using Backend.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace Backend.Controllers
 {
@@ -10,10 +13,39 @@ namespace Backend.Controllers
     public partial class SanPhamController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public SanPhamController(AppDbContext context)
+        public SanPhamController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
+        }
+
+        // =====================================================
+        // POST: api/san-pham/upload-image
+        // =====================================================
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "Không có file nào được tải lên." });
+
+            string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string uploadsFolder = Path.Combine(webRootPath, "images");
+
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            string fileUrl = $"http://localhost:5129/images/{uniqueFileName}";
+            return Ok(new { url = fileUrl });
         }
 
         // =====================================================
@@ -97,7 +129,6 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "Mục đích sử dụng không tồn tại." });
             }
 
-            // Tối ưu: Kiểm tra danh sách Vật liệu chỉ với 1 truy vấn SQL
             var reqMaVLs = request.MaVatLieus.Distinct().ToList();
             if (reqMaVLs.Any())
             {
@@ -108,7 +139,6 @@ namespace Backend.Controllers
                 }
             }
 
-            // Tối ưu: Kiểm tra danh sách Nhà cung cấp chỉ với 1 truy vấn SQL
             var reqMaNCCs = request.MaNhaCungCaps.Distinct().ToList();
             if (reqMaNCCs.Any())
             {
@@ -119,7 +149,6 @@ namespace Backend.Controllers
                 }
             }
 
-            // Bắt đầu Transaction
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -195,7 +224,6 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "Tên sản phẩm đã tồn tại." });
             }
 
-            // Tối ưu kiểm tra tồn tại mã VL & NCC trước khi thao tác DB
             var reqMaVLs = request.MaVatLieus.Distinct().ToList();
             if (reqMaVLs.Any())
             {
@@ -215,6 +243,10 @@ namespace Backend.Controllers
                     return BadRequest(new { message = "Một hoặc nhiều mã nhà cung cấp không tồn tại." });
                 }
             }
+
+            // 1. LƯU LẠI ĐƯỜNG DẪN ẢNH CŨ TRƯỚC KHI CẬP NHẬT
+            string oldImageUrl = product.HinhAnh;
+            string newImageUrl = request.SanPham.HinhAnh;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -255,6 +287,31 @@ namespace Backend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // ====================================================
+                // 2. NẾU ẢNH BỊ THAY ĐỔI, TIẾN HÀNH XÓA FILE ẢNH CŨ
+                // ====================================================
+                if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != newImageUrl)
+                {
+                    try
+                    {
+                        // Lấy tên file cũ
+                        string oldFileName = oldImageUrl.Substring(oldImageUrl.LastIndexOf('/') + 1);
+
+                        string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        string oldFilePath = Path.Combine(webRootPath, "images", oldFileName);
+
+                        // Nếu file cũ tồn tại thì xóa
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Không thể xóa file ảnh cũ: {ex.Message}");
+                    }
+                }
+
                 return Ok(new { message = "Cập nhật sản phẩm thành công." });
             }
             catch (Exception ex)
@@ -268,7 +325,6 @@ namespace Backend.Controllers
                 });
             }
         }
-
         // =====================================================
         // DELETE: api/san-pham/SP001
         // =====================================================
@@ -282,6 +338,9 @@ namespace Backend.Controllers
             {
                 return NotFound(new { message = "Không tìm thấy sản phẩm." });
             }
+
+            // Giữ lại đường dẫn ảnh trước khi xóa dữ liệu
+            string oldImageUrl = product.HinhAnh;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -302,7 +361,32 @@ namespace Backend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "Xóa sản phẩm thành công." });
+                // ====================================================
+                // XÓA FILE ẢNH VẬT LÝ TRONG THƯ MỤC WWWROOT
+                // ====================================================
+                if (!string.IsNullOrEmpty(oldImageUrl))
+                {
+                    try
+                    {
+                        // Cắt lấy tên file từ chuỗi URL
+                        string fileName = oldImageUrl.Substring(oldImageUrl.LastIndexOf('/') + 1);
+
+                        string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        string filePath = Path.Combine(webRootPath, "images", fileName);
+
+                        // Kiểm tra nếu file tồn tại trên máy thì xóa
+                        if (System.IO.File.Exists(filePath))
+                        {
+                            System.IO.File.Delete(filePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Không thể xóa file ảnh vật lý: {ex.Message}");
+                    }
+                }
+
+                return Ok(new { message = "Xóa sản phẩm và dọn dẹp ảnh thành công." });
             }
             catch (Exception ex)
             {
@@ -315,8 +399,9 @@ namespace Backend.Controllers
                 });
             }
         }
+
         // =====================================================
-        // DTO nhận dữ liệu từ Frontend (Đặt ngoài Controller Class)
+        // DTO nhận dữ liệu từ Frontend
         // =====================================================
         public class SanPhamRequest
         {
