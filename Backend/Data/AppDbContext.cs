@@ -16,5 +16,6 @@ namespace Backend.Data
         public DbSet<MUCDICHSUDUNG> MUCDICHSUDUNG { get; set; }
         public DbSet<VATLIEU> VATLIEU { get; set; }
         public DbSet<NHACUNGCAP> NHACUNGCAP { get; set; }
+        public DbSet<KHACHHANG> KHACHHANG { get; set; }
     }
 }
