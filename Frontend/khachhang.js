@@ -112,13 +112,13 @@ async function deleteKhachHang(maKH) {
                 alert("Không thể xóa khách hàng!");
             }
         } catch (error) {
-            alert("Lỗi kết nối máy chủ!");
+            alert("Không thể kết nối đến máy chủ. Vui lòng thử lại sau!");
         }
     }
 }
 
 // ==========================================
-// 6. LƯU KHÁCH HÀNG (POST / PUT) - LOGIC CỦA TÂN
+// 6. LƯU KHÁCH HÀNG (POST / PUT)
 // ==========================================
 const regexSdt = /^\d{10}$/; // Yêu cầu chính xác 10 chữ số
 
@@ -182,9 +182,32 @@ formKhachHang.addEventListener('submit', async function(event) {
         }
 
     } catch (error) {
-        alert("Lỗi kết nối tới Server. Đảm bảo API đang chạy!");
+        alert("Không thể kết nối đến máy chủ. Vui lòng thử lại sau!");
     } finally {
         btnLuu.disabled = false;
         btnLuu.innerText = isEditModeKH ? "Lưu Thay Đổi" : "Lưu Khách Hàng";
     }
 });
+
+// ==========================================
+// 7. TÌM KIẾM KHÁCH HÀNG (Lọc Client-side toàn bộ trường)
+// ==========================================
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('keyup', function() {
+        const keyword = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#bangKhachHang tr');
+        
+        rows.forEach(row => {
+            // Lấy toàn bộ nội dung text của cả dòng thay vì từng cột lẻ
+            const rowData = row.textContent.toLowerCase();
+            
+            // Ẩn/hiện dòng dựa trên từ khóa tìm kiếm
+            if (rowData.includes(keyword)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}

@@ -43,7 +43,7 @@
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm tên, SĐT khách hàng...">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm tên, SĐT khách hàng...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -92,35 +92,35 @@
                 <form id="khForm">
                     <div class="input-group">
                         <label>Mã Khách Hàng <span style="color:red">*</span></label>
-                        <input type="text" id="maKhachHang" placeholder="Nhập mã (VD: KH01)" required>
+                        <input type="text" id="maKhachHang" placeholder="Nhập mã (VD: KH01)" style="width: 100%; box-sizing: border-box;" required>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
-                        <div class="input-group" style="flex: 1;">
+                        <div class="input-group" style="flex: 1; min-width: 0;">
                             <label>Tên Đăng Nhập</label>
-                            <input type="text" id="tenDangNhap" placeholder="Nhập username...">
+                            <input type="text" id="tenDangNhap" placeholder="Nhập username..." style="width: 100%; box-sizing: border-box;">
                         </div>
-                        <div class="input-group" style="flex: 1;">
+                        <div class="input-group" style="flex: 1; min-width: 0;">
                             <label>Mật Khẩu</label>
-                            <input type="password" id="matKhau" placeholder="Nhập mật khẩu...">
+                            <input type="password" id="matKhau" placeholder="Nhập mật khẩu..." style="width: 100%; box-sizing: border-box;">
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>Họ và Tên <span style="color:red">*</span></label>
-                        <input type="text" id="tenKhachHang" placeholder="Nhập họ tên đầy đủ..." required>
+                        <input type="text" id="tenKhachHang" placeholder="Nhập họ tên đầy đủ..." style="width: 100%; box-sizing: border-box;" required>
                     </div>
 
                     <div class="form-row" style="display: flex; gap: 15px;">
-                        <div class="input-group" style="flex: 1;">
+                        <div class="input-group" style="flex: 1; min-width: 0;">
                             <label>Số Điện Thoại <span style="color:red">*</span></label>
-                            <input type="tel" id="sdtKhachHang" placeholder="Chỉ nhập 10 số (VD: 0912345678)" required>
+                            <input type="tel" id="sdtKhachHang" placeholder="Chỉ nhập 10 số (VD: 0912345678)" style="width: 100%; box-sizing: border-box;" required>
                             <!-- Thẻ báo lỗi HTTP 409 và Regex -->
                             <span id="sdtError" style="color: red; display: none; font-size: 0.9em; margin-top: 5px; font-weight: 500;"></span>
                         </div>
-                        <div class="input-group" style="flex: 1;">
+                        <div class="input-group" style="flex: 1; min-width: 0;">
                             <label>Trạng Thái</label>
-                            <select id="trangThai">
+                            <select id="trangThai" style="width: 100%; box-sizing: border-box;">
                                 <option value="1">Đang hoạt động</option>
                                 <option value="0">Tạm khóa</option>
                             </select>
@@ -129,7 +129,7 @@
 
                     <div class="input-group">
                         <label>Địa Chỉ Liên Hệ</label>
-                        <textarea id="diaChiKhachHang" rows="2" placeholder="Số nhà, tên đường, quận/huyện..."></textarea>
+                        <textarea id="diaChiKhachHang" rows="2" placeholder="Số nhà, tên đường, quận/huyện..." style="width: 100%; box-sizing: border-box;"></textarea>
                     </div>
                 </form>
             </div>
