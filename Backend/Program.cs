@@ -63,7 +63,7 @@ app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseStaticFiles(); // Cho phép truy cập các file tĩnh (như ảnh) từ wwwroot
 app.MapControllers();
 
 app.Run();
