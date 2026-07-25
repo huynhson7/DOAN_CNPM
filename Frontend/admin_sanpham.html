@@ -198,10 +198,20 @@
     </div>
 
     <!-- Script điều khiển Modal -->
+   <!-- Script điều khiển Modal -->
     <script>
         const modalSP = document.getElementById("spModal");
-        function openSpModal() { modalSP.style.display = "flex"; }
-        function closeSpModal() { modalSP.style.display = "none"; }
+        
+        function openSpModal() { 
+            modalSP.style.display = "flex"; 
+        }
+        
+        function closeSpModal() { 
+            modalSP.style.display = "none"; 
+            // Dòng code mới thêm vào: Xóa trắng form và đưa về chế độ Thêm Mới mỗi khi đóng Modal
+            document.getElementById("spForm").reset();
+        }
+        
         window.onclick = function(event) {
             if (event.target === modalSP) closeSpModal();
         }
