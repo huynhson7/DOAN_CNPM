@@ -161,7 +161,9 @@
     border: 1px solid #eee;
     border-radius: 10px;
     overflow-x: auto; /* Lưới an toàn: nếu vẫn tràn thì cuộn ngang trong khung, không đẩy vỡ modal */
+    overflow-y: auto; /* Cuộn dọc bên trong khung khi có nhiều sản phẩm, tránh modal bị giãn cao */
     max-width: 100%;
+    max-height: 260px; /* Giới hạn chiều cao bảng sản phẩm để không đẩy giãn cả 2 form (Tạo/Sửa hóa đơn) */
 }
 
 .small-table {
@@ -187,6 +189,9 @@
     text-align: left;
     white-space: nowrap; /* Không cho tiêu đề cột (VD "XÓA") bị xuống dòng */
     border-bottom: 1.5px solid #eee;
+    position: sticky; /* Giữ tiêu đề cột cố định phía trên khi cuộn dọc trong bảng */
+    top: 0;
+    z-index: 1;
 }
 
 .small-table td {

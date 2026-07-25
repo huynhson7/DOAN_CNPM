@@ -271,7 +271,9 @@ async function taiDanhSachSanPham() {
 // Tải danh sách nhân viên vào <select> để chọn/đổi nhân viên phụ trách hóa đơn.
 // maNVChon: mã nhân viên cần chọn sẵn (khi Sửa hóa đơn); bỏ trống thì mặc định
 // chọn nhân viên đang đăng nhập (khi Tạo mới).
-async function taiDanhSachNhanVien(maNVChon) {
+// tenNVChon: tên nhân viên tương ứng (dùng để hiển thị đúng tên cũ trong trường
+// hợp nhân viên đó không còn nằm trong danh sách nhân viên đang hoạt động).
+async function taiDanhSachNhanVien(maNVChon, tenNVChon) {
     const select = document.getElementById('selectNhanVien');
     try {
         const res = await fetch(API_NHAN_VIEN);
@@ -286,7 +288,26 @@ async function taiDanhSachNhanVien(maNVChon) {
             select.appendChild(option);
         });
 
-        select.value = maNVChon || MA_NV_HIEN_TAI;
+        // So khớp không phân biệt khoảng trắng thừa/hoa-thường để tránh trường hợp
+        // dữ liệu mã nhân viên bị lệch định dạng khiến ô chọn bị rỗng.
+        const maCanChon = (maNVChon || MA_NV_HIEN_TAI || '').trim();
+        const nvKhopTrongDanhSach = dsNV.find(
+            nv => (nv.maNV || '').trim().toLowerCase() === maCanChon.toLowerCase()
+        );
+
+        if (maCanChon && !nvKhopTrongDanhSach) {
+            // Nhân viên đã lập hóa đơn này không còn trong danh sách hiện tại
+            // (VD đã bị khóa/xóa) -> vẫn thêm tạm 1 option để giữ nguyên tên cũ,
+            // thay vì hiển thị trống "-- Chọn Nhân Viên --". Người dùng vẫn có thể
+            // đổi sang nhân viên khác trong danh sách bình thường.
+            const optionCu = document.createElement('option');
+            optionCu.value = maCanChon;
+            optionCu.innerText = tenNVChon ? tenNVChon : maCanChon;
+            select.appendChild(optionCu);
+            select.value = maCanChon;
+        } else {
+            select.value = nvKhopTrongDanhSach ? nvKhopTrongDanhSach.maNV : maCanChon;
+        }
     } catch (error) {
         console.error('Lỗi tải danh sách nhân viên:', error);
         select.innerHTML = '<option value="">-- Không tải được danh sách --</option>';
@@ -307,15 +328,27 @@ async function openEditModal(maHD) {
             return;
         }
 
-        // Tải danh sách KH/SP/NV trước rồi mới điền dữ liệu cũ vào
-        await Promise.all([taiDanhSachKhachHang(), taiDanhSachSanPham(), taiDanhSachNhanVien(hd.nhanVien?.maNV)]);
-
         isEditMode = true;
         maHDDangSua = maHD;
 
+        // QUAN TRỌNG: reset() phải chạy TRƯỚC khi tải danh sách KH/SP/NV và điền
+        // dữ liệu cũ vào. Nếu reset() chạy sau, nó sẽ đưa mọi <select> (kể cả ô
+        // Nhân Viên vừa được chọn) về lại lựa chọn mặc định ban đầu, khiến ô
+        // Nhân Viên bị trống dù đã set đúng giá trị trước đó.
         document.getElementById('createHdForm').reset();
         document.getElementById('createModalTitle').innerHTML = `<i class="fas fa-pen"></i> Sửa Hóa Đơn #${maHD}`;
         document.getElementById('btnLuuHD').innerText = 'Lưu Thay Đổi';
+
+        // Tải danh sách KH/SP/NV rồi mới điền dữ liệu cũ vào (SAU khi đã reset).
+        // Luôn truyền đúng mã + tên nhân viên đã lập hóa đơn này (kể cả khi
+        // nhân viên đó không còn active) để ô "Nhân Viên" hiển thị đúng tên cũ,
+        // nhưng vẫn là <select> bình thường nên người dùng vẫn đổi được nếu muốn.
+        await Promise.all([
+            taiDanhSachKhachHang(),
+            taiDanhSachSanPham(),
+            taiDanhSachNhanVien(hd.nhanVien?.maNV, hd.nhanVien?.tenNV)
+        ]);
+
         document.getElementById('inputNgayLap').value = hd.ngayLapHD ? hd.ngayLapHD.split('T')[0] : '';
         document.getElementById('selectKhachHang').value = hd.khachHang?.maKhachHang ?? '';
 
