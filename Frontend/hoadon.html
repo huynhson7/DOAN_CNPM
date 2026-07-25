@@ -61,19 +61,22 @@
             <!-- Bộ lọc Hóa Đơn -->
             <div class="invoice-filters">
                 <div class="input-group">
-                    <input type="date" title="Từ ngày">
+                    <input type="date" id="filterTuNgay" title="Từ ngày">
                 </div>
                 <div class="input-group">
-                    <input type="date" title="Đến ngày">
+                    <input type="date" id="filterDenNgay" title="Đến ngày">
                 </div>
                 <div class="input-group">
-                    <select>
+                    <select id="filterTrangThai">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="paid">Đã thanh toán</option>
-                        <option value="pending">Chờ thanh toán</option>
+                        <option value="Chờ thanh toán">Chờ thanh toán</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Đã giao hàng">Đã giao hàng</option>
+                        <option value="Đã hủy">Đã hủy</option>
                     </select>
                 </div>
-                <button class="btn-outline"><i class="fas fa-filter"></i> Lọc</button>
+                <button class="btn-outline" id="btnLocHoaDon" type="button"><i class="fas fa-filter"></i> Lọc</button>
+                <button class="btn-outline" id="btnBoLocHoaDon" type="button" title="Xóa bộ lọc"><i class="fas fa-times"></i> Bỏ lọc</button>
             </div>
 
             <!-- Bảng danh sách hóa đơn chính -->
@@ -90,58 +93,8 @@
                             <th>Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>HD-10025</strong></td>
-                            <td>18/07/2026</td>
-                            <td>Trần Quang Khải</td>
-                            <td>Nguyễn Văn Tân</td>
-                            <td class="price-text">24,500,000 đ</td>
-                            <td><span class="status-badge status-paid">Đã thanh toán</span></td>
-                            <td>
-                                <!-- Nút Xem chi tiết -->
-                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <!-- Nút In hóa đơn -->
-                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>HD-10026</strong></td>
-                            <td>18/07/2026</td>
-                            <td>Lê Thị Hoa</td>
-                            <td>Trần Thị Bích</td>
-                            <td class="price-text">8,200,000 đ</td>
-                            <td><span class="status-badge status-pending">Chờ thanh toán</span></td>
-                            <td>
-                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <!-- Dòng demo Đã hủy được thêm vào đây -->
-                        <tr>
-                            <td><strong>HD-10027</strong></td>
-                            <td>19/07/2026</td>
-                            <td>Nguyễn Văn A</td>
-                            <td>Hệ thống</td>
-                            <td class="price-text">15,000,000 đ</td>
-                            <td><span class="status-badge status-cancelled">Đã hủy</span></td>
-                            <td>
-                                <button class="btn-action view" onclick="openHdModal()" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-action print" onclick="openAndPrintHd()" title="Xuất/In hóa đơn">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                            </td>
-                        </tr>
+                    <tbody id="bangHoaDon">
+                        <tr><td colspan="7" style="text-align:center;">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -152,7 +105,7 @@
     <div id="hdModal" class="modal">
         <div class="modal-content modal-large invoice-modal">
             <div class="modal-header hide-on-print">
-                <h3>Chi Tiết Hóa Đơn #HD-10025</h3>
+                <h3 id="hdModalTitle">Chi Tiết Hóa Đơn</h3>
                 <span class="close-btn" onclick="closeHdModal()">&times;</span>
             </div>
             
@@ -168,14 +121,14 @@
                 <!-- Thông tin Master -->
                 <div class="receipt-info-grid">
                     <div class="info-box">
-                        <p><strong>Khách hàng:</strong> Trần Quang Khải</p>
-                        <p><strong>Điện thoại:</strong> 0912 345 678</p>
-                        <p><strong>Địa chỉ:</strong> 45 Lê Lợi, Q.1, TP.HCM</p>
+                        <p><strong>Khách hàng:</strong> <span id="hdKhachHangTen"></span></p>
+                        <p><strong>Điện thoại:</strong> <span id="hdKhachHangDT"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span id="hdKhachHangDiaChi"></span></p>
                     </div>
                     <div class="info-box text-right">
-                        <p><strong>Mã HĐ:</strong> HD-10025</p>
-                        <p><strong>Ngày lập:</strong> 18/07/2026</p>
-                        <p><strong>Nhân viên:</strong> Nguyễn Văn Tân</p>
+                        <p><strong>Mã HĐ:</strong> <span id="hdMaHD"></span></p>
+                        <p><strong>Ngày lập:</strong> <span id="hdNgayLap"></span></p>
+                        <p><strong>Nhân viên:</strong> <span id="hdNhanVien"></span></p>
                     </div>
                 </div>
 
@@ -190,21 +143,7 @@
                             <th class="text-right">Thành Tiền</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Sofa Da Bò Ý Cao Cấp</td>
-                            <td class="text-center">1</td>
-                            <td class="text-right">18,500,000</td>
-                            <td class="text-right">18,500,000</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Bàn Trà Mặt Đá Khung Inox</td>
-                            <td class="text-center">1</td>
-                            <td class="text-right">6,000,000</td>
-                            <td class="text-right">6,000,000</td>
-                        </tr>
+                    <tbody id="hdChiTietBody">
                     </tbody>
                 </table>
 
@@ -212,15 +151,11 @@
                 <div class="receipt-summary">
                     <div class="summary-row">
                         <span>Cộng tiền hàng:</span>
-                        <span>24,500,000 đ</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Chiết khấu (0%):</span>
-                        <span>0 đ</span>
+                        <span id="hdTongTienHang">0 đ</span>
                     </div>
                     <div class="summary-row total-row">
                         <span>TỔNG CỘNG:</span>
-                        <span>24,500,000 đ</span>
+                        <span id="hdTongCong">0 đ</span>
                     </div>
                 </div>
             </div>
@@ -236,7 +171,7 @@
     <div id="createModal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3><i class="fas fa-cart-plus"></i> Lập Hóa Đơn Bán Hàng</h3>
+                <h3 id="createModalTitle"><i class="fas fa-cart-plus"></i> Lập Hóa Đơn Bán Hàng</h3>
                 <span class="close-btn" onclick="closeCreateModal()">&times;</span>
             </div>
             
@@ -249,22 +184,31 @@
                             
                             <div class="input-group">
                                 <label>Khách Hàng <span style="color:red">*</span></label>
-                                <select required>
+                                <select id="selectKhachHang" required>
                                     <option value="">-- Chọn Khách Hàng --</option>
-                                    <option value="KH01">Trần Quang Khải - 0912345678</option>
-                                    <option value="KH02">Lê Thị Hoa - 0988777666</option>
                                 </select>
                             </div>
 
                             <div class="form-row">
                                 <div class="input-group half-width">
                                     <label>Ngày Lập</label>
-                                    <input type="date" value="2026-07-18" readonly style="background-color: #f5f5f5;">
+                                    <input type="date" id="inputNgayLap" readonly style="background-color: #f5f5f5;">
                                 </div>
                                 <div class="input-group half-width">
                                     <label>Nhân Viên</label>
-                                    <input type="text" value="Nguyễn Văn Tân" readonly style="background-color: #f5f5f5;">
+                                    <select id="selectNhanVien">
+                                        <option value="">-- Chọn Nhân Viên --</option>
+                                    </select>
                                 </div>
+                            </div>
+
+                            <div class="input-group" id="groupTrangThai" style="display:none;">
+                                <label>Trạng Thái Đơn Hàng</label>
+                                <select id="selectTrangThai">
+                                    <option value="Chờ thanh toán">Chờ thanh toán</option>
+                                    <option value="Đang xử lý">Đang xử lý</option>
+                                    <option value="Đã giao hàng">Đã giao hàng</option>
+                                </select>
                             </div>
 
                             <div class="input-group">
@@ -279,41 +223,41 @@
                             
                             <!-- Khu vực chọn nhanh sản phẩm -->
                             <div class="add-product-row">
-                                <select class="select-product">
+                                <select id="selectSanPham" class="select-product">
                                     <option value="">-- Chọn SP --</option>
-                                    <option value="SP01">Sofa Da Bò Ý</option>
-                                    <option value="SP02">Bàn Trà Khung Inox</option>
                                 </select>
-                                <input type="number" class="qty-input" placeholder="SL" min="1" value="1">
-                                <button type="button" class="btn-primary btn-add-sp"><i class="fas fa-plus"></i></button>
+                                <input type="number" id="inputSoLuong" class="qty-input" placeholder="SL" min="1" value="1">
+                                <button type="button" class="btn-primary btn-add-sp" onclick="themSanPhamVaoHD()"><i class="fas fa-plus"></i></button>
                             </div>
 
                             <!-- Bảng hiển thị các SP đã chọn -->
                             <div class="selected-products-container">
                                 <table class="data-table small-table">
+                                    <colgroup>
+                                        <col style="width: auto;">
+                                        <col style="width: 76px;">
+                                        <col style="width: 130px;">
+                                        <col style="width: 140px;">
+                                        <col style="width: 60px;">
+                                    </colgroup>
                                     <thead>
                                         <tr>
                                             <th>Tên SP</th>
                                             <th>SL</th>
                                             <th>Đơn Giá</th>
+                                            <th>Thành Tiền</th>
                                             <th>Xóa</th>
                                         </tr>
                                     </thead>
-                                    <!-- Đã sửa lại bảng hiển thị SP được chọn -->
-                                    <tbody>
-                                        <tr>
-                                            <td>Sofa Da Bò Ý</td>
-                                            <td>1</td>
-                                            <td>18,500,000</td>
-                                            <td><button type="button" class="btn-action delete"><i class="fas fa-trash"></i></button></td>
-                                        </tr>
+                                    <tbody id="bangChiTietHD">
+                                        <tr id="hangTrongHD"><td colspan="5" style="text-align:center; color:#999;">Chưa có sản phẩm nào</td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
                             <div class="total-preview">
                                 <span>Tổng Tiền Tạm Tính:</span>
-                                <span class="price-text">18,500,000 đ</span>
+                                <span class="price-text" id="tongTienTamTinh">0 đ</span>
                             </div>
                         </div>
                     </div>
@@ -322,7 +266,7 @@
             
             <div class="modal-footer">
                 <button class="btn-outline" onclick="closeCreateModal()">Hủy Bỏ</button>
-                <button type="submit" form="createHdForm" class="btn-primary" style="width: auto;">Hoàn Tất Tạo HĐ</button>
+                <button type="submit" form="createHdForm" id="btnLuuHD" class="btn-primary" style="width: auto;">Hoàn Tất Tạo HĐ</button>
             </div>
         </div>
     </div>
@@ -331,20 +275,14 @@
     <script>
         // 1. Quản lý Modal In/Xem Chi Tiết Hóa Đơn
         const hdModal = document.getElementById("hdModal");
-        function openHdModal() { hdModal.style.display = "flex"; }
         function closeHdModal() { hdModal.style.display = "none"; }
-
-        // HÀM MỚI: Mở modal và gọi lệnh in ngay lập tức
-        function openAndPrintHd() {
-            openHdModal();
-            setTimeout(function() {
-                window.print(); 
-            }, 300); 
-        }
 
         // 2. Quản lý Modal Tạo Hóa Đơn Mới
         const createModal = document.getElementById("createModal");
-        function openCreateModal() { createModal.style.display = "flex"; }
+        function openCreateModal() {
+            resetFormTaoHoaDon(); // Xem trong hoadon.js: reset giỏ hàng + load lại danh sách KH/SP
+            createModal.style.display = "flex";
+        }
         function closeCreateModal() { createModal.style.display = "none"; }
         
         // Bấm ra ngoài để đóng modal
@@ -356,21 +294,21 @@
 
     <script>
     // Bắt sự kiện gõ phím trên ô tìm kiếm
-    const searchInput = document.querySelector('input[placeholder^="Tìm kiếm"]');
+    const searchInput = document.querySelector('.search-bar input');
     if(searchInput) {
         searchInput.addEventListener('keyup', function() {
             let filter = this.value.toLowerCase();
-            // Lấy tất cả các dòng trong bảng (bỏ qua dòng tiêu đề thead)
-            let rows = document.querySelectorAll('table tbody tr');
-            
+            let rows = document.querySelectorAll('#bangHoaDon tr');
             rows.forEach(row => {
-                // Kiểm tra xem nội dung của dòng có chứa từ khóa không
                 let text = row.textContent.toLowerCase();
                 row.style.display = text.includes(filter) ? '' : 'none';
             });
         });
     }
-</script>
+    </script>
+
+    <!-- LOGIC NGHIỆP VỤ: tải KH/SP, thêm SP vào hóa đơn, tính tiền, gọi API -->
+    <script src="hoadon.js"></script>
 
 </body>
 </html>

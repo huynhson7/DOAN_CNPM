@@ -20,6 +20,8 @@ namespace Backend.Data
         public DbSet<SANPHAM> SANPHAM { get; set; }
         public DbSet<LAMNEN> LAMNEN { get; set; }
         public DbSet<CUNGCAP> CUNGCAP { get; set; }
+        public DbSet<HOADON> HOADON { get; set; }
+        public DbSet<CHITIETHOADON> CHITIETHOADON { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -78,6 +80,39 @@ namespace Backend.Data
                 .WithMany()
                 .HasForeignKey(x => x.MaMD)
                 .HasPrincipalKey(x => x.MaMD)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //=========================================================
+            // CHITIETHOADON (khóa chính kép: MaHD + MaChiTietHD)
+            //=========================================================
+            modelBuilder.Entity<CHITIETHOADON>()
+                .HasKey(x => new { x.MaHD, x.MaChiTietHD });
+
+            modelBuilder.Entity<CHITIETHOADON>()
+                .HasOne(x => x.HoaDon)
+                .WithMany(x => x.ChiTietHoaDons)
+                .HasForeignKey(x => x.MaHD)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CHITIETHOADON>()
+                .HasOne(x => x.SanPham)
+                .WithMany()
+                .HasForeignKey(x => x.MaSP)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //=========================================================
+            // HOADON -> KHACHHANG / NHANVIEN
+            //=========================================================
+            modelBuilder.Entity<HOADON>()
+                .HasOne(x => x.KhachHang)
+                .WithMany()
+                .HasForeignKey(x => x.MaKhachHang)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<HOADON>()
+                .HasOne(x => x.NhanVien)
+                .WithMany()
+                .HasForeignKey(x => x.MaNV)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

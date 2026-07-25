@@ -52,6 +52,215 @@
 .btn-action.print { color: #7f8c8d; }
 .btn-action.print:hover { background-color: #f2f4f4; }
 
+/* Trạng thái "Đang xử lý" - tách riêng khỏi màu "Chờ thanh toán" cho dễ phân biệt */
+.status-processing {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #1565c0;
+}
+
+/* =========================================
+   KHU VỰC THÊM SẢN PHẨM VÀO HÓA ĐƠN (MODAL TẠO/SỬA)
+========================================= */
+
+/* Mở rộng modal Tạo/Sửa hóa đơn để có đủ không gian cho 2 cột thoáng hơn */
+#createModal .modal-large {
+    max-width: 1040px;
+    width: 95%;
+}
+
+/* Tăng khoảng cách giữa cột "Thông Tin Chung" và "Chi Tiết Sản Phẩm" để không bị dính liền */
+#createModal .form-grid {
+    grid-template-columns: 1fr 1.15fr;
+    gap: 55px;
+}
+
+/* Mỗi cột trong form Tạo/Sửa hóa đơn: giữ khoảng cách đều giữa các khối.
+   min-width: 0 là điểm mấu chốt để cột co lại đúng theo khung Grid thay vì
+   bị bảng sản phẩm bên trong đẩy tràn ra ngoài modal (lỗi tràn viền). */
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* Bỏ margin-bottom mặc định của input-group vì đã dùng gap ở trên để dãn đều */
+.form-column .input-group {
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 6px 0;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid #eee;
+}
+
+/* Hàng chọn sản phẩm + số lượng + nút thêm: canh đều, chiều cao đồng bộ */
+.add-product-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 48px;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.select-product,
+.qty-input {
+    height: 46px;
+    padding: 0 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.select-product {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23757575%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 0.6em auto;
+    padding-right: 34px;
+}
+
+.qty-input {
+    text-align: center;
+}
+
+.select-product:focus,
+.qty-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px rgba(188, 152, 126, 0.15);
+}
+
+.btn-add-sp {
+    width: 100%;
+    height: 46px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+/* Bảng danh sách sản phẩm đã chọn trong hóa đơn */
+.selected-products-container {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow-x: auto; /* Lưới an toàn: nếu vẫn tràn thì cuộn ngang trong khung, không đẩy vỡ modal */
+    max-width: 100%;
+}
+
+.small-table {
+    width: 100%;
+    min-width: 520px;
+    table-layout: fixed; /* Cố định độ rộng cột theo colgroup, tránh nội dung dài đẩy tràn bảng */
+    border-collapse: collapse;
+}
+
+.small-table th,
+.small-table td {
+    overflow-wrap: break-word; /* Tên sản phẩm dài sẽ tự xuống dòng gọn gàng thay vì đẩy tràn cột */
+}
+
+.small-table th {
+    background-color: #fafafa;
+    padding: 12px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #666;
+    text-align: left;
+    white-space: nowrap; /* Không cho tiêu đề cột (VD "XÓA") bị xuống dòng */
+    border-bottom: 1.5px solid #eee;
+}
+
+.small-table td {
+    padding: 10px 10px;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f2f2f2;
+    vertical-align: middle;
+}
+
+.small-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Cột SL: căn giữa, đủ chỗ cho ô nhập số lượng không lấn sang cột Đơn Giá */
+.small-table th:nth-child(2),
+.small-table td:nth-child(2) {
+    text-align: center;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* Cột Đơn Giá & Thành Tiền: căn phải cho dễ đọc số tiền, đã được nới rộng ở colgroup */
+.small-table th:nth-child(3),
+.small-table td:nth-child(3),
+.small-table th:nth-child(4),
+.small-table td:nth-child(4) {
+    text-align: right;
+}
+
+/* Cột Xóa: căn giữa, không xuống dòng */
+.small-table th:nth-child(5),
+.small-table td:nth-child(5) {
+    text-align: center;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* Ô nhập số lượng chỉnh sửa trực tiếp trong bảng sản phẩm đã chọn */
+.qty-edit-input {
+    width: 56px;
+    height: 34px;
+    padding: 0 4px;
+    text-align: center;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.qty-edit-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(188, 152, 126, 0.15);
+}
+
+/* Dòng tổng tiền tạm tính */
+.total-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background-color: #faf7f5;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.total-preview .price-text {
+    font-size: 18px;
+}
+
 /* =========================================
    GIAO DIỆN BIÊN LAI BÊN TRONG MODAL
 ========================================= */
