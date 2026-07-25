@@ -157,7 +157,7 @@ async function loadProducts() {
             const trangThaiVal = p.trangThai !== undefined ? p.trangThai : p.TrangThai;
             const statusBadge = trangThaiVal === 1 
                 ? '<span class="badge badge-active" style="white-space: nowrap;">Đang bán</span>' 
-                : '<span class="badge badge-inactive" style="white-space: nowrap;">Ngừng kinh</span>';
+                : '<span class="badge badge-inactive" style="white-space: nowrap;">Ngừng kinh doanh</span>';
             
             const hinhAnhVal = p.hinhAnh || p.HinhAnh;
             
@@ -333,7 +333,9 @@ if (formSanPham) {
             formSanPham.reset(); 
             
             if (typeof closeSpModal === 'function') closeSpModal();
-            loadProducts();
+            
+            // THÊM AWAIT VÀO ĐÂY ĐỂ ĐỢI TẢI XONG DỮ LIỆU RỒI MỚI MỞ NÚT ẤN
+            await loadProducts();
 
         } catch (error) {
             console.error("Lỗi:", error);
@@ -360,7 +362,7 @@ async function deleteProduct(id) {
 
         if (response.ok) {
             alert("Xóa sản phẩm thành công!");
-            loadProducts();
+            await loadProducts(); // Nên thêm await ở đây cho chắc chắn dữ liệu load kịp
         } else {
             const result = await response.json();
             alert(result.message || "Xóa thất bại!");

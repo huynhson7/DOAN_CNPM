@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Backend.Controllers
 {
@@ -56,7 +60,8 @@ namespace Backend.Controllers
         {
             var list = await _context.SANPHAM
                 .AsNoTracking()
-                .OrderBy(x => x.MaSP)
+                .OrderBy(x => x.MaSP.Length)
+                .ThenBy(x => x.MaSP)
                 .ToListAsync();
 
             return Ok(list);
