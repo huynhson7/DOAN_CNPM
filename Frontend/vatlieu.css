@@ -30,3 +30,49 @@
     overflow: hidden;
     text-overflow: ellipsis; 
 }
+
+/* =========================================
+   CSS CHO FORM "THÔNG TIN VẬT LIỆU" (MODAL)
+   (đồng bộ style textarea với input, vì style.css
+   chỉ định nghĩa sẵn .input-group input, chưa có textarea)
+========================================= */
+
+#vlModal .modal-content {
+    max-width: 480px;
+}
+
+#vlModal .input-group {
+    margin-bottom: 18px;
+}
+
+#vlModal .input-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #333;
+    outline: none;
+    resize: vertical;
+    min-height: 90px;
+    max-height: 220px;
+    line-height: 1.5;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+#vlModal .input-group textarea:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px rgba(188, 152, 126, 0.15);
+}
+
+#vlModal .input-group textarea::placeholder {
+    color: #aaa;
+}
+
+/* Input Mã/Tên vật liệu trải full chiều ngang modal cho gọn gàng */
+#vlModal .input-group input {
+    width: 100%;
+    box-sizing: border-box;
+}

@@ -309,6 +309,18 @@
 
     <!-- LOGIC NGHIỆP VỤ: tải KH/SP, thêm SP vào hóa đơn, tính tiền, gọi API -->
     <script src="hoadon.js"></script>
-
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentRole = localStorage.getItem('userRole');
+            
+            // Kiểm tra nếu không phải Admin thì ẩn Menu Nhân Viên
+            if (!currentRole || (!currentRole.toLowerCase().includes('quản trị') && !currentRole.toLowerCase().includes('admin'))) {
+                const menuNhanVien = document.querySelector('a[href="nhanvien.html"]');
+                if (menuNhanVien && menuNhanVien.parentElement) {
+                    menuNhanVien.parentElement.style.display = 'none'; // Ẩn thẻ <li> chứa link
+                }
+            }
+        });
+    </script>
 </body>
 </html>

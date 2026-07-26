@@ -43,7 +43,7 @@
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm tên vật liệu...">
+                <input type="text" id="searchVatLieuInput" placeholder="Tìm kiếm tên vật liệu...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -55,7 +55,7 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Danh Mục Vật Liệu</h2>
-                <button class="btn-primary" onclick="openVlModal()"><i class="fas fa-plus"></i> Thêm Vật Liệu Mới</button>
+                <button class="btn-primary" onclick="openAddVlModal()"><i class="fas fa-plus"></i> Thêm Vật Liệu Mới</button>
             </div>
 
             <!-- Bảng danh sách vật liệu -->
@@ -63,38 +63,16 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">Mã VL</th>
-                            <th style="width: 30%;">Tên Vật Liệu</th>
-                            <th style="width: 40%;">Mô Tả Đặc Tính</th>
-                            <th style="width: 15%; text-align: center;">Thao Tác</th>
+                            <th style="width: 20%;">Mã VL</th>
+                            <th style="width: 55%;">Tên Vật Liệu</th>
+                            <th style="width: 25%; text-align: center;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>VL01</strong></td>
-                            <td><span class="material-name"><i class="fas fa-tree"></i> Gỗ Sồi Tự Nhiên</span></td>
-                            <td class="material-desc">Chống mối mọt tốt, vân gỗ đẹp, màu sáng tự nhiên phù hợp không gian hiện đại.</td>
-                            <td style="text-align: center;">
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>VL02</strong></td>
-                            <td><span class="material-name"><i class="fas fa-paw"></i> Da Bò Ý</span></td>
-                            <td class="material-desc">Da bò nguyên tấm nhập khẩu, bề mặt mềm mịn, độ bền cao, dễ vệ sinh.</td>
-                            <td style="text-align: center;">
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>VL03</strong></td>
-                            <td><span class="material-name"><i class="fas fa-gem"></i> Kính Cường Lực</span></td>
-                            <td class="material-desc">Chịu lực gấp 5 lần kính thường, an toàn khi vỡ, chống xước bề mặt.</td>
-                            <td style="text-align: center;">
-                                <button class="btn-action edit" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <button class="btn-action delete" title="Xóa"><i class="fas fa-trash"></i></button>
+                    <tbody id="vlTableBody">
+                        <tr id="vlNoResultRow" style="display: none;">
+                            <td colspan="3" style="text-align: center; padding: 30px; color: #999;">
+                                <i class="fas fa-box-open" style="margin-right: 8px;"></i>
+                                Không tìm thấy vật liệu phù hợp.
                             </td>
                         </tr>
                     </tbody>
@@ -107,7 +85,7 @@
     <div id="vlModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-cubes"></i> Thông Tin Vật Liệu</h3>
+                <h3 id="vlModalTitle"><i class="fas fa-cubes"></i> Thông Tin Vật Liệu</h3>
                 <span class="close-btn" onclick="closeVlModal()">&times;</span>
             </div>
             
@@ -115,17 +93,17 @@
                 <form id="vlForm">
                     <div class="input-group">
                         <label>Mã Vật Liệu <span style="color:red">*</span></label>
-                        <input type="text" placeholder="VD: VL04" required>
+                        <input type="text" id="vlMaCode" placeholder="VD: VL04" required>
                     </div>
 
                     <div class="input-group">
                         <label>Tên Vật Liệu <span style="color:red">*</span></label>
-                        <input type="text" placeholder="Nhập tên vật liệu..." required>
+                        <input type="text" id="vlTenVL" placeholder="Nhập tên vật liệu..." required>
                     </div>
 
                     <div class="input-group">
                         <label>Đặc Tính / Mô Tả</label>
-                        <textarea rows="4" placeholder="Nhập mô tả về ưu điểm, cách bảo quản..."></textarea>
+                        <textarea id="vlMoTa" rows="4" placeholder="Nhập mô tả về ưu điểm, cách bảo quản..."></textarea>
                     </div>
                 </form>
             </div>
@@ -137,15 +115,6 @@
         </div>
     </div>
 
-    <script>
-        const vlModal = document.getElementById("vlModal");
-
-        function openVlModal() { vlModal.style.display = "flex"; }
-        function closeVlModal() { vlModal.style.display = "none"; }
-        
-        window.onclick = function(event) {
-            if (event.target === vlModal) closeVlModal();
-        }
-    </script>
+    <script src="vatlieu.js"></script>
 </body>
 </html>
