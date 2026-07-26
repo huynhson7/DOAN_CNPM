@@ -48,7 +48,7 @@ namespace Backend.Controllers
 
         // POST: api/vat-lieu
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Create([FromBody] VATLIEU model)
         {
             if (!ModelState.IsValid)
