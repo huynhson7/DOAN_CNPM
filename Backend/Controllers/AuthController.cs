@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Backend.Data;
 
 namespace Backend.Controllers
 {
@@ -11,44 +12,83 @@ namespace Backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly AppDbContext _context;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, AppDbContext context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            // Tạm thời hardcode tài khoản để test JWT trong Sprint 1
-            if (request.Username == "admin" && request.Password == "123456")
+            string userRole = "";
+            string hoTen = "";
+            string maUser = "";
+
+            var nhanVien = _context.NHANVIEN.FirstOrDefault(nv => nv.TenDangNhap == request.Username && nv.MatKhau == request.Password);
+            
+            if (nhanVien != null)
             {
-                var issuer = _configuration["Jwt:Issuer"];
-                var audience = _configuration["Jwt:Audience"];
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
-
-                var tokenDescriptor = new SecurityTokenDescriptor
+                if (nhanVien.TrangThai == 0) 
+                    return Unauthorized(new { message = "Tài khoản nhân viên đã bị khóa hoặc ngừng hoạt động." });
+                
+                userRole = nhanVien.VaiTroKhuVucPhuTrach ?? "Nhân viên"; 
+                hoTen = nhanVien.TenNV;
+                maUser = nhanVien.MaNV;
+            }
+            else
+            {
+                var khachHang = _context.KHACHHANG.FirstOrDefault(kh => kh.TenDangNhap == request.Username && kh.MatKhau == request.Password);
+                
+                if (khachHang != null)
                 {
-                    Subject = new ClaimsIdentity(new[]
-                    {
-                        new Claim("Id", Guid.NewGuid().ToString()),
-                        new Claim(JwtRegisteredClaimNames.Sub, request.Username),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                    }),
-                    Expires = DateTime.UtcNow.AddMinutes(120), // Token có hạn trong 120 phút
-                    Issuer = issuer,
-                    Audience = audience,
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                };
+                    if (khachHang.TrangThai == 0) 
+                        return Unauthorized(new { message = "Tài khoản khách hàng đã bị khóa." });
 
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var jwtToken = tokenHandler.WriteToken(token);
-
-                return Ok(new { token = jwtToken });
+                    userRole = "Khách hàng"; 
+                    hoTen = khachHang.TenKhachHang;
+                    maUser = khachHang.MaKhachHang;
+                }
             }
 
-            return Unauthorized("Tài khoản hoặc mật khẩu không chính xác.");
+            if (string.IsNullOrEmpty(userRole))
+            {
+                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không chính xác!" });
+            }
+
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("Id", maUser),
+                    new Claim(ClaimTypes.NameIdentifier, request.Username),
+                    new Claim(ClaimTypes.Name, hoTen ?? ""),
+                    new Claim(ClaimTypes.Role, userRole),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(120),
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+
+            return Ok(new 
+            { 
+                token = jwtToken,
+                role = userRole,
+                hoTen = hoTen,
+                maUser = maUser
+            });
         }
     }
 

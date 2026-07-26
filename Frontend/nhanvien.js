@@ -1,18 +1,24 @@
+// 0. BẢO MẬT TRUY CẬP (FRONTEND ROUTE GUARD)
+// ==========================================
+(function checkAccess() {
+    const userRole = localStorage.getItem('userRole');
+    // Nếu chưa đăng nhập, hoặc vai trò không chứa chữ "quản trị" / "admin"
+    if (!userRole || (!userRole.toLowerCase().includes('quản trị') && !userRole.toLowerCase().includes('admin'))) {
+        alert("Bạn không có quyền truy cập vào trang Quản lý Nhân Viên!");
+        window.location.href = 'hoadon.html';
+    }
+})();
 // ==========================================
 // 1. CÁC HÀM XỬ LÝ GIAO DIỆN (UI) VÀ TRẠNG THÁI
 // ==========================================
 const nvModal = document.getElementById("nvModal");
-let isEditMode = false; // Biến theo dõi trạng thái đang Thêm hay Sửa
+let isEditMode = false;
 
-// Mở Modal cho chức năng THÊM MỚI
 function openNvModal() { 
     isEditMode = false;
-    document.getElementById('nvForm').reset(); // Xóa sạch dữ liệu cũ
-    
-    // Mở khóa ô Mã NV và đặt lại chữ cho nút
+    document.getElementById('nvForm').reset();
     document.getElementById('maNV').readOnly = false;
     document.querySelector('button[form="nvForm"]').innerText = "Lưu Nhân Viên";
-    
     nvModal.style.display = "flex"; 
 }
 
@@ -26,7 +32,6 @@ window.onclick = function(event) {
     }
 }
 
-// Hàm Ẩn/Hiện mật khẩu
 function togglePassword() {
     const pwdInput = document.getElementById("nvPassword");
     const icon = document.querySelector(".toggle-password");
@@ -46,24 +51,41 @@ function togglePassword() {
 // ==========================================
 const API_NHAN_VIEN = "http://localhost:5129/api/nhan-vien";
 
+// Hàm hỗ trợ lấy Token để gắn vào Header
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
 // ==========================================
 // 3. HÀM LẤY VÀ HIỂN THỊ DANH SÁCH (GET)
 // ==========================================
 async function loadDanhSachNhanVien() {
     try {
-        const response = await fetch(API_NHAN_VIEN);
+        const response = await fetch(API_NHAN_VIEN, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+
+        if (response.status === 401) {
+            alert("Vui lòng đăng nhập để xem danh sách nhân viên!");
+            window.location.href = "login.html";
+            return;
+        }
+
         if (!response.ok) throw new Error("Lỗi mạng khi tải dữ liệu");
         
         const danhSachNV = await response.json();
         const tbody = document.getElementById('bangNhanVien');
-        tbody.innerHTML = ""; // Xóa dữ liệu tĩnh/cũ
+        tbody.innerHTML = ""; 
 
         danhSachNV.forEach(nv => {
-            // Xử lý hiển thị CSS Badge
             let roleClass = nv.vaiTroKhuVucPhuTrach === "Quản lý Cửa hàng" ? "role-manager" : "role-staff";
             let statusClass = nv.trangThaiLamViec === "Đang làm việc" ? "badge-active" : "badge-inactive";
 
-            // Đã đổi icon lock thành trash và gắn sự kiện onclick cho Edit và Delete
             const row = `
                 <tr>
                     <td>${nv.maNV}</td>
@@ -85,7 +107,6 @@ async function loadDanhSachNhanVien() {
     }
 }
 
-// Chạy hàm load danh sách ngay khi trang web tải xong
 document.addEventListener("DOMContentLoaded", loadDanhSachNhanVien);
 
 // ==========================================
@@ -93,21 +114,27 @@ document.addEventListener("DOMContentLoaded", loadDanhSachNhanVien);
 // ==========================================
 async function openEditModal(maNV) {
     try {
-        // Lấy thông tin chi tiết của nhân viên từ Server
-        const response = await fetch(`${API_NHAN_VIEN}/${maNV}`);
+        const response = await fetch(`${API_NHAN_VIEN}/${maNV}`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            alert("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+            return;
+        }
+
         if (!response.ok) throw new Error("Không thể lấy thông tin nhân viên.");
         
         const nv = await response.json();
 
-        // Điền dữ liệu vào form
         document.getElementById('maNV').value = nv.maNV;
-        document.getElementById('maNV').readOnly = true; // Khóa không cho sửa Mã NV
+        document.getElementById('maNV').readOnly = true; 
         
         document.getElementById('tenDangNhap').value = nv.tenDangNhap;
         document.getElementById('nvPassword').value = nv.matKhau;
         document.getElementById('tenNV').value = nv.tenNV;
         
-        // Xử lý chuyển đổi ngày sinh thành định dạng YYYY-MM-DD để đưa vào thẻ input type="date"
         if (nv.ngaySinh) {
             const dateObj = new Date(nv.ngaySinh);
             const year = dateObj.getFullYear();
@@ -122,11 +149,8 @@ async function openEditModal(maNV) {
         document.getElementById('vaiTroKhuVucPhuTrach').value = nv.vaiTroKhuVucPhuTrach;
         document.getElementById('trangThaiLamViec').value = nv.trangThaiLamViec;
 
-        // Chuyển trạng thái sang Cập nhật và đổi chữ trên nút
         isEditMode = true;
         document.querySelector('button[form="nvForm"]').innerText = "Lưu thay đổi";
-        
-        // Mở Modal
         nvModal.style.display = "flex";
     } catch (error) {
         console.error("Lỗi lấy dữ liệu sửa:", error);
@@ -138,18 +162,23 @@ async function openEditModal(maNV) {
 // 5. HÀM XÓA NHÂN VIÊN (DELETE)
 // ==========================================
 async function deleteNhanVien(maNV) {
-    // Hàm confirm mặc định của trình duyệt sẽ hiển thị OK/Cancel (hoặc Có/Hủy tùy ngôn ngữ máy tính)
     const xacNhan = confirm("Bạn có chắc chắn muốn xóa nhân viên này!");
     
     if (xacNhan) {
         try {
             const response = await fetch(`${API_NHAN_VIEN}/${maNV}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: getAuthHeaders()
             });
+
+            if (response.status === 403) {
+                alert("Từ chối truy cập: Chỉ Quản trị hệ thống mới có quyền xóa nhân viên!");
+                return;
+            }
 
             if (response.ok) {
                 alert("Xóa nhân viên thành công!");
-                loadDanhSachNhanVien(); // Tải lại bảng sau khi xóa
+                loadDanhSachNhanVien(); 
             } else {
                 const errorData = await response.json();
                 alert(errorData.message || "Lỗi khi xóa nhân viên");
@@ -167,13 +196,11 @@ async function deleteNhanVien(maNV) {
 const formNhanVien = document.getElementById('nvForm');
 
 formNhanVien.addEventListener('submit', async function(event) {
-    event.preventDefault(); // Chặn tải lại trang
+    event.preventDefault(); 
 
-    // Thu thập ngày sinh và chuyển đổi sang chuẩn ISO
     const dateInput = document.getElementById('ngaySinh').value;
     const ngaySinhISO = new Date(dateInput).toISOString();
 
-    // Gom dữ liệu vào Object
     const payload = {
         maNV: document.getElementById('maNV').value.trim(),
         tenDangNhap: document.getElementById('tenDangNhap').value.trim(),
@@ -185,12 +212,10 @@ formNhanVien.addEventListener('submit', async function(event) {
         diaChiNV: document.getElementById('diaChiNV').value.trim(),
         vaiTroKhuVucPhuTrach: document.getElementById('vaiTroKhuVucPhuTrach').value,
         trangThaiLamViec: document.getElementById('trangThaiLamViec').value,
-        trangThai: 0 // Giá trị mặc định
+        trangThai: 0 
     };
 
     const btnLuu = document.querySelector('button[form="nvForm"]');
-
-    // Xác định URL và Phương thức gọi API dựa trên chế độ Thêm hay Sửa
     const apiUrl = isEditMode ? `${API_NHAN_VIEN}/${payload.maNV}` : API_NHAN_VIEN;
     const apiMethod = isEditMode ? 'PUT' : 'POST';
 
@@ -200,11 +225,14 @@ formNhanVien.addEventListener('submit', async function(event) {
 
         const response = await fetch(apiUrl, {
             method: apiMethod,
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(payload)
         });
+
+        if (response.status === 403) {
+            alert("Từ chối truy cập: Chỉ Quản trị hệ thống mới có quyền Thêm/Sửa nhân viên!");
+            return;
+        }
 
         if (response.ok) {
             alert(isEditMode ? "Cập nhật hồ sơ nhân viên thành công!" : "Thêm hồ sơ nhân viên thành công!");
@@ -219,7 +247,6 @@ formNhanVien.addEventListener('submit', async function(event) {
         console.error("Lỗi gửi dữ liệu:", error);
         alert("Lỗi kết nối tới Server. Hãy đảm bảo API đang chạy!");
     } finally {
-        // Phục hồi lại trạng thái nút bấm
         btnLuu.disabled = false;
         btnLuu.innerText = isEditMode ? "Lưu thay đổi" : "Lưu Nhân Viên";
     }
