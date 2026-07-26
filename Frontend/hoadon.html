@@ -12,6 +12,44 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* TÙY CHỈNH KÍCH THƯỚC VÀ THANH CUỘN CHO PROFILE MODAL */
+        #profileModal .modal-content {
+            width: 650px; 
+            max-width: 95%;
+            max-height: 85vh; 
+            display: flex;
+            flex-direction: column;
+        }
+        #profileModal .modal-body {
+            overflow-y: auto; 
+            padding-right: 15px; 
+        }
+        #profileModal .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        #profileModal .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        #profileModal .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 8px;
+        }
+        #profileModal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        #profileModal .input-group {
+            margin-bottom: 16px;
+        }
+        #profileModal .input-group input, 
+        #profileModal .input-group select {
+            padding: 10px 12px; 
+            font-size: 14px;
+            border-radius: 6px; 
+        }
+    </style>
 </head>
 <body class="admin-body">
 
@@ -35,6 +73,13 @@
             <li><a href="hoadon.html" class="active"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
             <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
             <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+            
+            <!-- Canh chỉnh margin-top: 85px để nút vừa đụng mí dưới màn hình -->
+            <li style="margin-top: 85px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+                <a href="#" onclick="dangXuatHethong(event)" style="color: #dc3545; font-weight: 600; font-size: 16px; display: flex; align-items: center;">
+                    <i class="fas fa-sign-out-alt" style="font-size: 18px; margin-right: 10px;"></i> Đăng xuất
+                </a>
+            </li>
         </ul>
     </aside>
 
@@ -45,9 +90,9 @@
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Tìm mã hóa đơn, tên khách hàng...">
             </div>
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
-                <span>Quản trị viên</span>
+            <div class="user-profile" onclick="openProfileModal()" style="cursor: pointer;" title="Cập nhật thông tin cá nhân">
+                <img id="headerUserIcon" src="https://ui-avatars.com/api/?name=User&background=1a1a1a&color=fff" alt="User">
+                <span id="headerUserName">Đang tải...</span>
             </div>
         </header>
 
@@ -101,7 +146,7 @@
         </div>
     </main>
 
-    <!-- MODAL 1: CHI TIẾT VÀ IN HÓA ĐƠN (Đã được khôi phục) -->
+    <!-- MODAL 1: CHI TIẾT VÀ IN HÓA ĐƠN -->
     <div id="hdModal" class="modal">
         <div class="modal-content modal-large invoice-modal">
             <div class="modal-header hide-on-print">
@@ -110,7 +155,6 @@
             </div>
             
             <div class="modal-body print-area">
-                <!-- Tiêu đề tờ hóa đơn -->
                 <div class="receipt-header">
                     <div class="receipt-logo">LUXURY<span>FURNITURE</span></div>
                     <p>Địa chỉ: 123 Đường Nội Thất, Quận 1, TP.HCM</p>
@@ -118,7 +162,6 @@
                     <h2 class="receipt-title">HÓA ĐƠN BÁN HÀNG</h2>
                 </div>
 
-                <!-- Thông tin Master -->
                 <div class="receipt-info-grid">
                     <div class="info-box">
                         <p><strong>Khách hàng:</strong> <span id="hdKhachHangTen"></span></p>
@@ -132,7 +175,6 @@
                     </div>
                 </div>
 
-                <!-- Thông tin Detail (Danh sách sản phẩm) -->
                 <table class="receipt-table">
                     <thead>
                         <tr>
@@ -147,7 +189,6 @@
                     </tbody>
                 </table>
 
-                <!-- Tổng kết tiền -->
                 <div class="receipt-summary">
                     <div class="summary-row">
                         <span>Cộng tiền hàng:</span>
@@ -178,7 +219,6 @@
             <div class="modal-body">
                 <form id="createHdForm">
                     <div class="form-grid">
-                        <!-- Cột 1: Thông tin chung -->
                         <div class="form-column">
                             <h4 class="form-section-title"><i class="fas fa-info-circle"></i> Thông Tin Chung</h4>
                             
@@ -217,11 +257,9 @@
                             </div>
                         </div>
 
-                        <!-- Cột 2: Chi tiết hóa đơn -->
                         <div class="form-column">
                             <h4 class="form-section-title"><i class="fas fa-couch"></i> Chi Tiết Sản Phẩm</h4>
                             
-                            <!-- Khu vực chọn nhanh sản phẩm -->
                             <div class="add-product-row">
                                 <select id="selectSanPham" class="select-product">
                                     <option value="">-- Chọn SP --</option>
@@ -230,7 +268,6 @@
                                 <button type="button" class="btn-primary btn-add-sp" onclick="themSanPhamVaoHD()"><i class="fas fa-plus"></i></button>
                             </div>
 
-                            <!-- Bảng hiển thị các SP đã chọn -->
                             <div class="selected-products-container">
                                 <table class="data-table small-table">
                                     <colgroup>
@@ -271,29 +308,139 @@
         </div>
     </div>
 
-    <!-- SCRIPT ĐIỀU KHIỂN CẢ 2 MODAL -->
+    <!-- MODAL 3: CẬP NHẬT THÔNG TIN CÁ NHÂN -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Thông Tin Cá Nhân</h3>
+                <span class="close-btn" onclick="closeProfileModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-row">
+                        <div class="input-group half-width">
+                            <label>Mã NV (Khóa)</label>
+                            <input type="text" id="profMaNV" readonly style="background-color: #f5f5f5;">
+                        </div>
+                        <div class="input-group half-width">
+                            <label>Tên Đăng Nhập</label>
+                            <input type="text" id="profTenDangNhap" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="input-group half-width">
+                            <label>Họ và Tên</label>
+                            <input type="text" id="profTenNV" required>
+                        </div>
+                        <div class="input-group half-width">
+                            <label>Mật Khẩu</label>
+                            <input type="password" id="profMatKhau" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="input-group half-width">
+                            <label>Ngày Sinh</label>
+                            <input type="date" id="profNgaySinh" required>
+                        </div>
+                        <div class="input-group half-width">
+                            <label>Giới Tính</label>
+                            <select id="profGioiTinh" required>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Số Điện Thoại</label>
+                        <input type="tel" id="profSoDT" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Địa Chỉ</label>
+                        <input type="text" id="profDiaChi" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Vai Trò / Khu Vực (Khóa)</label>
+                        <input type="text" id="profVaiTro" readonly style="background-color: #f5f5f5;">
+                    </div>
+                    <div class="form-row">
+                        <div class="input-group half-width">
+                            <label>Trạng Thái LV (Khóa)</label>
+                            <input type="text" id="profTrangThaiLV" readonly style="background-color: #f5f5f5;">
+                        </div>
+                        <div class="input-group half-width">
+                            <label>Trạng Thái (Khóa)</label>
+                            <input type="text" id="profTrangThai" readonly style="background-color: #f5f5f5;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" type="button" onclick="closeProfileModal()">Hủy Bỏ</button>
+                <button type="submit" form="profileForm" class="btn-primary">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ĐIỀU KHIỂN CÁC MODAL -->
     <script>
-        // 1. Quản lý Modal In/Xem Chi Tiết Hóa Đơn
         const hdModal = document.getElementById("hdModal");
         function closeHdModal() { hdModal.style.display = "none"; }
 
-        // 2. Quản lý Modal Tạo Hóa Đơn Mới
         const createModal = document.getElementById("createModal");
         function openCreateModal() {
-            resetFormTaoHoaDon(); // Xem trong hoadon.js: reset giỏ hàng + load lại danh sách KH/SP
+            if(typeof resetFormTaoHoaDon === 'function') resetFormTaoHoaDon();
             createModal.style.display = "flex";
         }
         function closeCreateModal() { createModal.style.display = "none"; }
+
+        const profileModal = document.getElementById("profileModal");
+        function openProfileModal() {
+            const loggedInUserId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+            if(!loggedInUserId) {
+                alert("Không tìm thấy thông tin đăng nhập!"); return;
+            }
+
+            fetch(`http://localhost:5129/api/nhan-vien/${loggedInUserId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('profMaNV').value = data.maNV;
+                document.getElementById('profTenDangNhap').value = data.tenDangNhap;
+                document.getElementById('profMatKhau').value = data.matKhau;
+                document.getElementById('profTenNV').value = data.tenNV;
+                document.getElementById('profNgaySinh').value = data.ngaySinh ? data.ngaySinh.split('T')[0] : '';
+                document.getElementById('profGioiTinh').value = data.gioiTinh;
+                document.getElementById('profSoDT').value = data.soDT;
+                document.getElementById('profDiaChi').value = data.diaChiNV;
+                document.getElementById('profVaiTro').value = data.vaiTroKhuVucPhuTrach;
+                document.getElementById('profTrangThaiLV').value = data.trangThaiLamViec;
+                document.getElementById('profTrangThai').value = data.trangThai;
+                
+                profileModal.style.display = "flex";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Không thể tải thông tin cá nhân.");
+            });
+        }
+        function closeProfileModal() { profileModal.style.display = "none"; }
         
-        // Bấm ra ngoài để đóng modal
         window.onclick = function(event) {
             if (event.target === hdModal) closeHdModal();
             if (event.target === createModal) closeCreateModal();
+            if (event.target === profileModal) closeProfileModal();
         }
     </script>
 
     <script>
-    // Bắt sự kiện gõ phím trên ô tìm kiếm
     const searchInput = document.querySelector('.search-bar input');
     if(searchInput) {
         searchInput.addEventListener('keyup', function() {
@@ -307,20 +454,76 @@
     }
     </script>
 
-    <!-- LOGIC NGHIỆP VỤ: tải KH/SP, thêm SP vào hóa đơn, tính tiền, gọi API -->
+    <!-- LOGIC NGHIỆP VỤ -->
     <script src="hoadon.js"></script>
+    
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            const currentHoTen = localStorage.getItem('hoTen') || 'User';
+            document.getElementById('headerUserName').innerText = `Xin chào, ${currentHoTen}!`;
+            document.getElementById('headerUserIcon').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentHoTen)}&background=1a1a1a&color=fff`;
+
             const currentRole = localStorage.getItem('userRole');
-            
-            // Kiểm tra nếu không phải Admin thì ẩn Menu Nhân Viên
             if (!currentRole || (!currentRole.toLowerCase().includes('quản trị') && !currentRole.toLowerCase().includes('admin'))) {
                 const menuNhanVien = document.querySelector('a[href="nhanvien.html"]');
                 if (menuNhanVien && menuNhanVien.parentElement) {
-                    menuNhanVien.parentElement.style.display = 'none'; // Ẩn thẻ <li> chứa link
+                    menuNhanVien.parentElement.style.display = 'none';
                 }
             }
         });
+
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const loggedInUserId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+            
+            const updatedData = {
+                maNV: document.getElementById('profMaNV').value,
+                tenDangNhap: document.getElementById('profTenDangNhap').value,
+                matKhau: document.getElementById('profMatKhau').value,
+                tenNV: document.getElementById('profTenNV').value,
+                ngaySinh: document.getElementById('profNgaySinh').value,
+                gioiTinh: document.getElementById('profGioiTinh').value,
+                soDT: document.getElementById('profSoDT').value,
+                diaChiNV: document.getElementById('profDiaChi').value,
+                vaiTroKhuVucPhuTrach: document.getElementById('profVaiTro').value,
+                trangThaiLamViec: document.getElementById('profTrangThaiLV').value,
+                trangThai: document.getElementById('profTrangThai').value
+            };
+
+            fetch(`http://localhost:5129/api/nhan-vien/profile/${loggedInUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(async res => {
+                const result = await res.json();
+                if(res.ok) {
+                    alert("Cập nhật thông tin thành công!");
+                    localStorage.setItem('hoTen', updatedData.tenNV);
+                    document.getElementById('headerUserName').innerText = `Xin chào, ${updatedData.tenNV}!`;
+                    document.getElementById('headerUserIcon').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedData.tenNV)}&background=1a1a1a&color=fff`;
+                    closeProfileModal();
+                } else {
+                    alert(result.message || "Lỗi cập nhật!");
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi:", err);
+                alert("Không thể kết nối đến máy chủ.");
+            });
+        });
+    </script>
+    <script>
+        function dangXuatHethong(event) {
+            event.preventDefault(); 
+            // Đã xóa hộp thoại xác nhận (confirm), đăng xuất sẽ diễn ra ngay lập tức
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
     </script>
 </body>
 </html>

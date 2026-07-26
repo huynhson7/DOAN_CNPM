@@ -140,6 +140,46 @@ namespace Backend.Controllers
             });
         }
 
+        // ---------------- THÊM MỚI TẠI ĐÂY ----------------
+        // PUT: api/nhan-vien/profile/NV001
+        [HttpPut("profile/{id}")]
+        [Authorize] // Bất kỳ ai đăng nhập cũng được gọi, nhưng chỉ sửa thông tin của mình
+        public async Task<IActionResult> UpdateProfile(string id, [FromBody] NHANVIEN model)
+        {
+            if (id != model.MaNV)
+            {
+                return BadRequest(new { message = "Mã nhân viên không khớp." });
+            }
+
+            var employee = await _context.NHANVIEN.FindAsync(id);
+            if (employee == null)
+            {
+                return NotFound(new { message = "Không tìm thấy nhân viên." });
+            }
+
+            bool tenDangNhapTonTai = await _context.NHANVIEN
+                .AnyAsync(x => x.TenDangNhap == model.TenDangNhap && x.MaNV != id);
+
+            if (tenDangNhapTonTai)
+            {
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại." });
+            }
+
+            // CHỈ CẬP NHẬT CÁC TRƯỜNG CHO PHÉP (Bỏ qua VaiTro, TrangThai, TrangThaiLamViec)
+            employee.TenDangNhap = model.TenDangNhap;
+            employee.MatKhau = model.MatKhau;
+            employee.TenNV = model.TenNV;
+            employee.NgaySinh = model.NgaySinh;
+            employee.GioiTinh = model.GioiTinh;
+            employee.SoDT = model.SoDT;
+            employee.DiaChiNV = model.DiaChiNV;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật thông tin cá nhân thành công." });
+        }
+        // ---------------- KẾT THÚC THÊM MỚI ----------------
+
         // DELETE: api/nhan-vien/NV001
         [HttpDelete("{id}")]
         [Authorize(Roles = "Quản trị Hệ thống")] // Chỉ tài khoản Quản trị mới được Xóa
