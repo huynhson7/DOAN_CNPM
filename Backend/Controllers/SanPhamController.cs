@@ -54,15 +54,46 @@ namespace Backend.Controllers
 
         // =====================================================
         // GET: api/san-pham
+        // GET: api/san-pham?chiHoatDong=true
+        //
+        // Ghi chú quan trọng:
+        // - Endpoint này đang được trang Quản trị (admin_sanpham.js) dùng để
+        //   liệt kê TẤT CẢ sản phẩm (kể cả ngừng kinh doanh) nhằm quản lý.
+        // - Để KHÔNG phá vỡ chức năng Quản trị, hành vi mặc định (không truyền
+        //   tham số) được giữ NGUYÊN 100% như cũ.
+        // - Khi truyền chiHoatDong=true (dùng cho trang Cửa hàng - sanpham.html),
+        //   API sẽ chỉ trả sản phẩm đang hoạt động (TrangThai = 1) và sắp xếp
+        //   theo tên sản phẩm.
+        // - Include() được thêm vào TẤT CẢ các trường hợp để trả kèm tên Nhóm
+        //   sản phẩm / Mục đích sử dụng / Vật liệu. Đây chỉ là dữ liệu BỔ SUNG
+        //   (thêm field lồng nhau trong JSON), không đổi/xoá field cũ, nên
+        //   không ảnh hưởng tới code Admin đang đọc các field cũ.
         // =====================================================
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] bool? chiHoatDong)
         {
-            var list = await _context.SANPHAM
+            var query = _context.SANPHAM
                 .AsNoTracking()
-                .OrderBy(x => x.MaSP.Length)
-                .ThenBy(x => x.MaSP)
-                .ToListAsync();
+                .Include(x => x.NhomSanPham)
+                .Include(x => x.MucDichSuDung)
+                .Include(x => x.LamNens)
+                    .ThenInclude(l => l.VatLieu)
+                .AsQueryable();
+
+            if (chiHoatDong == true)
+            {
+                // Dùng cho trang Cửa hàng: chỉ hiển thị sản phẩm còn hoạt động
+                query = query.Where(x => x.TrangThai == 1)
+                             .OrderBy(x => x.TenSP);
+            }
+            else
+            {
+                // Giữ nguyên thứ tự cũ để không ảnh hưởng trang Quản trị
+                query = query.OrderBy(x => x.MaSP.Length)
+                             .ThenBy(x => x.MaSP);
+            }
+
+            var list = await query.ToListAsync();
 
             return Ok(list);
         }
@@ -73,8 +104,16 @@ namespace Backend.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
+            // Include Nhóm sản phẩm / Mục đích sử dụng / Vật liệu để trang
+            // chi tiết sản phẩm (chitiet-sanpham.html) có tên hiển thị.
+            // Đây là field BỔ SUNG, không đổi/xoá field cũ nên không ảnh
+            // hưởng tới form Sửa sản phẩm bên trang Quản trị.
             var item = await _context.SANPHAM
                 .AsNoTracking()
+                .Include(x => x.NhomSanPham)
+                .Include(x => x.MucDichSuDung)
+                .Include(x => x.LamNens)
+                    .ThenInclude(l => l.VatLieu)
                 .FirstOrDefaultAsync(x => x.MaSP == id);
 
             if (item == null)
@@ -92,7 +131,7 @@ namespace Backend.Controllers
         // POST: api/san-pham
         // =====================================================
         [HttpPost]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] SanPhamRequest request)
         {
             if (!ModelState.IsValid || request?.SanPham == null)
@@ -206,7 +245,7 @@ namespace Backend.Controllers
         // PUT: api/san-pham/SP001
         // =====================================================
         [HttpPut("{id}")]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(string id, [FromBody] SanPhamRequest request)
         {
             if (request?.SanPham == null || id != request.SanPham.MaSP)
@@ -334,7 +373,7 @@ namespace Backend.Controllers
         // DELETE: api/san-pham/SP001
         // =====================================================
         [HttpDelete("{id}")]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(string id)
         {
             var product = await _context.SANPHAM.FindAsync(id);
