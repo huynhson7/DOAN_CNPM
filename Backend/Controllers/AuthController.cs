@@ -66,8 +66,12 @@ namespace Backend.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim("Id", maUser),
-                    new Claim(ClaimTypes.NameIdentifier, request.Username),
+                    // Đã sửa: Truyền maUser (Mã NV) vào đúng chuẩn NameIdentifier để hệ thống đọc được
+                    new Claim(ClaimTypes.NameIdentifier, maUser),
+                    
+                    // Đã sửa: Lưu tên đăng nhập vào claim "Username" thay vì NameIdentifier
+                    new Claim("Username", request.Username),
+                    
                     new Claim(ClaimTypes.Name, hoTen ?? ""),
                     new Claim(ClaimTypes.Role, userRole),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())

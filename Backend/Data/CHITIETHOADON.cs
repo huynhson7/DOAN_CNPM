@@ -26,8 +26,8 @@ namespace Backend.Data
         [Column(TypeName = "decimal(18,2)")]
         public decimal? ThanhTien { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal? GiamGia { get; set; }
+        [StringLength(255)]
+        public string? MoTa { get; set; }
 
         //---------------------------------------
         // Navigation

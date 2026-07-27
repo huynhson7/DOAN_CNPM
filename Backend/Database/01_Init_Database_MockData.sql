@@ -602,3 +602,25 @@ UPDATE SANPHAM SET MoTa = N'Tủ giày cánh lật 3 tầng sức chứa 15 đô
 UPDATE SANPHAM SET MoTa = N'Kệ tab nhỏ 2 ngăn kéo để đèn ngủ và điện thoại.' WHERE MaSP = 'SP49';
 UPDATE SANPHAM SET MoTa = N'Thiết kế xương cá ziczac tối ưu diện tích lưu trữ.' WHERE MaSP = 'SP50';
 GO
+
+
+
+USE HTQLCHBNT;
+GO
+
+-- Bước 1: Đổi tên cột GiamGia thành MoTa
+EXEC sp_rename 'CHITIETHOADON.GiamGia', 'MoTa', 'COLUMN';
+GO
+
+-- Bước 2: Đổi kiểu dữ liệu cột MoTa từ decimal(5,2) sang nvarchar(255)
+ALTER TABLE CHITIETHOADON
+ALTER COLUMN MoTa nvarchar(255) NULL;
+GO
+
+-- Bước 3: Cập nhật dữ liệu MoTa từ DiaChiKhachHang của bảng KHACHHANG
+UPDATE CTHD
+SET CTHD.MoTa = KH.DiaChiKhachHang
+FROM CHITIETHOADON CTHD
+INNER JOIN HOADON HD ON CTHD.MaHD = HD.MaHD
+INNER JOIN KHACHHANG KH ON HD.MaKhachHang = KH.MaKhachHang;
+GO

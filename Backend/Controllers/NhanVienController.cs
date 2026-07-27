@@ -88,6 +88,7 @@ namespace Backend.Controllers
         }
 
         // PUT: api/nhan-vien/NV001
+       // PUT: api/nhan-vien/NV001
         [HttpPut("{id}")]
         [Authorize(Roles = "Quản trị Hệ thống")] // Chỉ tài khoản Quản trị mới được Sửa
         public async Task<IActionResult> Update(string id, [FromBody] NHANVIEN model)
@@ -121,6 +122,7 @@ namespace Backend.Controllers
                 });
             }
 
+            // Cập nhật các thông tin cơ bản
             employee.TenDangNhap = model.TenDangNhap;
             employee.MatKhau = model.MatKhau;
             employee.TenNV = model.TenNV;
@@ -128,9 +130,16 @@ namespace Backend.Controllers
             employee.GioiTinh = model.GioiTinh;
             employee.SoDT = model.SoDT;
             employee.DiaChiNV = model.DiaChiNV;
-            employee.VaiTroKhuVucPhuTrach = model.VaiTroKhuVucPhuTrach;
-            employee.TrangThaiLamViec = model.TrangThaiLamViec;
-            employee.TrangThai = model.TrangThai;
+            
+            // Nếu form có gửi VaiTro lên thì mới cập nhật, không thì giữ nguyên
+            if (!string.IsNullOrEmpty(model.VaiTroKhuVucPhuTrach))
+            {
+                employee.VaiTroKhuVucPhuTrach = model.VaiTroKhuVucPhuTrach;
+            }
+
+            // BỎ GÁN ĐÈ TRẠNG THÁI:
+            // employee.TrangThaiLamViec = model.TrangThaiLamViec; 
+            // employee.TrangThai = model.TrangThai;
 
             await _context.SaveChangesAsync();
 
@@ -139,6 +148,7 @@ namespace Backend.Controllers
                 message = "Cập nhật nhân viên thành công."
             });
         }
+        
 
         // ---------------- THÊM MỚI TẠI ĐÂY ----------------
         // PUT: api/nhan-vien/profile/NV001
