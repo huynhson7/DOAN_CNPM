@@ -137,9 +137,16 @@ namespace Backend.Controllers
                 employee.VaiTroKhuVucPhuTrach = model.VaiTroKhuVucPhuTrach;
             }
 
-            // BỎ GÁN ĐÈ TRẠNG THÁI:
-            // employee.TrangThaiLamViec = model.TrangThaiLamViec; 
-            // employee.TrangThai = model.TrangThai;
+            // Cập nhật trạng thái làm việc (Đang làm việc / Đã nghỉ việc)
+            if (!string.IsNullOrEmpty(model.TrangThaiLamViec))
+            {
+                employee.TrangThaiLamViec = model.TrangThaiLamViec;
+            }
+
+            if (model.TrangThai.HasValue)
+            {
+                employee.TrangThai = model.TrangThai;
+            }
 
             await _context.SaveChangesAsync();
 
