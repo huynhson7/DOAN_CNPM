@@ -46,7 +46,7 @@ namespace Backend.Controllers
 
         // POST: api/nhom-san-pham
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Create([FromBody] NHOMSANPHAM model)
         {
             if (!ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace Backend.Controllers
 
         // PUT: api/nhom-san-pham/NSP001
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Update(string id, [FromBody] NHOMSANPHAM model)
         {
             if (id != model.MaNhomSP)
@@ -131,7 +131,7 @@ namespace Backend.Controllers
 
         // DELETE: api/nhom-san-pham/NSP001
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Delete(string id)
         {
             var group = await _context.NHOMSANPHAM.FindAsync(id);

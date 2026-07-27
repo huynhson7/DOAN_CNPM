@@ -1,18 +1,35 @@
 // ==========================================
+// THÔNG TIN BẢO MẬT & TRẠNG THÁI
+// ==========================================
+const token = localStorage.getItem('token');
+const userRole = localStorage.getItem('role') || localStorage.getItem('userRole');
+
+// Chuyển hướng về trang đăng nhập nếu chưa có token
+if (!token) {
+    alert("Vui lòng đăng nhập để truy cập!");
+    window.location.href = "login.html"; // Thay đổi tên file login của bạn nếu khác
+}
+
+// Ẩn nút "Thêm mới" nếu là NV Bán Hàng
+document.addEventListener("DOMContentLoaded", () => {
+    if (userRole !== "Quản trị Hệ thống") {
+        const btnThem = document.querySelector('button[onclick="openNccModal()"]');
+        if (btnThem) btnThem.style.display = 'none';
+    }
+    loadDanhSachNhaCungCap();
+});
+
+// ==========================================
 // 1. CÁC HÀM XỬ LÝ GIAO DIỆN (UI) VÀ TRẠNG THÁI
 // ==========================================
 const nccModal = document.getElementById("nccModal");
-let isEditMode = false; // Biến theo dõi trạng thái đang Thêm hay Sửa
+let isEditMode = false;
 
-// Mở Modal cho chức năng THÊM MỚI
 function openNccModal() {
     isEditMode = false;
-    document.getElementById('nccForm').reset(); // Xóa sạch dữ liệu cũ
-
-    // Mở khóa ô Mã NCC và đặt lại chữ cho nút
+    document.getElementById('nccForm').reset();
     document.getElementById('maNCC').readOnly = false;
     document.querySelector('button[form="nccForm"]').innerText = "Lưu Nhà Cung Cấp";
-
     nccModal.style.display = "flex";
 }
 
@@ -21,9 +38,7 @@ function closeNccModal() {
 }
 
 window.onclick = function (event) {
-    if (event.target === nccModal) {
-        closeNccModal();
-    }
+    if (event.target === nccModal) closeNccModal();
 }
 
 // ==========================================
@@ -36,23 +51,39 @@ const API_NHA_CUNG_CAP = "http://localhost:5129/api/nha-cung-cap";
 // ==========================================
 async function loadDanhSachNhaCungCap() {
     try {
-        const response = await fetch(API_NHA_CUNG_CAP);
+        const response = await fetch(API_NHA_CUNG_CAP, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 403) {
+            alert("Bạn không có quyền xem dữ liệu này!");
+            return;
+        }
+
         if (!response.ok) throw new Error("Lỗi mạng khi tải dữ liệu");
 
         const danhSachNCC = await response.json();
         const tbody = document.getElementById('bangNhaCungCap');
-        tbody.innerHTML = ""; // Xóa dữ liệu cũ
+        tbody.innerHTML = "";
 
         danhSachNCC.forEach(ncc => {
+            // Kiểm tra phân quyền để render cột thao tác
+            let rowActions = '';
+            if (userRole === "Quản trị Hệ thống") {
+                rowActions = `
+                    <button class="btn-action edit" title="Sửa" onclick="openEditModal('${ncc.maNcc}')"><i class="fas fa-pen"></i></button>
+                    <button class="btn-action delete" title="Xóa" onclick="deleteNhaCungCap('${ncc.maNcc}')"><i class="fas fa-trash"></i></button>
+                `;
+            } else {
+                rowActions = `<span style="color:#999; font-size:13px; font-style:italic;">Chỉ xem</span>`;
+            }
+
             const row = `
                 <tr>
                     <td>${ncc.maNcc}</td>
                     <td>${ncc.tenNcc}</td>
                     <td>${ncc.moTaNcc || ''}</td>
-                    <td>
-                        <button class="btn-action edit" title="Sửa" onclick="openEditModal('${ncc.maNcc}')"><i class="fas fa-pen"></i></button>
-                        <button class="btn-action delete" title="Xóa" onclick="deleteNhaCungCap('${ncc.maNcc}')"><i class="fas fa-trash"></i></button>
-                    </td>
+                    <td>${rowActions}</td>
                 </tr>
             `;
             tbody.innerHTML += row;
@@ -63,32 +94,26 @@ async function loadDanhSachNhaCungCap() {
     }
 }
 
-// Chạy hàm load danh sách ngay khi trang web tải xong
-document.addEventListener("DOMContentLoaded", loadDanhSachNhaCungCap);
-
 // ==========================================
 // 4. HÀM MỞ MODAL ĐỂ SỬA NHÀ CUNG CẤP (GET BY ID)
 // ==========================================
 async function openEditModal(maNcc) {
     try {
-        // Lấy thông tin chi tiết từ Server
-        const response = await fetch(`${API_NHA_CUNG_CAP}/${maNcc}`);
+        const response = await fetch(`${API_NHA_CUNG_CAP}/${maNcc}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
         if (!response.ok) throw new Error("Không thể lấy thông tin nhà cung cấp.");
 
         const ncc = await response.json();
 
-        // Điền dữ liệu vào form (Lưu ý: Map chính xác với thuộc tính từ API trả về)
         document.getElementById('maNCC').value = ncc.maNcc;
-        document.getElementById('maNCC').readOnly = true; // Khóa không cho sửa Mã NCC
-
+        document.getElementById('maNCC').readOnly = true;
         document.getElementById('tenNCC').value = ncc.tenNcc;
         document.getElementById('moTaNCC').value = ncc.moTaNcc || '';
 
-        // Chuyển trạng thái sang Cập nhật và đổi chữ trên nút
         isEditMode = true;
         document.querySelector('button[form="nccForm"]').innerText = "Lưu thay đổi";
-
-        // Mở Modal
         nccModal.style.display = "flex";
     } catch (error) {
         console.error("Lỗi lấy dữ liệu sửa:", error);
@@ -101,18 +126,18 @@ async function openEditModal(maNcc) {
 // ==========================================
 async function deleteNhaCungCap(maNcc) {
     const xacNhan = confirm("Bạn có chắc chắn muốn xóa nhà cung cấp này?");
-
     if (xacNhan) {
         try {
             const response = await fetch(`${API_NHA_CUNG_CAP}/${maNcc}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 alert(data.message || "Xóa nhà cung cấp thành công!");
-                loadDanhSachNhaCungCap(); // Tải lại bảng sau khi xóa
+                loadDanhSachNhaCungCap();
             } else {
                 alert(data.message || "Lỗi khi xóa nhà cung cấp");
             }
@@ -124,14 +149,13 @@ async function deleteNhaCungCap(maNcc) {
 }
 
 // ==========================================
-// 6. XỬ LÝ SỰ KIỆN SUBMIT FORM (Cho cả THÊM và SỬA)
+// 6. XỬ LÝ SỰ KIỆN SUBMIT FORM
 // ==========================================
 const formNhaCungCap = document.getElementById('nccForm');
 
 formNhaCungCap.addEventListener('submit', async function (event) {
-    event.preventDefault(); // Chặn tải lại trang
+    event.preventDefault();
 
-    // Gom dữ liệu vào Object (Khớp chính xác từng chữ hoa/thường với Model C#)
     const payload = {
         maNcc: document.getElementById('maNCC').value.trim(),
         tenNcc: document.getElementById('tenNCC').value.trim(),
@@ -139,8 +163,6 @@ formNhaCungCap.addEventListener('submit', async function (event) {
     };
 
     const btnLuu = document.querySelector('button[form="nccForm"]');
-
-    // Xác định URL và Phương thức gọi API dựa trên chế độ Thêm hay Sửa
     const apiUrl = isEditMode ? `${API_NHA_CUNG_CAP}/${payload.maNcc}` : API_NHA_CUNG_CAP;
     const apiMethod = isEditMode ? 'PUT' : 'POST';
 
@@ -151,7 +173,8 @@ formNhaCungCap.addEventListener('submit', async function (event) {
         const response = await fetch(apiUrl, {
             method: apiMethod,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(payload)
         });
@@ -170,14 +193,13 @@ formNhaCungCap.addEventListener('submit', async function (event) {
         console.error("Lỗi gửi dữ liệu:", error);
         alert("Lỗi kết nối tới Server. Hãy đảm bảo API đang chạy!");
     } finally {
-        // Phục hồi lại trạng thái nút bấm
         btnLuu.disabled = false;
         btnLuu.innerText = isEditMode ? "Lưu thay đổi" : "Lưu Nhà Cung Cấp";
     }
 });
 
 // ==========================================
-// 7. HÀM TÌM KIẾM NHÀ CUNG CẤP (TÌM TRỰC TIẾP TRÊN BẢNG)
+// 7. HÀM TÌM KIẾM NHÀ CUNG CẤP
 // ==========================================
 const searchInput = document.getElementById('timKiemNCC');
 
@@ -188,7 +210,6 @@ if (searchInput) {
 
         rows.forEach(row => {
             const rowData = row.textContent.toLowerCase();
-
             if (rowData.includes(keyword)) {
                 row.style.display = "";
             } else {

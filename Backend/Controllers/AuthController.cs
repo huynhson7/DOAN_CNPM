@@ -34,7 +34,11 @@ namespace Backend.Controllers
                 if (nhanVien.TrangThai == 0) 
                     return Unauthorized(new { message = "Tài khoản nhân viên đã bị khóa hoặc ngừng hoạt động." });
                 
-                userRole = nhanVien.VaiTroKhuVucPhuTrach ?? "Nhân viên"; 
+                // ĐÃ SỬA: Xử lý dứt điểm chuỗi rỗng và khoảng trắng thừa
+                userRole = string.IsNullOrWhiteSpace(nhanVien.VaiTroKhuVucPhuTrach) 
+                            ? "Nhân viên" 
+                            : nhanVien.VaiTroKhuVucPhuTrach.Trim(); 
+                            
                 hoTen = nhanVien.TenNV;
                 maUser = nhanVien.MaNV;
             }
@@ -66,12 +70,8 @@ namespace Backend.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    // Đã sửa: Truyền maUser (Mã NV) vào đúng chuẩn NameIdentifier để hệ thống đọc được
                     new Claim(ClaimTypes.NameIdentifier, maUser),
-                    
-                    // Đã sửa: Lưu tên đăng nhập vào claim "Username" thay vì NameIdentifier
                     new Claim("Username", request.Username),
-                    
                     new Claim(ClaimTypes.Name, hoTen ?? ""),
                     new Claim(ClaimTypes.Role, userRole),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())

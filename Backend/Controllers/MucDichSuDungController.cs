@@ -46,7 +46,7 @@ namespace Backend.Controllers
 
         // POST: api/muc-dich-su-dung
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Create([FromBody] MUCDICHSUDUNG model)
         {
             if (!ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace Backend.Controllers
 
         // PUT: api/muc-dich-su-dung/MD001
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Update(string id, [FromBody] MUCDICHSUDUNG model)
         {
             if (id != model.MaMD)
@@ -131,7 +131,7 @@ namespace Backend.Controllers
 
         // DELETE: api/muc-dich-su-dung/MD001
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Delete(string id)
         {
             var purpose = await _context.MUCDICHSUDUNG.FindAsync(id);

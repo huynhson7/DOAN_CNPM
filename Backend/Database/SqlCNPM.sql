@@ -603,8 +603,6 @@ UPDATE SANPHAM SET MoTa = N'Kệ tab nhỏ 2 ngăn kéo để đèn ngủ và đ
 UPDATE SANPHAM SET MoTa = N'Thiết kế xương cá ziczac tối ưu diện tích lưu trữ.' WHERE MaSP = 'SP50';
 GO
 
-
-
 USE HTQLCHBNT;
 GO
 

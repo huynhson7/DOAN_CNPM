@@ -16,8 +16,11 @@ namespace Backend.Controllers
             _context = context;
         }
 
-        // GET: api/nha-cung-cap
+        // =====================================================
+        // 1. GET: Lấy danh sách (Quyền: Admin, Nhân viên)
+        // =====================================================
         [HttpGet]
+        [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
         public async Task<IActionResult> GetAll()
         {
             var list = await _context.NHACUNGCAP
@@ -27,8 +30,11 @@ namespace Backend.Controllers
             return Ok(list);
         }
 
-        // GET: api/nha-cung-cap/NCC001
+        // =====================================================
+        // 2. GET: Lấy chi tiết theo ID (Quyền: Admin, Nhân viên)
+        // =====================================================
         [HttpGet("{id}")]
+        [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
             var item = await _context.NHACUNGCAP
@@ -37,87 +43,62 @@ namespace Backend.Controllers
 
             if (item == null)
             {
-                return NotFound(new
-                {
-                    message = "Không tìm thấy nhà cung cấp."
-                });
+                return NotFound(new { message = "Không tìm thấy nhà cung cấp." });
             }
 
             return Ok(item);
         }
 
-        // POST: api/nha-cung-cap
+        // =====================================================
+        // 3. POST: Thêm mới (Chỉ Admin)
+        // =====================================================
         [HttpPost]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Create([FromBody] NHACUNGCAP model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            bool maTonTai = await _context.NHACUNGCAP
-                .AnyAsync(x => x.MaNcc == model.MaNcc);
-
+            bool maTonTai = await _context.NHACUNGCAP.AnyAsync(x => x.MaNcc == model.MaNcc);
             if (maTonTai)
             {
-                return BadRequest(new
-                {
-                    message = "Mã nhà cung cấp đã tồn tại."
-                });
+                return BadRequest(new { message = "Mã nhà cung cấp đã tồn tại." });
             }
 
-            bool tenTonTai = await _context.NHACUNGCAP
-                .AnyAsync(x => x.TenNcc == model.TenNcc);
-
+            bool tenTonTai = await _context.NHACUNGCAP.AnyAsync(x => x.TenNcc == model.TenNcc);
             if (tenTonTai)
             {
-                return BadRequest(new
-                {
-                    message = "Tên nhà cung cấp đã tồn tại."
-                });
+                return BadRequest(new { message = "Tên nhà cung cấp đã tồn tại." });
             }
 
             _context.NHACUNGCAP.Add(model);
-
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = model.MaNcc },
-                model);
+            return CreatedAtAction(nameof(GetById), new { id = model.MaNcc }, model);
         }
 
-        // PUT: api/nha-cung-cap/NCC001
+        // =====================================================
+        // 4. PUT: Cập nhật thông tin (Chỉ Admin)
+        // =====================================================
         [HttpPut("{id}")]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Update(string id, [FromBody] NHACUNGCAP model)
         {
             if (id != model.MaNcc)
             {
-                return BadRequest(new
-                {
-                    message = "Mã nhà cung cấp không khớp."
-                });
+                return BadRequest(new { message = "Mã nhà cung cấp không khớp." });
             }
 
             var supplier = await _context.NHACUNGCAP.FindAsync(id);
-
             if (supplier == null)
             {
-                return NotFound(new
-                {
-                    message = "Không tìm thấy nhà cung cấp."
-                });
+                return NotFound(new { message = "Không tìm thấy nhà cung cấp." });
             }
 
-            bool tenTonTai = await _context.NHACUNGCAP
-                .AnyAsync(x => x.TenNcc == model.TenNcc && x.MaNcc != id);
-
+            bool tenTonTai = await _context.NHACUNGCAP.AnyAsync(x => x.TenNcc == model.TenNcc && x.MaNcc != id);
             if (tenTonTai)
             {
-                return BadRequest(new
-                {
-                    message = "Tên nhà cung cấp đã tồn tại."
-                });
+                return BadRequest(new { message = "Tên nhà cung cấp đã tồn tại." });
             }
 
             supplier.TenNcc = model.TenNcc;
@@ -125,35 +106,26 @@ namespace Backend.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                message = "Cập nhật nhà cung cấp thành công."
-            });
+            return Ok(new { message = "Cập nhật nhà cung cấp thành công." });
         }
 
-        // DELETE: api/nha-cung-cap/NCC001
+        // =====================================================
+        // 5. DELETE: Xóa cứng (Chỉ Admin)
+        // =====================================================
         [HttpDelete("{id}")]
-        //[Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Delete(string id)
         {
             var supplier = await _context.NHACUNGCAP.FindAsync(id);
-
             if (supplier == null)
             {
-                return NotFound(new
-                {
-                    message = "Không tìm thấy nhà cung cấp."
-                });
+                return NotFound(new { message = "Không tìm thấy nhà cung cấp." });
             }
 
             _context.NHACUNGCAP.Remove(supplier);
-
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                message = "Xóa nhà cung cấp thành công."
-            });
+            return Ok(new { message = "Xóa nhà cung cấp thành công." });
         }
     }
 }

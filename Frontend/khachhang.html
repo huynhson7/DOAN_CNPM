@@ -35,6 +35,15 @@
             <li><a href="hoadon.html"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
             <li><a href="khachhang.html" class="active"><i class="fas fa-users"></i> Khách Hàng</a></li>
             <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+
+            <!-- Thêm nút đăng xuất vào cuối sidebar -->
+            <!-- Đã giảm margin-top từ 85px xuống 30px để nút nhích lên và mất thanh cuộn -->
+            <li style="margin-top: 30px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+                <a href="#" onclick="dangXuatHethong(event)" style="color: #dc3545; font-weight: 600; font-size: 16px; display: flex; align-items: center;">
+                    <i class="fas fa-sign-out-alt" style="font-size: 18px; margin-right: 10px;"></i> Đăng xuất
+                </a>
+            </li>
+
         </ul>
         <div class="sidebar-footer">
             <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
@@ -48,9 +57,10 @@
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Tìm kiếm tên, SĐT khách hàng...">
             </div>
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
-                <span>Quản trị viên</span>
+           <!-- Khối hiển thị tên và avatar người dùng -->
+            <div class="user-profile" style="cursor: default;">
+                <img id="headerUserIcon" src="https://ui-avatars.com/api/?name=User&background=1a1a1a&color=fff" alt="User">
+                <span id="headerUserName">Đang tải...</span>
             </div>
         </header>
 
@@ -146,5 +156,26 @@
 
     <!-- Gọi file JS tách rời -->
     <script src="khachhang.js"></script>
+    <!-- SCRIPT XỬ LÝ GIAO DIỆN CHUNG (TÊN USER VÀ ĐĂNG XUẤT) -->
+    <script>
+        // 1. Lấy tên hiển thị lên góc phải
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentHoTen = localStorage.getItem('hoTen') || 'Quản trị viên';
+            const headerUserName = document.getElementById('headerUserName');
+            const headerUserIcon = document.getElementById('headerUserIcon');
+            
+            if(headerUserName && headerUserIcon) {
+                headerUserName.innerText = `Xin chào, ${currentHoTen}!`;
+                headerUserIcon.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentHoTen)}&background=1a1a1a&color=fff`;
+            }
+        });
+
+        // 2. Xử lý nút Đăng xuất
+        function dangXuatHethong(event) {
+            event.preventDefault(); 
+            localStorage.clear(); // Xóa toàn bộ token và dữ liệu phiên làm việc
+            window.location.href = "login.html"; // Trở về trang đăng nhập
+        }
+    </script>
 </body>
 </html>

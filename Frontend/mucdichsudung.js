@@ -29,6 +29,41 @@ const API_MUC_DICH = `${API_BASE}/muc-dich-su-dung`;
 
 
 // ==========================================================
+// 1b. HÀM HỖ TRỢ LẤY TOKEN ĐĂNG NHẬP (JWT)
+// Gắn kèm vào header Authorization cho mọi request cần xác thực
+// ==========================================================
+
+function getAuthHeaders() {
+
+    const token = localStorage.getItem("token");
+
+    return {
+
+        "Content-Type": "application/json",
+
+        "Authorization": `Bearer ${token}`
+
+    };
+
+}
+
+
+
+// ==========================================================
+// 1c. XỬ LÝ KHI HẾT PHIÊN / CHƯA ĐĂNG NHẬP (401)
+// ==========================================================
+
+function handleUnauthorized() {
+
+    alert("Phiên đăng nhập đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+
+    window.location.href = "login.html";
+
+}
+
+
+
+// ==========================================================
 // 2. BIẾN TOÀN CỤC
 // ==========================================================
 
@@ -167,13 +202,17 @@ async function loadPurposes() {
 
             method: "GET",
 
-            headers: {
-
-                "Content-Type": "application/json"
-
-            }
+            headers: getAuthHeaders()
 
         });
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
 
         if (!response.ok) {
 
@@ -536,6 +575,42 @@ async function savePurpose(e) {
 
 }
 // ==========================================================
+// 14b. ĐỌC JSON AN TOÀN
+// Một số API trả về Response không có nội dung (204 No Content,
+// hoặc body rỗng) => response.json() sẽ ném lỗi
+// "Unexpected end of JSON input". Hàm này đọc dạng text trước,
+// chỉ parse JSON khi có nội dung thực sự.
+// ==========================================================
+
+async function parseJsonSafe(response) {
+
+    const text = await response.text();
+
+    if (!text || text.trim() === "") {
+
+        return null;
+
+    }
+
+    try {
+
+        return JSON.parse(text);
+
+    }
+
+    catch (error) {
+
+        console.error("Không thể parse JSON:", error, text);
+
+        return null;
+
+    }
+
+}
+
+
+
+// ==========================================================
 // 15. THÊM MỤC ĐÍCH SỬ DỤNG
 // ==========================================================
 
@@ -549,19 +624,29 @@ async function createPurpose(model) {
 
             method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: getAuthHeaders(),
 
             body: JSON.stringify(model)
 
         });
 
-        const result = await response.json();
+        if (response.status === 401) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+        const result = await parseJsonSafe(response);
 
         if (!response.ok) {
 
-            throw new Error(result.message || "Không thể thêm dữ liệu.");
+            const message =
+                (result && (result.message || result.title)) ||
+                `Không thể thêm dữ liệu (mã lỗi ${response.status}).`;
+
+            throw new Error(message);
 
         }
 
@@ -605,19 +690,29 @@ async function updatePurpose(model) {
 
             method: "PUT",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: getAuthHeaders(),
 
             body: JSON.stringify(model)
 
         });
 
-        const result = await response.json();
+        if (response.status === 401) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+        const result = await parseJsonSafe(response);
 
         if (!response.ok) {
 
-            throw new Error(result.message || "Không thể cập nhật.");
+            const message =
+                (result && (result.message || result.title)) ||
+                `Không thể cập nhật (mã lỗi ${response.status}).`;
+
+            throw new Error(message);
 
         }
 
@@ -667,15 +762,29 @@ async function deletePurpose(id) {
 
         const response = await fetch(`${API_MUC_DICH}/${id}`, {
 
-            method: "DELETE"
+            method: "DELETE",
+
+            headers: getAuthHeaders()
 
         });
 
-        const result = await response.json();
+        if (response.status === 401) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+        const result = await parseJsonSafe(response);
 
         if (!response.ok) {
 
-            throw new Error(result.message || "Không thể xóa.");
+            const message =
+                (result && (result.message || result.title)) ||
+                `Không thể xóa (mã lỗi ${response.status}).`;
+
+            throw new Error(message);
 
         }
 

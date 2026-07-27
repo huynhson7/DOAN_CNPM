@@ -19,21 +19,24 @@ let currentImageUrl = "";
 // 2. LOGIC PHÂN QUYỀN (ROLE-BASED UI)
 // ==========================================
 document.addEventListener("DOMContentLoaded", function() {
-    if (!localStorage.getItem('userRole')) {
-        localStorage.setItem('userRole', 'admin'); 
-    }
-    
-    const userRole = localStorage.getItem('userRole');
+    // Vai trò lấy từ Token khi đăng nhập (xem AuthController.cs) có dạng
+    // "Quản trị Hệ thống" chứ KHÔNG PHẢI chuỗi literal "admin", nên phải
+    // kiểm tra theo cùng quy ước với các trang admin khác (nhanvien.js...),
+    // tuyệt đối không tự gán mặc định quyền admin khi chưa đăng nhập.
+    const userRole = localStorage.getItem('userRole') || '';
+    const isAdmin = userRole.toLowerCase().includes('quản trị') || userRole.toLowerCase().includes('admin');
+
     const menuAdminSanPham = document.getElementById('menu-admin-sanpham');
     const menuAdminNhom = document.getElementById('menu-admin-nhom');
-    
-    if (userRole !== 'admin') {
+
+    if (!isAdmin) {
         if (menuAdminSanPham) menuAdminSanPham.style.display = 'none';
         if (menuAdminNhom) menuAdminNhom.style.display = 'none';
-        
+
         if (window.location.pathname.includes('admin_sanpham.html') || window.location.pathname.includes('quantri.html')) {
-            alert("Bạn không có quyền truy cập trang quản trị này!");
-            window.location.href = 'sanpham.html';
+            alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên.");
+            window.location.href = 'login.html';
+            return;
         }
     }
     
