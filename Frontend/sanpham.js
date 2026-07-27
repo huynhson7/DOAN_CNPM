@@ -1,0 +1,488 @@
+// ==========================================================
+// sanpham.js
+// Trang: sanpham.html (Cửa hàng - danh sách sản phẩm)
+//
+// User Story:
+// "Là Nhân viên bán hàng hoặc Khách hàng, tôi muốn xem danh sách toàn bộ
+//  sản phẩm nội thất trên Website để tìm kiếm và lựa chọn sản phẩm phù hợp."
+//
+// Nguyên tắc:
+// - Chỉ gọi API MỘT LẦN khi tải trang, lưu vào biến "allProducts".
+// - Tìm kiếm / lọc / sắp xếp / phân trang đều xử lý trên "allProducts",
+//   KHÔNG gọi lại API sau mỗi lần người dùng thao tác.
+// - Không dùng thư viện ngoài, chỉ Vanilla JS + Fetch API.
+// ==========================================================
+
+// ----------------------------------------------------------
+// 1. CẤU HÌNH & BIẾN TOÀN CỤC
+// ----------------------------------------------------------
+const API_BASE = "http://localhost:5129/api";
+const API_SAN_PHAM = `${API_BASE}/san-pham`;
+const API_NHOM_SP = `${API_BASE}/nhom-san-pham`;
+const API_VAT_LIEU = `${API_BASE}/vat-lieu`;
+
+const DEFAULT_PRODUCT_IMAGE = "https://placehold.co/500x500?text=Luxury+Furniture";
+const PRODUCTS_PER_PAGE = 10; // Yêu cầu: 10 sản phẩm / trang
+
+// Ánh xạ giá trị "category" trên URL (được dùng bởi menu dropdown Sản Phẩm
+// có sẵn trong navbar: sanpham.html?category=phong-khach / phong-ngu) sang
+// Mã Mục Đích Sử Dụng (MaMD) trong CSDL. Đây là cách tái sử dụng link menu
+// đã có sẵn trong giao diện thay vì phải thêm mới một dropdown "Mục đích".
+const CATEGORY_TO_MA_MD = {
+    "phong-khach": "MD01",
+    "phong-ngu": "MD02"
+};
+
+// Dữ liệu gốc lấy từ API - chỉ gọi 1 lần
+let allProducts = [];
+
+// Bộ lọc / tìm kiếm / sắp xếp / phân trang hiện tại
+const state = {
+    selectedNhomSp: new Set(),   // các MaNhomSP đang được chọn lọc
+    selectedVatLieu: new Set(),  // các MaVL đang được chọn lọc
+    maxPrice: null,              // lọc giá <= maxPrice
+    maMD: null,                  // lọc theo Mục đích (từ query ?category=)
+    keyword: "",                 // từ khóa tìm kiếm theo tên
+    sortBy: "default",           // default | name-asc | name-desc | price-asc | price-desc
+    currentPage: 1
+};
+
+// ----------------------------------------------------------
+// 2. KHỞI TẠO
+// ----------------------------------------------------------
+document.addEventListener("DOMContentLoaded", init);
+
+async function init() {
+    applyCategoryFromQueryString();
+    bindEvents();
+
+    showLoading();
+    try {
+        await Promise.all([loadCategories(), loadMaterials()]);
+        await loadProducts();
+        renderProductList();
+    } catch (error) {
+        console.error("Lỗi khởi tạo trang sản phẩm:", error);
+        showError();
+    }
+}
+
+// Đọc ?category= trên URL để lọc theo Mục đích sử dụng (tái sử dụng menu có sẵn)
+function applyCategoryFromQueryString() {
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get("category");
+    if (category && CATEGORY_TO_MA_MD[category]) {
+        state.maMD = CATEGORY_TO_MA_MD[category];
+    }
+}
+
+// ----------------------------------------------------------
+// 3. TẢI DANH MỤC (NHÓM SẢN PHẨM / VẬT LIỆU) ĐỂ RENDER BỘ LỌC
+// ----------------------------------------------------------
+async function loadCategories() {
+    const list = document.getElementById("nhomSpFilterList");
+    if (!list) return;
+
+    try {
+        const res = await fetch(API_NHOM_SP);
+        if (!res.ok) throw new Error("Không thể tải nhóm sản phẩm.");
+        const data = await res.json();
+
+        list.innerHTML = data.map(n => {
+            const ma = n.maNhomSP || n.MaNhomSP;
+            const ten = n.tenNhomSP || n.TenNhomSP;
+            return `<li><label><input type="checkbox" class="filter-nhom-sp" value="${ma}"> ${ten}</label></li>`;
+        }).join("");
+    } catch (error) {
+        console.error("Lỗi tải nhóm sản phẩm:", error);
+        list.innerHTML = "";
+    }
+}
+
+async function loadMaterials() {
+    const list = document.getElementById("vatLieuFilterList");
+    if (!list) return;
+
+    try {
+        const res = await fetch(API_VAT_LIEU);
+        if (!res.ok) throw new Error("Không thể tải vật liệu.");
+        const data = await res.json();
+
+        list.innerHTML = data.map(v => {
+            const ma = v.maVL || v.MaVL;
+            const ten = v.tenVL || v.TenVL;
+            return `<li><label><input type="checkbox" class="filter-vat-lieu" value="${ma}"> ${ten}</label></li>`;
+        }).join("");
+    } catch (error) {
+        console.error("Lỗi tải vật liệu:", error);
+        list.innerHTML = "";
+    }
+}
+
+// ----------------------------------------------------------
+// 4. TẢI DANH SÁCH SẢN PHẨM (GỌI 1 LẦN DUY NHẤT)
+// ----------------------------------------------------------
+async function loadProducts() {
+    // chiHoatDong=true: chỉ lấy sản phẩm đang hoạt động (dành cho khách xem),
+    // tham số này được API mặc định BỎ QUA nếu không truyền, nên không ảnh
+    // hưởng tới trang Quản trị.
+    const response = await fetch(`${API_SAN_PHAM}?chiHoatDong=true`, { cache: "no-store" });
+
+    if (!response.ok) {
+        throw new Error(`API trả về lỗi HTTP ${response.status}`);
+    }
+
+    allProducts = await response.json();
+}
+
+// ----------------------------------------------------------
+// 5. GẮN SỰ KIỆN CHO CÁC ĐIỀU KHIỂN LỌC / TÌM KIẾM / SẮP XẾP
+// ----------------------------------------------------------
+function bindEvents() {
+    // Tìm kiếm realtime, không reload trang, không gọi API
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            state.keyword = this.value.trim().toLowerCase();
+            state.currentPage = 1;
+            renderProductList();
+        });
+    }
+
+    // Sắp xếp
+    const sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) {
+        sortSelect.addEventListener("change", function () {
+            state.sortBy = this.value;
+            renderProductList();
+        });
+    }
+
+    // Lọc theo giá (dùng thanh trượt sẵn có)
+    const priceSlider = document.getElementById("priceSlider");
+    const priceValueDisplay = document.getElementById("priceValueDisplay");
+    if (priceSlider) {
+        state.maxPrice = Number(priceSlider.value);
+        priceSlider.addEventListener("input", function () {
+            state.maxPrice = Number(this.value);
+            if (priceValueDisplay) {
+                priceValueDisplay.textContent = formatCurrency(state.maxPrice);
+            }
+            state.currentPage = 1;
+            renderProductList();
+        });
+    }
+
+    // Lọc theo Nhóm sản phẩm / Vật liệu (checkbox được render động nên dùng
+    // event delegation trên container cha thay vì gắn từng checkbox)
+    const nhomSpList = document.getElementById("nhomSpFilterList");
+    if (nhomSpList) {
+        nhomSpList.addEventListener("change", function (e) {
+            if (!e.target.classList.contains("filter-nhom-sp")) return;
+            toggleFilterValue(state.selectedNhomSp, e.target.value, e.target.checked);
+            state.currentPage = 1;
+            renderProductList();
+        });
+    }
+
+    const vatLieuList = document.getElementById("vatLieuFilterList");
+    if (vatLieuList) {
+        vatLieuList.addEventListener("change", function (e) {
+            if (!e.target.classList.contains("filter-vat-lieu")) return;
+            toggleFilterValue(state.selectedVatLieu, e.target.value, e.target.checked);
+            state.currentPage = 1;
+            renderProductList();
+        });
+    }
+}
+
+function toggleFilterValue(set, value, isChecked) {
+    if (isChecked) {
+        set.add(value);
+    } else {
+        set.delete(value);
+    }
+}
+
+// ----------------------------------------------------------
+// 6. LỌC (FILTER + SEARCH) - hoạt động đồng thời trên allProducts
+// ----------------------------------------------------------
+function filterProducts(products) {
+    return products.filter(p => {
+        const maNhomSP = p.maNhomSP || p.MaNhomSP || "";
+        const maMD = p.maMD || p.MaMD || "";
+        const giaBan = Number(p.giaBan ?? p.GiaBan ?? 0);
+        const danhSachVatLieu = getVatLieuCodes(p);
+
+        // Lọc theo Nhóm sản phẩm (nếu có chọn)
+        if (state.selectedNhomSp.size > 0 && !state.selectedNhomSp.has(maNhomSP)) {
+            return false;
+        }
+
+        // Lọc theo Vật liệu (nếu có chọn) - sản phẩm khớp nếu chứa ít nhất 1 vật liệu đã chọn
+        if (state.selectedVatLieu.size > 0) {
+            const coKhopVatLieu = danhSachVatLieu.some(ma => state.selectedVatLieu.has(ma));
+            if (!coKhopVatLieu) return false;
+        }
+
+        // Lọc theo Mục đích sử dụng (từ menu category trên navbar)
+        if (state.maMD && maMD !== state.maMD) {
+            return false;
+        }
+
+        // Lọc theo giá
+        if (state.maxPrice !== null && giaBan > state.maxPrice) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+function searchProducts(products) {
+    if (!state.keyword) return products;
+
+    return products.filter(p => {
+        const tenSP = (p.tenSP || p.TenSP || "").toLowerCase();
+        return tenSP.includes(state.keyword);
+    });
+}
+
+// ----------------------------------------------------------
+// 7. SẮP XẾP
+// ----------------------------------------------------------
+function sortProducts(products) {
+    const sorted = [...products];
+
+    switch (state.sortBy) {
+        case "name-asc":
+            sorted.sort((a, b) => getTenSP(a).localeCompare(getTenSP(b), "vi"));
+            break;
+        case "name-desc":
+            sorted.sort((a, b) => getTenSP(b).localeCompare(getTenSP(a), "vi"));
+            break;
+        case "price-asc":
+            sorted.sort((a, b) => getGiaBan(a) - getGiaBan(b));
+            break;
+        case "price-desc":
+            sorted.sort((a, b) => getGiaBan(b) - getGiaBan(a));
+            break;
+        default:
+            // "default": không có ngày tạo trong CSDL nên giữ nguyên thứ tự
+            // trả về từ API (đã sắp xếp theo tên khi chiHoatDong=true).
+            break;
+    }
+
+    return sorted;
+}
+
+// ----------------------------------------------------------
+// 8. LUỒNG XỬ LÝ CHÍNH: allProducts -> filter -> search -> sort -> phân trang -> render
+// ----------------------------------------------------------
+function renderProductList() {
+    let result = filterProducts(allProducts);
+    result = searchProducts(result);
+    result = sortProducts(result);
+
+    const totalItems = result.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PRODUCTS_PER_PAGE));
+    if (state.currentPage > totalPages) state.currentPage = totalPages;
+
+    const startIndex = (state.currentPage - 1) * PRODUCTS_PER_PAGE;
+    const pageItems = result.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+
+    if (totalItems === 0) {
+        showEmpty();
+        renderPagination(0, 1);
+        return;
+    }
+
+    hideMessage();
+    renderProducts(pageItems);
+    renderPagination(totalPages, state.currentPage);
+}
+
+// ----------------------------------------------------------
+// 9. RENDER DANH SÁCH SẢN PHẨM DẠNG CARD (giữ nguyên class CSS hiện có)
+// ----------------------------------------------------------
+function renderProducts(products) {
+    const grid = document.getElementById("productGrid");
+    if (!grid) return;
+
+    grid.innerHTML = products.map(buildProductCardHtml).join("");
+}
+
+function buildProductCardHtml(p) {
+    const maSP = p.maSP || p.MaSP || "";
+    const tenSP = getTenSP(p);
+    const giaBan = getGiaBan(p);
+    const moTa = p.moTa || p.MoTa || "";
+    const soLuongTon = p.soLuongTon !== undefined ? p.soLuongTon : (p.SoLuongTon || 0);
+    const hinhAnh = p.hinhAnh || p.HinhAnh;
+
+    const nhomSanPham = p.nhomSanPham || p.NhomSanPham;
+    const tenNhomSP = nhomSanPham ? (nhomSanPham.tenNhomSP || nhomSanPham.TenNhomSP) : "";
+
+    const mucDichSuDung = p.mucDichSuDung || p.MucDichSuDung;
+    const tenMD = mucDichSuDung ? (mucDichSuDung.tenMD || mucDichSuDung.TenMD) : "";
+
+    const tenVatLieuList = getVatLieuNames(p);
+
+    const stockClass = soLuongTon > 0 ? "" : "out-of-stock";
+    const stockText = soLuongTon > 0 ? `Còn ${soLuongTon} sản phẩm` : "Hết hàng";
+
+    return `
+        <div class="product-card">
+            <div class="product-image">
+                <img src="${escapeHtml(hinhAnh || DEFAULT_PRODUCT_IMAGE)}"
+                     alt="${escapeHtml(tenSP)}"
+                     onerror="this.onerror=null;this.src='${DEFAULT_PRODUCT_IMAGE}';">
+                <div class="product-actions">
+                    <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtml(maSP)}"><i class="fas fa-cart-plus"></i></button>
+                    <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                </div>
+            </div>
+            <div class="product-info">
+                <span class="product-category">${escapeHtml(tenNhomSP)}</span>
+                <h3 class="product-name">${escapeHtml(tenSP)}</h3>
+                <p class="product-price">${formatCurrency(giaBan)}</p>
+                <div class="product-extra-meta">
+                    ${tenMD ? `<span><i class="fas fa-bullseye"></i> ${escapeHtml(tenMD)}</span>` : ""}
+                    ${tenVatLieuList ? `<span><i class="fas fa-layer-group"></i> ${escapeHtml(tenVatLieuList)}</span>` : ""}
+                </div>
+                ${moTa ? `<p class="product-desc-short">${escapeHtml(moTa)}</p>` : ""}
+                <span class="product-stock ${stockClass}">${stockText}</span>
+                <div style="margin-top: 10px;">
+                    <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-outline" style="display:inline-block; padding:6px 14px; font-size:13px;">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ----------------------------------------------------------
+// 10. PHÂN TRANG (client-side)
+// ----------------------------------------------------------
+function renderPagination(totalPages, currentPage) {
+    const pagination = document.getElementById("pagination");
+    if (!pagination) return;
+
+    if (totalPages <= 1) {
+        pagination.innerHTML = "";
+        return;
+    }
+
+    let html = "";
+
+    html += `<a href="#" data-page="${currentPage - 1}" class="${currentPage === 1 ? "disabled" : ""}"><i class="fas fa-chevron-left"></i></a>`;
+
+    for (let page = 1; page <= totalPages; page++) {
+        html += `<a href="#" data-page="${page}" class="${page === currentPage ? "active" : ""}">${page}</a>`;
+    }
+
+    html += `<a href="#" data-page="${currentPage + 1}" class="${currentPage === totalPages ? "disabled" : ""}"><i class="fas fa-chevron-right"></i></a>`;
+
+    pagination.innerHTML = html;
+
+    pagination.querySelectorAll("a[data-page]").forEach(link => {
+        link.addEventListener("click", function (e) {
+            e.preventDefault();
+            const page = Number(this.dataset.page);
+            if (!page || page < 1 || page > totalPages || page === state.currentPage) return;
+            state.currentPage = page;
+            renderProductList();
+            window.scrollTo({ top: document.querySelector(".shop-container").offsetTop - 100, behavior: "smooth" });
+        });
+    });
+}
+
+// ----------------------------------------------------------
+// 11. TRẠNG THÁI: LOADING / RỖNG / LỖI
+// ----------------------------------------------------------
+function showLoading() {
+    const grid = document.getElementById("productGrid");
+    const msg = document.getElementById("productMessage");
+    if (grid) grid.innerHTML = "";
+    if (msg) {
+        msg.style.display = "block";
+        msg.className = "product-message is-loading";
+        msg.innerHTML = `<span class="spinner"></span> Đang tải dữ liệu...`;
+    }
+}
+
+function hideLoading() {
+    hideMessage();
+}
+
+function showEmpty() {
+    const grid = document.getElementById("productGrid");
+    const msg = document.getElementById("productMessage");
+    if (grid) grid.innerHTML = "";
+    if (msg) {
+        msg.style.display = "block";
+        msg.className = "product-message is-empty";
+        msg.textContent = "Không có sản phẩm";
+    }
+}
+
+function showError() {
+    const grid = document.getElementById("productGrid");
+    const msg = document.getElementById("productMessage");
+    if (grid) grid.innerHTML = "";
+    if (msg) {
+        msg.style.display = "block";
+        msg.className = "product-message is-error";
+        // Không hiển thị chi tiết lỗi kỹ thuật (exception/stacktrace) cho người dùng
+        msg.textContent = "Lỗi kết nối máy chủ. Vui lòng thử lại sau.";
+    }
+}
+
+function hideMessage() {
+    const msg = document.getElementById("productMessage");
+    if (msg) {
+        msg.style.display = "none";
+        msg.innerHTML = "";
+    }
+}
+
+// ----------------------------------------------------------
+// 12. HÀM TIỆN ÍCH
+// ----------------------------------------------------------
+function formatCurrency(value) {
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
+}
+
+function getTenSP(p) {
+    return p.tenSP || p.TenSP || "";
+}
+
+function getGiaBan(p) {
+    return Number(p.giaBan ?? p.GiaBan ?? 0);
+}
+
+// Lấy danh sách mã vật liệu (MaVL) của 1 sản phẩm từ quan hệ LAMNEN
+function getVatLieuCodes(p) {
+    const lamNens = p.lamNens || p.LamNens || [];
+    return lamNens
+        .map(l => l.maVL || l.MaVL)
+        .filter(Boolean);
+}
+
+// Lấy danh sách tên vật liệu, nối bằng dấu phẩy để hiển thị trên card
+function getVatLieuNames(p) {
+    const lamNens = p.lamNens || p.LamNens || [];
+    return lamNens
+        .map(l => {
+            const vatLieu = l.vatLieu || l.VatLieu;
+            return vatLieu ? (vatLieu.tenVL || vatLieu.TenVL) : null;
+        })
+        .filter(Boolean)
+        .join(", ");
+}
+
+// Tránh XSS khi chèn dữ liệu từ API vào innerHTML
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text ?? "";
+    return div.innerHTML;
+}
