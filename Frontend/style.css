@@ -1202,3 +1202,93 @@ textarea:focus {
     color: #d32f2f;
     border: 1px solid #d32f2f;
 }
+/* =========================================
+   CSS CHO TRANG QUÊN MẬT KHẨU (đồng bộ Login)
+========================================= */
+
+/* Input bị khóa sau khi đã gửi OTP */
+.input-group input:disabled {
+    background-color: #f2f2f2;
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* Nút phụ (Xác nhận OTP) - dùng màu accent để phân biệt với nút chính */
+.btn-accent {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-accent:hover {
+    background-color: #a67f63;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-accent:disabled {
+    background-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-primary:disabled {
+    background-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Khu vực OTP - ẩn lúc đầu, hiện ra sau khi gửi mã thành công */
+#otpSection {
+    display: none;
+    margin-top: 10px;
+    padding-top: 20px;
+    border-top: 1px dashed #e0e0e0;
+}
+
+/* Đồng hồ đếm ngược gửi lại mã */
+.timer-container {
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+#timerText {
+    color: var(--text-muted);
+}
+
+#timerText strong {
+    color: #d9534f;
+}
+
+/* Nút "Gửi lại mã" dạng link, đồng bộ với link .forgot-password a */
+#btnResend {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 600;
+    display: none;
+    width: auto;
+    transition: color 0.3s ease;
+}
+
+#btnResend:hover {
+    color: var(--primary-color);
+}
