@@ -8,7 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 using Backend.Services;
-using Microsoft.Extensions.Caching.Memory; // Thư viện dùng để lưu tạm OTP
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore; // Thêm thư viện này để quản lý State của Entity Framework
 
 namespace Backend.Controllers
 {
@@ -19,9 +20,8 @@ namespace Backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _context;
         private readonly EmailService _emailService;
-        private readonly IMemoryCache _cache; // Biến quản lý bộ nhớ tạm
+        private readonly IMemoryCache _cache;
 
-        // Đã tiêm IMemoryCache vào hàm khởi tạo
         public AuthController(IConfiguration configuration, AppDbContext context, EmailService emailService, IMemoryCache cache)
         {
             _configuration = configuration;
@@ -104,9 +104,6 @@ namespace Backend.Controllers
             });
         }
 
-        // ==========================================
-        // 1. API ĐĂNG KÝ (Không gửi email nữa)
-        // ==========================================
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
@@ -139,13 +136,9 @@ namespace Backend.Controllers
             return Ok(new { message = "Đăng ký tài khoản thành công!" });
         }
 
-        // ==========================================
-        // 2. API QUÊN MẬT KHẨU - GỬI MÃ OTP VÀO EMAIL
-        // ==========================================
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            // Kiểm tra xem email có tồn tại trong hệ thống không
             var user = _context.KHACHHANG.FirstOrDefault(k => k.Email == request.Email);
             if (user == null)
             {
@@ -155,7 +148,6 @@ namespace Backend.Controllers
             Random random = new Random();
             string otpCode = random.Next(100000, 999999).ToString();
 
-            // Lưu mã OTP vào bộ nhớ Cache, gắn với chìa khóa là Email, thời gian sống 5 phút
             _cache.Set(request.Email, otpCode, TimeSpan.FromMinutes(5));
 
             try
@@ -169,16 +161,11 @@ namespace Backend.Controllers
             }
         }
 
-        // ==========================================
-        // 3. API XÁC THỰC MÃ OTP
-        // ==========================================
         [HttpPost("verify-otp")]
         public IActionResult VerifyOtp([FromBody] VerifyOtpRequest request)
         {
-            // Lấy mã OTP từ bộ nhớ ra dựa theo Email
             if (_cache.TryGetValue(request.Email, out string? savedOtp))
             {
-                // So sánh mã khách hàng nhập với mã trong bộ nhớ
                 if (savedOtp == request.Otp)
                 {
                     return Ok(new { message = "Xác nhận OTP thành công! Bạn có thể đặt lại mật khẩu." });
@@ -188,10 +175,6 @@ namespace Backend.Controllers
             return BadRequest(new { message = "Mã OTP nhập vào không đúng hoặc đã hết hạn." });
         }
 
-        // ==========================================
-        // ==========================================
-        // 4. API ĐẶT LẠI MẬT KHẨU MỚI
-        // ==========================================
         [HttpPost("reset-password")]
         public IActionResult ResetPassword([FromBody] ResetPasswordRequest request)
         {
@@ -201,24 +184,18 @@ namespace Backend.Controllers
                 return NotFound(new { message = "Không tìm thấy tài khoản để đặt lại mật khẩu." });
             }
 
-            // Cập nhật mật khẩu mới
+            // Cập nhật mật khẩu mới và ép Entity Framework ghi nhận trạng thái Modified
             user.MatKhau = request.NewPassword;
-            
-            // BẮT BUỘC THÊM DÒNG NÀY ĐỂ ÉP EF CORE LƯU XUỐNG SQL SERVER
-            _context.KHACHHANG.Update(user);
-
+            _context.Entry(user).State = EntityState.Modified;
             _context.SaveChanges();
 
-            // Xóa mã OTP khỏi bộ nhớ để không dùng lại được nữa
+            // Xóa mã OTP khỏi bộ nhớ
             _cache.Remove(request.Email);
 
             return Ok(new { message = "Đặt lại mật khẩu thành công! Hãy đăng nhập lại bằng mật khẩu mới." });
         }
     }
 
-    // ==========================================
-    // CÁC CLASS ĐẠI DIỆN DỮ LIỆU ĐẦU VÀO
-    // ==========================================
     public class LoginRequest
     {
         public string Username { get; set; } = string.Empty;
