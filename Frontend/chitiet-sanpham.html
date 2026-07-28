@@ -89,14 +89,19 @@
 
                 <!-- Thao tác mua hàng -->
                 <div class="add-to-cart-action">
-                    <div class="quantity-selector">
-                        <button class="qty-btn minus" onclick="updateQty(-1)">-</button>
-                        <input type="number" id="product-quantity" value="1" min="1">
-                        <button class="qty-btn plus" onclick="updateQty(1)">+</button>
-                    </div>
-                    <button class="btn-primary add-cart-btn" id="addToCartBtn">
-                        <i class="fas fa-shopping-bag"></i> Thêm Vào Giỏ Hàng
+                    <button class="btn-buy-now" id="buyNowBtn">
+                        <i class="fas fa-bolt"></i> Mua Ngay
                     </button>
+                    <div class="cart-action-row">
+                        <div class="quantity-selector">
+                            <button class="qty-btn minus" onclick="updateQty(-1)">-</button>
+                            <input type="number" id="product-quantity" value="1" min="1">
+                            <button class="qty-btn plus" onclick="updateQty(1)">+</button>
+                        </div>
+                        <button class="btn-primary add-cart-btn" id="addToCartBtn">
+                            <i class="fas fa-shopping-bag"></i> Thêm Vào Giỏ Hàng
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Cam kết chất lượng dịch vụ -->

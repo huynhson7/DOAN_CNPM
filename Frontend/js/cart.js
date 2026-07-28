@@ -119,6 +119,55 @@ function clearCart() {
 }
 
 // ----------------------------------------------------------
+// "MUA NGAY" - đặt hàng nhanh 1 sản phẩm, KHÔNG trộn vào giỏ hàng chính.
+// Lưu tạm ở sessionStorage (khác localStorage của giỏ hàng) để trang
+// thanhtoan.html có thể ưu tiên đọc đúng 1 sản phẩm này khi thanh toán,
+// mà không ảnh hưởng tới các sản phẩm khác khách đã bỏ vào giỏ trước đó.
+// ----------------------------------------------------------
+const BUY_NOW_STORAGE_KEY = "luxuryfurniture_buynow";
+
+/**
+ * Lưu 1 sản phẩm để mua ngay (thay thế item cũ nếu có).
+ * product: { maSP, tenSP, giaBan, hinhAnh, soLuongTon }
+ */
+function setBuyNowItem(product, soLuong = 1) {
+    if (!product || !product.maSP) return null;
+
+    soLuong = Math.max(1, parseInt(soLuong, 10) || 1);
+
+    const tonKho = (product.soLuongTon !== undefined && product.soLuongTon !== null)
+        ? Number(product.soLuongTon)
+        : null;
+    if (tonKho !== null) soLuong = Math.min(soLuong, tonKho);
+
+    const item = {
+        maSP: product.maSP,
+        tenSP: product.tenSP || "",
+        giaBan: Number(product.giaBan) || 0,
+        hinhAnh: product.hinhAnh || "",
+        soLuong: Math.min(soLuong, CART_MAX_QTY),
+        soLuongTon: tonKho
+    };
+
+    sessionStorage.setItem(BUY_NOW_STORAGE_KEY, JSON.stringify(item));
+    return item;
+}
+
+function getBuyNowItem() {
+    try {
+        const raw = sessionStorage.getItem(BUY_NOW_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        console.error("Lỗi đọc dữ liệu Mua Ngay:", e);
+        return null;
+    }
+}
+
+function clearBuyNowItem() {
+    sessionStorage.removeItem(BUY_NOW_STORAGE_KEY);
+}
+
+// ----------------------------------------------------------
 // TÍNH TOÁN
 // ----------------------------------------------------------
 function getCartCount() {

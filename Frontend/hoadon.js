@@ -262,7 +262,7 @@ async function resetFormTaoHoaDon() {
     // hiển thị ô chọn trạng thái khi Tạo mới (chỉ hiện khi Sửa hóa đơn)
     document.getElementById('groupTrangThai').style.display = 'none';
 
-    // Reset goi y nhan don (chi hien khi mo modal Sua hoa don online chua ai nhan)
+    // Reset gợi ý nhận đơn (chỉ hiện khi mở modal Sửa hóa đơn online chưa ai nhận)
     const hintNhanVien = document.getElementById('hintNhanVien');
     if (hintNhanVien) {
         hintNhanVien.style.display = 'none';
@@ -440,9 +440,9 @@ async function openEditModal(maHD) {
             if(btnAddSp) btnAddSp.disabled = false;
         }
 
-        // Goi y cho nhan vien: neu day la don online dang o "kho chung" (NV01 -
-        // Pham Huynh Thien Son) va nguoi dang dang nhap khong phai Admin, thi khi
-        // luu thay doi hoa don nay se tu dong duoc gan ve ten nhan vien dang thao tac.
+        // Gợi ý cho nhân viên: nếu đây là đơn online đang ở "kho chung" (NV01 -
+        // Phạm Huỳnh Thiên Sơn) và người đang đăng nhập không phải Admin, thì khi
+        // lưu thay đổi hóa đơn này sẽ tự động được gán về tên nhân viên đang thao tác.
         const hintNhanVien = document.getElementById('hintNhanVien');
         if (hintNhanVien) {
             if (!IS_ADMIN && (hd.nhanVien?.maNV || '') === 'NV01') {

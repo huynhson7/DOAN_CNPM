@@ -21,6 +21,11 @@ const API_HOA_DON = `${API_BASE}/hoa-don`;
 // Số điện thoại VN: bắt đầu bằng 0, theo sau 9-10 chữ số
 const SDT_REGEX = /^0\d{9,10}$/;
 
+// true khi vào trang qua nút "Mua Ngay" (?buynow=1) -> chỉ thanh toán đúng
+// 1 sản phẩm đã lưu tạm ở sessionStorage (js/cart.js), KHÔNG đụng tới giỏ
+// hàng chính của khách. false -> thanh toán toàn bộ giỏ hàng như bình thường.
+let isBuyNowMode = false;
+
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
@@ -44,8 +49,12 @@ function init() {
         return;
     }
 
-    // 2. Giỏ hàng phải có sản phẩm
-    const cart = getCart();
+    // 2. Xác định nguồn giỏ hàng: "Mua Ngay" (1 sản phẩm) hay giỏ hàng đầy đủ
+    const params = new URLSearchParams(window.location.search);
+    const buyNowItem = params.get("buynow") === "1" ? getBuyNowItem() : null;
+    isBuyNowMode = !!buyNowItem;
+
+    const cart = isBuyNowMode ? [buyNowItem] : getCart();
     if (cart.length === 0) {
         showGuardMessage(
             "Giỏ hàng của bạn đang trống, vui lòng chọn thêm sản phẩm trước khi thanh toán.",
@@ -94,9 +103,12 @@ function prefillCustomerInfo() {
 // ----------------------------------------------------------
 function renderOrderSummary(cart) {
     const itemsBox = document.getElementById("checkoutOrderItems");
+    let total = 0;
+
     if (itemsBox) {
         itemsBox.innerHTML = cart.map(item => {
             const thanhTien = (item.soLuong || 0) * (item.giaBan || 0);
+            total += thanhTien;
             return `
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
                     <span>${escapeHtmlCart(item.tenSP)} x ${item.soLuong}</span>
@@ -104,9 +116,10 @@ function renderOrderSummary(cart) {
                 </div>
             `;
         }).join("");
+    } else {
+        total = cart.reduce((sum, item) => sum + (item.soLuong || 0) * (item.giaBan || 0), 0);
     }
 
-    const total = getCartTotal();
     const subtotalEl = document.getElementById("checkoutSubtotal");
     const totalEl = document.getElementById("checkoutGrandTotal");
     if (subtotalEl) subtotalEl.textContent = formatCurrencyVND(total);
@@ -144,7 +157,7 @@ function bindFormSubmit() {
             return;
         }
 
-        const cart = getCart();
+        const cart = isBuyNowMode ? [getBuyNowItem()].filter(Boolean) : getCart();
         if (cart.length === 0) {
             showCheckoutFormError("Giỏ hàng trống, không thể đặt hàng.");
             return;
@@ -192,7 +205,13 @@ function bindFormSubmit() {
                 return;
             }
 
-            clearCart();
+            // "Mua Ngay" chỉ xóa item tạm của riêng nó, KHÔNG đụng tới giỏ
+            // hàng chính (nếu khách đang có sẵn sản phẩm khác trong giỏ).
+            if (isBuyNowMode) {
+                clearBuyNowItem();
+            } else {
+                clearCart();
+            }
             showCheckoutSuccess(data.maHD);
         } catch (error) {
             console.error("Lỗi đặt hàng:", error);

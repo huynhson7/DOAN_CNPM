@@ -33,6 +33,7 @@ async function init() {
         renderProductDetail(product);
         bindQuantityEvents();
         bindAddToCartEvent(product);
+        bindBuyNowEvent(product);
     } catch (error) {
         console.error("Lỗi tải chi tiết sản phẩm:", error);
         if (error && error.notFound) {
@@ -163,6 +164,43 @@ function updateQty(change) {
 function bindQuantityEvents() {
     // Các nút +/- gọi trực tiếp qua onclick="updateQty(...)" có sẵn trong HTML,
     // hàm updateQty đã được định nghĩa ở phạm vi toàn cục (global) phía trên.
+}
+
+// ----------------------------------------------------------
+// MUA NGAY (bỏ qua giỏ hàng, chuyển thẳng sang trang thanh toán
+// chỉ với đúng 1 sản phẩm này - không trộn với giỏ hàng hiện có)
+// ----------------------------------------------------------
+function bindBuyNowEvent(product) {
+    const btn = document.getElementById("buyNowBtn");
+    if (!btn) return;
+
+    const soLuongTon = product.soLuongTon !== undefined ? product.soLuongTon : (product.SoLuongTon || 0);
+
+    if (soLuongTon <= 0) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-ban"></i> Hết Hàng`;
+        return;
+    }
+
+    btn.addEventListener("click", () => {
+        const qtyInput = document.getElementById("product-quantity");
+        const soLuong = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
+
+        const tenSP = product.tenSP || product.TenSP || "";
+        const giaBan = Number(product.giaBan ?? product.GiaBan ?? 0);
+        const hinhAnh = product.hinhAnh || product.HinhAnh || DEFAULT_PRODUCT_IMAGE;
+        const maSP = product.maSP || product.MaSP || getProductIdFromQueryString();
+
+        setBuyNowItem({
+            maSP,
+            tenSP,
+            giaBan,
+            hinhAnh,
+            soLuongTon
+        }, soLuong);
+
+        window.location.href = "thanhtoan.html?buynow=1";
+    });
 }
 
 // ----------------------------------------------------------
