@@ -194,6 +194,7 @@ create table KHACHHANG (
    TenKhachHang         nvarchar(100)        null,
    SDTKhachHang         nvarchar(15)         null,
    DiaChiKhachHang      nvarchar(255)        null,
+   Email                varchar(100)         not null,
    TrangThai            int                  null,
    constraint PK_KHACHHANG primary key (MaKhachHang)
 )
@@ -409,14 +410,14 @@ INSERT INTO NHANVIEN (MaNV, TenDangNhap, MatKhau, TenNV, NgaySinh, GioiTinh, SoD
 GO
 
 -- 2.2. Bảng Khách Hàng
-INSERT INTO KHACHHANG (MaKhachHang, TenDangNhap, MatKhau, TenKhachHang, SDTKhachHang, DiaChiKhachHang, TrangThai) VALUES 
-('KH01', 'thang_nguyen', '123456', N'Nguyễn Văn Thắng', '0909123456', N'102 Pasteur, Phường Bến Nghé, Quận 1, TP.HCM', 1),
-('KH02', 'lan_hoang', '123456', N'Hoàng Thị Lan', '0912345678', N'25 Võ Văn Kiệt, Phường 1, Quận 5, TP.HCM', 1),
-('KH03', 'hung_pham', '123456', N'Phạm Quốc Hùng', '0933888999', N'77 Lê Văn Sỹ, Phường 13, Quận Tân Bình, TP.HCM', 1),
-('KH04', 'mai_do', '123456', N'Đỗ Thị Mai', '0977222333', N'15 Hùng Vương, Phường 4, Quận 10, TP.HCM', 1),
-('KH05', 'tung_vu', '123456', N'Vũ Thanh Tùng', '0988444555', N'90 Điện Biên Phủ, Phường 17, Bình Thạnh, TP.HCM', 1),
-('KH06', 'huong_bui', '123456', N'Bùi Thanh Hương', '0908112233', N'Khu Đô Thị Sala, Phường An Lợi Đông, TP Thủ Đức', 1),
-('KH07', 'kien_trinh', '123456', N'Trịnh Trung Kiên', '0934555666', N'Tòa nhà Landmark 81, Vinhomes Central Park, Bình Thạnh', 1);
+INSERT INTO KHACHHANG (MaKhachHang, TenDangNhap, MatKhau, TenKhachHang, SDTKhachHang, DiaChiKhachHang, Email, TrangThai) VALUES 
+('KH01', 'thang_nguyen', '123456', N'Nguyễn Văn Thắng', '0909123456', N'102 Pasteur, Phường Bến Nghé, Quận 1, TP.HCM', 'thang_nguyen@gmail.com', 1),
+('KH02', 'lan_hoang', '123456', N'Hoàng Thị Lan', '0912345678', N'25 Võ Văn Kiệt, Phường 1, Quận 5, TP.HCM', 'lan_hoang@gmail.com', 1),
+('KH03', 'hung_pham', '123456', N'Phạm Quốc Hùng', '0933888999', N'77 Lê Văn Sỹ, Phường 13, Quận Tân Bình, TP.HCM', 'hung_pham@gmail.com', 1),
+('KH04', 'mai_do', '123456', N'Đỗ Thị Mai', '0977222333', N'15 Hùng Vương, Phường 4, Quận 10, TP.HCM', 'mai_do@gmail.com', 1),
+('KH05', 'tung_vu', '123456', N'Vũ Thanh Tùng', '0988444555', N'90 Điện Biên Phủ, Phường 17, Bình Thạnh, TP.HCM', 'tung_vu@gmail.com', 1),
+('KH06', 'huong_bui', '123456', N'Bùi Thanh Hương', '0908112233', N'Khu Đô Thị Sala, Phường An Lợi Đông, TP Thủ Đức', 'huong_bui@gmail.com', 1),
+('KH07', 'kien_trinh', '123456', N'Trịnh Trung Kiên', '0934555666', N'Tòa nhà Landmark 81, Vinhomes Central Park, Bình Thạnh', 'kien_trinh@gmail.com', 1);
 GO
 
 /* ========================================================= */
