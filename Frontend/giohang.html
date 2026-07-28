@@ -44,7 +44,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">2</span>
                 </a>
-                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+                <a href="login.html" class="btn-outline">Đăng Nhập</a>
             </div>
         </div>
     </nav>
@@ -59,77 +59,15 @@
     <main class="container">
         <div class="cart-wrapper">
             
-            <!-- Cột trái: Danh sách sản phẩm -->
-            <div class="cart-items">
-                <table class="cart-table">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Đơn giá</th>
-                            <th>Số lượng</th>
-                            <th>Thành tiền</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Sản phẩm 1 -->
-                        <tr>
-                            <td>
-                                <div class="cart-product-info">
-                                    <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200" alt="Sofa">
-                                    <div class="cart-product-details">
-                                        <h4>Sofa Da Bò Ý Cao Cấp</h4>
-                                        <p>Vật liệu: Da thật, Chân Inox</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="font-weight: 600;">18,500,000 đ</td>
-                            <td>
-                                <div class="quantity-selector">
-                                    <button class="qty-btn">-</button>
-                                    <input type="number" value="1">
-                                    <button class="qty-btn">+</button>
-                                </div>
-                            </td>
-                            <td style="font-weight: 700; color: var(--accent-color);">18,500,000 đ</td>
-                            <td>
-                                <button class="btn-action delete" title="Xóa khỏi giỏ"><i class="fas fa-trash-alt"></i></button>
-                            </td>
-                        </tr>
-                        <!-- Sản phẩm 2 -->
-                        <tr>
-                            <td>
-                                <div class="cart-product-info">
-                                    <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=200" alt="Ghế">
-                                    <div class="cart-product-details">
-                                        <h4>Ghế Tựa Thư Giãn Bắc Âu</h4>
-                                        <p>Vật liệu: Gỗ Sồi, Vải Nỉ</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="font-weight: 600;">4,200,000 đ</td>
-                            <td>
-                                <div class="quantity-selector">
-                                    <button class="qty-btn">-</button>
-                                    <input type="number" value="1">
-                                    <button class="qty-btn">+</button>
-                                </div>
-                            </td>
-                            <td style="font-weight: 700; color: var(--accent-color);">4,200,000 đ</td>
-                            <td>
-                                <button class="btn-action delete" title="Xóa khỏi giỏ"><i class="fas fa-trash-alt"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- Cột trái: Danh sách sản phẩm - được render động bởi giohang.js từ giỏ hàng lưu ở localStorage -->
+            <div class="cart-items"></div>
 
             <!-- Cột phải: Tổng kết đơn hàng -->
             <div class="cart-summary">
                 <h3>Tổng Đơn Hàng</h3>
                 <div class="summary-row">
                     <span>Tạm tính:</span>
-                    <span style="font-weight: 600;">22,700,000 đ</span>
+                    <span id="cartSubtotal" style="font-weight: 600;">0 đ</span>
                 </div>
                 
                 <div class="summary-row">
@@ -139,7 +77,7 @@
                 
                 <div class="summary-total">
                     <span>Tổng cộng:</span>
-                    <span>22,700,000 đ</span>
+                    <span id="cartGrandTotal">0 đ</span>
                 </div>
 
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 15px; text-align: center;">
@@ -147,7 +85,7 @@
                 </p>
 
                 <!-- Nút chuyển sang trang thanh toán -->
-                <a href="thanhtoan.html" class="btn-primary btn-checkout">
+                <a href="thanhtoan.html" id="btnCheckout" class="btn-primary btn-checkout">
                     Tiến Hành Thanh Toán <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
@@ -180,5 +118,8 @@
         </div>
     </footer>
 
+    <!-- Module giỏ hàng dùng chung (localStorage) + logic riêng của trang giỏ hàng -->
+    <script src="js/cart.js"></script>
+    <script src="giohang.js"></script>
 </body>
 </html>

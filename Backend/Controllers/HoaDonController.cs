@@ -117,6 +117,17 @@ namespace Backend.Controllers
             if (hd == null)
                 return NotFound(new { message = "Không tìm thấy hóa đơn." });
 
+            // Nhân viên (không phải Admin) chỉ được xem hóa đơn do chính mình đã
+            // nhận/lập, hoặc hóa đơn online đang chờ trong "kho chung" (NV01).
+            // Hóa đơn đã có nhân viên khác nhận thì không được xem.
+            var (role, userId) = GetCurrentUser();
+            bool isAdmin = role.Contains("Admin", StringComparison.OrdinalIgnoreCase) ||
+                           role.Contains("Quản trị", StringComparison.OrdinalIgnoreCase);
+            if (!isAdmin && hd.MaNV != userId && hd.MaNV != "NV01")
+            {
+                return StatusCode(403, new { message = "Bạn không có quyền xem hóa đơn của người khác." });
+            }
+
             var result = new
             {
                 hd.MaHD,
@@ -177,12 +188,25 @@ namespace Backend.Controllers
                     .Max();
                 string maHDMoi = $"HD{(maxSo + 1):000}";
 
-                // Lấy mã nhân viên từ request do Frontend gửi lên
+                // Lấy mã nhân viên từ request do Frontend gửi lên.
+                // Nếu Frontend không gửi (trường hợp KHÁCH HÀNG tự đặt hàng online
+                // qua trang thanhtoan.html) thì mặc định gán cho NV01
+                // (Phạm Huỳnh Thiên Sơn - Admin) để làm "hóa đơn dùng chung",
+                // chờ nhân viên trực nào rảnh sẽ vào nhận xử lý.
                 string maNhanVienPhuTrach = request.MaNV;
-                if (string.IsNullOrWhiteSpace(maNhanVienPhuTrach))
+                bool laDonKhachTuDatOnline = string.IsNullOrWhiteSpace(maNhanVienPhuTrach);
+                if (laDonKhachTuDatOnline)
                 {
                     maNhanVienPhuTrach = "NV01"; // Mặc định nếu trống (Đơn Online)
                 }
+
+                // Đơn khách tự đặt online: coi như đã "chốt đơn" xong ở phía khách hàng,
+                // nên vào thẳng trạng thái "Đang xử lý" để nhân viên xử lý giao hàng.
+                // Đơn do Nhân viên/Admin tự lập tại quầy (có chọn MaNV) thì vẫn giữ
+                // trạng thái khởi tạo "Chờ thanh toán" như cũ (khách thanh toán tại quầy).
+                string trangThaiKhoiTao = laDonKhachTuDatOnline
+                    ? TrangThaiHoaDon.DangXuLy
+                    : TrangThaiHoaDon.ChoThanhToan;
 
                 var hoaDonMoi = new HOADON
                 {
@@ -191,7 +215,7 @@ namespace Backend.Controllers
                     MaKhachHang = request.MaKhachHang,
                     NgayLapHD = DateTime.Now,
                     NgayGiaoHang = null,
-                    TrangThaiGiaoHang = TrangThaiHoaDon.ChoThanhToan
+                    TrangThaiGiaoHang = trangThaiKhoiTao
                 };
                 _context.HOADON.Add(hoaDonMoi);
 
@@ -282,18 +306,20 @@ namespace Backend.Controllers
             if (!isAdmin)
             {
                 // BƯỚC 1: Xử lý nghiệp vụ "Nhận đơn Online"
-                if (hoaDon.MaNV == "NV01" && !string.IsNullOrWhiteSpace(request.MaNV) && request.MaNV == userId)
+                // Đơn đang ở "kho chung" (MaNV = NV01, tức là do khách tự đặt online
+                // và chưa nhân viên nào xử lý) thì NHÂN VIÊN ĐANG ĐĂNG NHẬP là người
+                // đầu tiên thao tác (đổi trạng thái/ngày giao) sẽ nghiễm nhiên "nhận đơn":
+                // hóa đơn được gán lại MaNV = chính nhân viên đó (không còn là NV01/
+                // Phạm Huỳnh Thiên Sơn nữa) -> kể từ lúc này hóa đơn sẽ ẩn khỏi các
+                // tài khoản nhân viên khác, chỉ nhân viên vừa nhận + Admin còn thấy được.
+                // Lưu ý: KHÔNG dựa vào request.MaNV do Frontend gửi lên (không tin dữ liệu
+                // client) mà lấy thẳng userId từ JWT để đảm bảo đúng người đang thao tác.
+                if (hoaDon.MaNV == "NV01")
                 {
                     hoaDon.MaNV = userId; // Gán đơn hàng cho nhân viên đang thao tác
-                    
-                    // Tự động cập nhật trạng thái nếu đơn đang chờ thanh toán
-                    if (hoaDon.TrangThaiGiaoHang == TrangThaiHoaDon.ChoThanhToan)
-                    {
-                        hoaDon.TrangThaiGiaoHang = TrangThaiHoaDon.DangXuLy;
-                    }
                 }
-                // Chốt chặn bảo mật: Cấm sửa hóa đơn của người khác
-                else if (hoaDon.MaNV != userId && hoaDon.MaNV != "NV01")
+                // Chốt chặn bảo mật: Cấm sửa hóa đơn đã có nhân viên khác nhận/lập
+                else if (hoaDon.MaNV != userId)
                 {
                     return StatusCode(403, new { message = "Bạn không có quyền thao tác trên hóa đơn của người khác." });
                 }

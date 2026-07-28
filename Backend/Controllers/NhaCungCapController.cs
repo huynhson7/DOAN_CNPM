@@ -2,6 +2,7 @@ using Backend.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Backend.Controllers
 {
@@ -17,10 +18,11 @@ namespace Backend.Controllers
         }
 
         // =====================================================
-        // 1. GET: Lấy danh sách (Quyền: Admin, Nhân viên)
+        // 1. GET: Lấy danh sách (Mở khóa để Frontend tải Dropdown)
         // =====================================================
         [HttpGet]
-        [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
+        // Đã tắt dòng chặn dưới đây để JS lấy được dữ liệu không cần đính kèm Token
+        // [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
         public async Task<IActionResult> GetAll()
         {
             var list = await _context.NHACUNGCAP
@@ -31,10 +33,10 @@ namespace Backend.Controllers
         }
 
         // =====================================================
-        // 2. GET: Lấy chi tiết theo ID (Quyền: Admin, Nhân viên)
+        // 2. GET: Lấy chi tiết theo ID 
         // =====================================================
         [HttpGet("{id}")]
-        [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
+        // [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
             var item = await _context.NHACUNGCAP

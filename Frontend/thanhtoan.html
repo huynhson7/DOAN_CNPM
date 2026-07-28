@@ -36,29 +36,50 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">2</span>
                 </a>
-                <a href="dangnhap.html" class="btn-outline">Đăng Nhập</a>
+                <a href="login.html" class="btn-outline">Đăng Nhập</a>
             </div>
         </div>
     </nav>
 
     <main class="container" style="padding: 40px 0;">
         <h2 style="margin-bottom: 30px;">Thông Tin Thanh Toán</h2>
-        
-        <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
-            
+
+        <!-- Vùng cảnh báo: chưa đăng nhập / giỏ hàng trống (ẩn mặc định, hiện bởi thanhtoan.js) -->
+        <div id="checkoutGuardMessage" class="product-message" style="display:none; text-align:center; padding:60px 20px;">
+        </div>
+
+        <!-- Vùng xác nhận đặt hàng thành công (ẩn mặc định) -->
+        <div id="checkoutSuccessBox" class="data-card" style="display:none; padding: 40px; text-align:center;">
+            <p style="font-size: 46px; color: #2e7d32; margin-bottom: 10px;"><i class="fas fa-check-circle"></i></p>
+            <h3 style="margin-bottom: 10px;">Đặt hàng thành công!</h3>
+            <p id="checkoutSuccessDetail" style="color: var(--text-muted); margin-bottom: 25px;"></p>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <a href="index.html" class="btn-outline">Về Trang Chủ</a>
+                <a href="sanpham.html" class="btn-primary">Tiếp Tục Mua Sắm</a>
+            </div>
+        </div>
+
+        <form id="checkoutForm" class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+
             <!-- Cột trái: Form thông tin khách hàng -->
             <div class="data-card" style="padding: 25px;">
+                <div id="checkoutError" class="field-error"></div>
+
                 <div class="input-group">
                     <label>Họ và Tên</label>
-                    <input type="text" placeholder="Nhập họ tên của bạn">
+                    <input type="text" id="checkoutHoTen" placeholder="Nhập họ tên của bạn" required>
                 </div>
                 <div class="input-group">
                     <label>Số Điện Thoại</label>
-                    <input type="tel" placeholder="090xxx...">
+                    <input type="tel" id="checkoutSdt" placeholder="090xxx..." required>
                 </div>
                 <div class="input-group">
                     <label>Địa chỉ giao hàng</label>
-                    <textarea rows="3" placeholder="Số nhà, đường, phường/xã..."></textarea>
+                    <textarea rows="3" id="checkoutDiaChi" placeholder="Số nhà, đường, phường/xã..." required></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Ghi chú (không bắt buộc)</label>
+                    <textarea rows="2" id="checkoutGhiChu" placeholder="Ví dụ: Giao giờ hành chính..."></textarea>
                 </div>
             </div>
 
@@ -66,17 +87,24 @@
             <div class="data-card" style="padding: 25px; height: fit-content;">
                 <h3>Đơn hàng của bạn</h3>
                 <hr style="margin: 15px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span>Sofa Da Bò Ý x 1</span>
-                    <span>25.500.000 ₫</span>
+
+                <div id="checkoutOrderItems"></div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; color: var(--text-muted); font-size: 14px;">
+                    <span>Tạm tính:</span>
+                    <span id="checkoutSubtotal">0 đ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 6px; color: #2e7d32; font-size: 14px; font-weight: 600;">
+                    <span>Phí vận chuyển:</span>
+                    <span>Miễn phí</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; margin-top: 15px; color: var(--accent-color);">
                     <span>Tổng cộng:</span>
-                    <span>25.500.000 ₫</span>
+                    <span id="checkoutGrandTotal">0 đ</span>
                 </div>
-                <button class="btn-primary" style="margin-top: 25px;">Đặt Hàng Ngay</button>
+                <button type="submit" id="btnPlaceOrder" class="btn-primary" style="margin-top: 25px; width: 100%;">Đặt Hàng Ngay</button>
             </div>
-        </div>
+        </form>
     </main>
 
   <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
@@ -103,5 +131,8 @@
     </div>
 </footer>
 
+    <!-- Module giỏ hàng dùng chung (localStorage) + logic riêng của trang thanh toán -->
+    <script src="js/cart.js"></script>
+    <script src="thanhtoan.js"></script>
 </body>
 </html>

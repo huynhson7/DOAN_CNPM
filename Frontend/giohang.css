@@ -121,3 +121,9 @@
     text-decoration: none;
     gap: 10px;
 }
+
+.btn-checkout.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: auto; /* vẫn nhận click để hiện thông báo lỗi */
+}

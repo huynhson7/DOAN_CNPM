@@ -66,10 +66,22 @@
     <!-- Nội dung chính -->
     <main class="main-content">
         <header class="top-header">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Tìm kiếm tên, mã sản phẩm...">
-            </div>
+            <!-- [ĐÃ CHỈNH SỬA] Đưa nút thêm sản phẩm lên kế bên ô tìm kiếm bằng Flexbox -->
+           <div class="action-bar" style="display: flex; justify-content: flex-start; align-items: center; gap: 25px; margin-bottom: 20px;">
+    
+    <!-- Ô tìm kiếm -->
+    <div class="search-box" style="position: relative; width: 350px;">
+        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm tên, mã sản phẩm..." style="width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #ccc; border-radius: 5px; outline: none;">
+    </div>
+
+    <!-- Nút Thêm Sản Phẩm (Đã tách khoảng cách) -->
+    <button class="btn-add" onclick="openSpModal()" style="white-space: nowrap; width: fit-content; background-color: #1a1a1a; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; margin-left: 10px;">
+        <i class="fas fa-plus"></i> Thêm Sản Phẩm
+    </button>
+
+</div>
+            
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
                 <span>Quản trị viên</span>
@@ -79,18 +91,25 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Danh Sách Sản Phẩm</h2>
-                <button class="btn-primary" onclick="openSpModal()"><i class="fas fa-plus"></i> Thêm Sản Phẩm</button>
+                <!-- Nút Thêm Sản Phẩm đã được dời lên Header theo yêu cầu -->
             </div>
 
             <div class="data-card">
                 <table class="data-table">
+                    <!-- [ĐÃ CHỈNH SỬA] Thêm cột Nhà Cung Cấp ngay sau Mục đích sử dụng -->
                     <thead>
                         <tr>
                             <th>Mã SP</th>
-                            <th>Hình Ảnh</th>
+                            <th>Vật Liệu</th>
+                            <th>Mục Đích Sử Dụng</th>
+                            <th>Nhà Cung Cấp</th>
+                            <th>Nhóm Sản Phẩm</th>
+                            <th style="text-align: center;">Hình Ảnh</th>
                             <th>Tên Sản Phẩm</th>
-                            <th>Giá Bán</th>
+                            <th>Đơn Vị Tính</th>
                             <th>Tồn Kho</th>
+                            <th>Giá Bán</th>
+                            <th>Mô Tả</th>
                             <th>Trạng Thái</th>
                             <th>Thao Tác</th>
                         </tr>
@@ -103,7 +122,7 @@
         </div>
     </main>
 
-    <!-- Modal Thêm Sản Phẩm (Đã bổ sung thanh cuộn) -->
+    <!-- Modal Thêm Sản Phẩm -->
     <div id="spModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
             <div class="modal-header">
@@ -177,7 +196,10 @@
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 2;">
                             <label>Hình Ảnh (Chọn file từ máy)</label>
-                            <input type="file" id="hinhAnhFile" class="input-file-custom" accept=".jpg, .png, .webp">
+                            <!-- [THÊM MỚI] Sự kiện onchange để xem trước hình ảnh -->
+                            <input type="file" id="hinhAnhFile" class="input-file-custom" accept=".jpg, .png, .webp" onchange="previewImg(this)">
+                            <!-- [THÊM MỚI] Vùng hiển thị ảnh xem trước -->
+                            <img id="imgPreview" src="" style="display:none; width: 120px; height: 120px; object-fit: cover; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" alt="Preview">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Trạng Thái</label>
@@ -198,7 +220,6 @@
     </div>
 
     <!-- Script điều khiển Modal -->
-   <!-- Script điều khiển Modal -->
     <script>
         const modalSP = document.getElementById("spModal");
         
@@ -208,8 +229,27 @@
         
         function closeSpModal() { 
             modalSP.style.display = "none"; 
-            // Dòng code mới thêm vào: Xóa trắng form và đưa về chế độ Thêm Mới mỗi khi đóng Modal
             document.getElementById("spForm").reset();
+            // Ẩn khung xem trước ảnh khi đóng
+            const preview = document.getElementById("imgPreview");
+            preview.src = "";
+            preview.style.display = "none";
+        }
+
+        // [THÊM MỚI] Hàm xử lý hiển thị ảnh tức thì khi vừa chọn xong
+        function previewImg(input) {
+            const preview = document.getElementById('imgPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         }
         
         window.onclick = function(event) {

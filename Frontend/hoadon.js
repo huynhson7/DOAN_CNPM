@@ -187,6 +187,7 @@ async function openHdModal(maHD) {
             method: 'GET',
             headers: getAuthHeaders()
         });
+        if (res.status === 403) throw new Error('Hóa đơn này đã có nhân viên khác nhận xử lý, bạn không thể xem.');
         if (!res.ok) throw new Error('Không tải được chi tiết hóa đơn');
         const hd = await res.json();
 
@@ -219,7 +220,7 @@ async function openHdModal(maHD) {
         document.getElementById('hdModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi xem chi tiết hóa đơn:', error);
-        alert('Không thể tải chi tiết hóa đơn này!');
+        alert(error.message || 'Không thể tải chi tiết hóa đơn này!');
     }
 }
 
@@ -260,6 +261,13 @@ async function resetFormTaoHoaDon() {
     // Hóa đơn mới luôn bắt đầu ở trạng thái "Chờ thanh toán" nên không cần
     // hiển thị ô chọn trạng thái khi Tạo mới (chỉ hiện khi Sửa hóa đơn)
     document.getElementById('groupTrangThai').style.display = 'none';
+
+    // Reset goi y nhan don (chi hien khi mo modal Sua hoa don online chua ai nhan)
+    const hintNhanVien = document.getElementById('hintNhanVien');
+    if (hintNhanVien) {
+        hintNhanVien.style.display = 'none';
+        hintNhanVien.innerText = '';
+    }
 
     // Ngày lập luôn là hôm nay
     const homNay = new Date();
@@ -364,6 +372,7 @@ async function openEditModal(maHD) {
             method: 'GET',
             headers: getAuthHeaders()
         });
+        if (res.status === 403) throw new Error('Hóa đơn này đã có nhân viên khác nhận xử lý, bạn không thể sửa.');
         if (!res.ok) throw new Error('Không tải được hóa đơn cần sửa');
         const hd = await res.json();
 
@@ -431,12 +440,26 @@ async function openEditModal(maHD) {
             if(btnAddSp) btnAddSp.disabled = false;
         }
 
+        // Goi y cho nhan vien: neu day la don online dang o "kho chung" (NV01 -
+        // Pham Huynh Thien Son) va nguoi dang dang nhap khong phai Admin, thi khi
+        // luu thay doi hoa don nay se tu dong duoc gan ve ten nhan vien dang thao tac.
+        const hintNhanVien = document.getElementById('hintNhanVien');
+        if (hintNhanVien) {
+            if (!IS_ADMIN && (hd.nhanVien?.maNV || '') === 'NV01') {
+                hintNhanVien.style.display = 'block';
+                hintNhanVien.innerText = 'Đơn online chưa ai nhận - khi bạn lưu thay đổi, hóa đơn này sẽ được gán về cho bạn.';
+            } else {
+                hintNhanVien.style.display = 'none';
+                hintNhanVien.innerText = '';
+            }
+        }
+
         renderGioHang();
 
         document.getElementById('createModal').style.display = 'flex';
     } catch (error) {
         console.error('Lỗi mở form sửa hóa đơn:', error);
-        alert('Không thể tải hóa đơn để sửa!');
+        alert(error.message || 'Không thể tải hóa đơn để sửa!');
     }
 }
 

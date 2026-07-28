@@ -127,9 +127,52 @@ document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
 
+    const allowed = applyGroupPermissionUI();
+    if (!allowed) return;
+
     bindEvents();
 
     await loadGroups();
+
+}
+
+
+
+// ==========================================================
+// 4b. PHÂN QUYỀN THEO ROLE (NHOMSANPHAM - quantri.html)
+// - Quản trị Hệ thống: Toàn quyền thêm, sửa, xóa.
+// - NV Bán Hàng: Chỉ xem, không được thêm/sửa/xóa.
+// - Khách hàng (hoặc chưa đăng nhập): Không được vào trang này.
+// Trả về false nếu không được phép truy cập trang (đã điều hướng đi login).
+// ==========================================================
+function applyGroupPermissionUI() {
+
+    const userRole = localStorage.getItem('userRole') || '';
+    const isAdmin = userRole === 'Quản trị Hệ thống';
+    const isStaff = userRole === 'NV Bán Hàng';
+    const isAllowed = isAdmin || isStaff;
+
+    const menuAdminSanPham = document.getElementById('menu-admin-sanpham');
+    const menuAdminNhom = document.getElementById('menu-admin-nhom');
+
+    if (!isAllowed) {
+        if (menuAdminSanPham) menuAdminSanPham.style.display = 'none';
+        if (menuAdminNhom) menuAdminNhom.style.display = 'none';
+
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+        return false;
+    }
+
+    window.__isAdminNhomSP = isAdmin;
+
+    // Nhân viên: chỉ xem, ẩn nút "Thêm Nhóm Mới"
+    if (!isAdmin) {
+        const btnAdd = document.querySelector('.page-header .btn-primary[onclick="openModal()"]');
+        if (btnAdd) btnAdd.style.display = 'none';
+    }
+
+    return true;
 
 }
 
@@ -298,18 +341,23 @@ function renderTable(data) {
         const badgeClass = isActive ? "badge-active" : "badge-inactive";
         const badgeText = isActive ? "Hoạt động" : "Tạm ngưng";
 
+        const isAdminNow = window.__isAdminNhomSP === true;
+        const actionsHtml = isAdminNow
+            ? `<button class="btn-action edit" data-id="${maNhomSP}" title="Sửa">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-action delete" data-id="${maNhomSP}" title="Xóa">
+                    <i class="fas fa-trash"></i>
+                </button>`
+            : `<span style="color:#9e9e9e; font-size:13px;">Chỉ xem</span>`;
+
         return `
             <tr>
                 <td>${escapeHtml(maNhomSP)}</td>
                 <td>${escapeHtml(tenNhomSP)}</td>
                 <td><span class="badge ${badgeClass}">${badgeText}</span></td>
                 <td>
-                    <button class="btn-action edit" data-id="${maNhomSP}" title="Sửa">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="btn-action delete" data-id="${maNhomSP}" title="Xóa">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${actionsHtml}
                 </td>
             </tr>
         `;

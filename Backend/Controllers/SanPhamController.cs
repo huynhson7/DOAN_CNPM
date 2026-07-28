@@ -29,6 +29,7 @@ namespace Backend.Controllers
         // POST: api/san-pham/upload-image
         // =====================================================
         [HttpPost("upload-image")]
+        [AllowAnonymous] 
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -48,26 +49,14 @@ namespace Backend.Controllers
                 await file.CopyToAsync(fileStream);
             }
 
-            string fileUrl = $"http://localhost:5129/images/{uniqueFileName}";
+            string baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
+            string fileUrl = $"{baseUrl}/images/{uniqueFileName}";
             return Ok(new { url = fileUrl });
         }
+        
 
         // =====================================================
         // GET: api/san-pham
-        // GET: api/san-pham?chiHoatDong=true
-        //
-        // Ghi chú quan trọng:
-        // - Endpoint này đang được trang Quản trị (admin_sanpham.js) dùng để
-        //   liệt kê TẤT CẢ sản phẩm (kể cả ngừng kinh doanh) nhằm quản lý.
-        // - Để KHÔNG phá vỡ chức năng Quản trị, hành vi mặc định (không truyền
-        //   tham số) được giữ NGUYÊN 100% như cũ.
-        // - Khi truyền chiHoatDong=true (dùng cho trang Cửa hàng - sanpham.html),
-        //   API sẽ chỉ trả sản phẩm đang hoạt động (TrangThai = 1) và sắp xếp
-        //   theo tên sản phẩm.
-        // - Include() được thêm vào TẤT CẢ các trường hợp để trả kèm tên Nhóm
-        //   sản phẩm / Mục đích sử dụng / Vật liệu. Đây chỉ là dữ liệu BỔ SUNG
-        //   (thêm field lồng nhau trong JSON), không đổi/xoá field cũ, nên
-        //   không ảnh hưởng tới code Admin đang đọc các field cũ.
         // =====================================================
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] bool? chiHoatDong)
@@ -78,22 +67,39 @@ namespace Backend.Controllers
                 .Include(x => x.MucDichSuDung)
                 .Include(x => x.LamNens)
                     .ThenInclude(l => l.VatLieu)
+                .Include(x => x.CungCaps)
+                    .ThenInclude(c => c.NhaCungCap)
                 .AsQueryable();
 
             if (chiHoatDong == true)
             {
-                // Dùng cho trang Cửa hàng: chỉ hiển thị sản phẩm còn hoạt động
                 query = query.Where(x => x.TrangThai == 1)
                              .OrderBy(x => x.TenSP);
             }
             else
             {
-                // Giữ nguyên thứ tự cũ để không ảnh hưởng trang Quản trị
                 query = query.OrderBy(x => x.MaSP.Length)
                              .ThenBy(x => x.MaSP);
             }
 
             var list = await query.ToListAsync();
+            var baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
+
+            foreach (var item in list)
+            {
+                if (!string.IsNullOrEmpty(item.HinhAnh))
+                {
+                    if (item.HinhAnh.StartsWith("/images/"))
+                    {
+                        item.HinhAnh = baseUrl + item.HinhAnh;
+                    }
+                    else if (Uri.TryCreate(item.HinhAnh, UriKind.Absolute, out Uri? absoluteUri))
+                    {
+                        // Chuẩn hóa lại domain/port theo máy chủ hiện tại đang thực thi
+                        item.HinhAnh = $"{baseUrl}{absoluteUri.AbsolutePath}";
+                    }
+                }
+            }
 
             return Ok(list);
         }
@@ -104,83 +110,83 @@ namespace Backend.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            // Include Nhóm sản phẩm / Mục đích sử dụng / Vật liệu để trang
-            // chi tiết sản phẩm (chitiet-sanpham.html) có tên hiển thị.
-            // Đây là field BỔ SUNG, không đổi/xoá field cũ nên không ảnh
-            // hưởng tới form Sửa sản phẩm bên trang Quản trị.
             var item = await _context.SANPHAM
                 .AsNoTracking()
-                .Include(x => x.NhomSanPham)
-                .Include(x => x.MucDichSuDung)
-                .Include(x => x.LamNens)
-                    .ThenInclude(l => l.VatLieu)
                 .FirstOrDefaultAsync(x => x.MaSP == id);
 
             if (item == null)
             {
-                return NotFound(new
-                {
-                    message = "Không tìm thấy sản phẩm."
-                });
+                return NotFound(new { message = "Không tìm thấy sản phẩm." });
             }
 
-            return Ok(item);
+            if (!string.IsNullOrEmpty(item.HinhAnh))
+            {
+                var baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
+                if (item.HinhAnh.StartsWith("/images/"))
+                {
+                    item.HinhAnh = baseUrl + item.HinhAnh;
+                }
+                else if (Uri.TryCreate(item.HinhAnh, UriKind.Absolute, out Uri? absoluteUri))
+                {
+                    item.HinhAnh = $"{baseUrl}{absoluteUri.AbsolutePath}";
+                }
+            }
+
+            var maVatLieus = await _context.LAMNEN
+                .Where(x => x.MaSP == id)
+                .Select(x => x.MaVL)
+                .ToListAsync();
+
+            var maNhaCungCaps = await _context.CUNGCAP
+                .Where(x => x.MaSP == id)
+                .Select(x => x.MaNcc)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                MaSP = item.MaSP,
+                TenSP = item.TenSP,
+                MaNhomSP = item.MaNhomSP,
+                MaMD = item.MaMD,
+                DonViTinh = item.DonViTinh,
+                SoLuongTon = item.SoLuongTon,
+                GiaBan = item.GiaBan,
+                MoTa = item.MoTa,
+                TrangThai = item.TrangThai,
+                HinhAnh = item.HinhAnh,
+                MaVatLieus = maVatLieus,
+                MaNhaCungCaps = maNhaCungCaps
+            });
         }
 
         // =====================================================
         // POST: api/san-pham
         // =====================================================
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Create([FromBody] SanPhamRequest request)
         {
             if (!ModelState.IsValid || request?.SanPham == null)
                 return BadRequest(ModelState);
 
-            // Kiểm tra mã sản phẩm
-            bool maTonTai = await _context.SANPHAM
-                .AnyAsync(x => x.MaSP == request.SanPham.MaSP);
+            bool maTonTai = await _context.SANPHAM.AnyAsync(x => x.MaSP == request.SanPham.MaSP);
+            if (maTonTai) return BadRequest(new { message = "Mã sản phẩm đã tồn tại." });
 
-            if (maTonTai)
-            {
-                return BadRequest(new { message = "Mã sản phẩm đã tồn tại." });
-            }
+            bool tenTonTai = await _context.SANPHAM.AnyAsync(x => x.TenSP == request.SanPham.TenSP);
+            if (tenTonTai) return BadRequest(new { message = "Tên sản phẩm đã tồn tại." });
 
-            // Kiểm tra tên sản phẩm
-            bool tenTonTai = await _context.SANPHAM
-                .AnyAsync(x => x.TenSP == request.SanPham.TenSP);
+            bool nhomTonTai = await _context.NHOMSANPHAM.AnyAsync(x => x.MaNhomSP == request.SanPham.MaNhomSP);
+            if (!nhomTonTai) return BadRequest(new { message = "Nhóm sản phẩm không tồn tại." });
 
-            if (tenTonTai)
-            {
-                return BadRequest(new { message = "Tên sản phẩm đã tồn tại." });
-            }
-
-            // Kiểm tra nhóm sản phẩm
-            bool nhomTonTai = await _context.NHOMSANPHAM
-                .AnyAsync(x => x.MaNhomSP == request.SanPham.MaNhomSP);
-
-            if (!nhomTonTai)
-            {
-                return BadRequest(new { message = "Nhóm sản phẩm không tồn tại." });
-            }
-
-            // Kiểm tra mục đích sử dụng
-            bool mucDichTonTai = await _context.MUCDICHSUDUNG
-                .AnyAsync(x => x.MaMD == request.SanPham.MaMD);
-
-            if (!mucDichTonTai)
-            {
-                return BadRequest(new { message = "Mục đích sử dụng không tồn tại." });
-            }
+            bool mucDichTonTai = await _context.MUCDICHSUDUNG.AnyAsync(x => x.MaMD == request.SanPham.MaMD);
+            if (!mucDichTonTai) return BadRequest(new { message = "Mục đích sử dụng không tồn tại." });
 
             var reqMaVLs = request.MaVatLieus.Distinct().ToList();
             if (reqMaVLs.Any())
             {
                 var countVL = await _context.VATLIEU.CountAsync(x => reqMaVLs.Contains(x.MaVL));
                 if (countVL != reqMaVLs.Count)
-                {
                     return BadRequest(new { message = "Một hoặc nhiều mã vật liệu không tồn tại." });
-                }
             }
 
             var reqMaNCCs = request.MaNhaCungCaps.Distinct().ToList();
@@ -188,56 +194,42 @@ namespace Backend.Controllers
             {
                 var countNCC = await _context.NHACUNGCAP.CountAsync(x => reqMaNCCs.Contains(x.MaNcc));
                 if (countNCC != reqMaNCCs.Count)
-                {
                     return BadRequest(new { message = "Một hoặc nhiều mã nhà cung cấp không tồn tại." });
+            }
+
+            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh))
+            {
+                if (Uri.TryCreate(request.SanPham.HinhAnh, UriKind.Absolute, out Uri? uri))
+                {
+                     request.SanPham.HinhAnh = uri?.AbsolutePath;
                 }
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                // Thêm sản phẩm
                 _context.SANPHAM.Add(request.SanPham);
                 await _context.SaveChangesAsync();
 
-                // Thêm danh sách vật liệu (LAM_NEN)
                 foreach (var maVL in reqMaVLs)
                 {
-                    _context.LAMNEN.Add(new LAMNEN
-                    {
-                        MaSP = request.SanPham.MaSP,
-                        MaVL = maVL
-                    });
+                    _context.LAMNEN.Add(new LAMNEN { MaSP = request.SanPham.MaSP, MaVL = maVL });
                 }
 
-                // Thêm danh sách nhà cung cấp (CUNG_CAP)
                 foreach (var maNCC in reqMaNCCs)
                 {
-                    _context.CUNGCAP.Add(new CUNGCAP
-                    {
-                        MaSP = request.SanPham.MaSP,
-                        MaNcc = maNCC
-                    });
+                    _context.CUNGCAP.Add(new CUNGCAP { MaSP = request.SanPham.MaSP, MaNcc = maNCC });
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = request.SanPham.MaSP },
-                    request.SanPham);
+                return CreatedAtAction(nameof(GetById), new { id = request.SanPham.MaSP }, request.SanPham);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-
-                return BadRequest(new
-                {
-                    message = "Thêm sản phẩm thất bại.",
-                    error = ex.Message
-                });
+                return BadRequest(new { message = "Thêm sản phẩm thất bại.", error = ex.Message });
             }
         }
 
@@ -245,37 +237,46 @@ namespace Backend.Controllers
         // PUT: api/san-pham/SP001
         // =====================================================
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> Update(string id, [FromBody] SanPhamRequest request)
         {
             if (request?.SanPham == null || id != request.SanPham.MaSP)
-            {
                 return BadRequest(new { message = "Mã sản phẩm không khớp hoặc dữ liệu rỗng." });
-            }
 
             var product = await _context.SANPHAM.FindAsync(id);
+            if (product == null) return NotFound(new { message = "Không tìm thấy sản phẩm." });
 
-            if (product == null)
+            // =====================================================
+            // PHÂN QUYỀN THEO ROLE:
+            // - Quản trị Hệ thống: toàn quyền sửa mọi trường (kể cả GiaBan, TrangThai).
+            // - NV Bán Hàng: CHỈ được cập nhật SoLuongTon, MoTa, HinhAnh.
+            //   Mọi trường khác (kể cả nếu Frontend lỡ gửi lên do bị can thiệp)
+            //   đều bị ép về lại đúng giá trị hiện có trong CSDL, không tin
+            //   tưởng Frontend - đây là lớp bảo vệ THẬT SỰ, không chỉ ẩn nút UI.
+            // =====================================================
+            bool isAdmin = User.IsInRole("Quản trị Hệ thống");
+            if (!isAdmin)
             {
-                return NotFound(new { message = "Không tìm thấy sản phẩm." });
+                request.SanPham.MaMD = product.MaMD;
+                request.SanPham.MaNhomSP = product.MaNhomSP;
+                request.SanPham.TenSP = product.TenSP;
+                request.SanPham.DonViTinh = product.DonViTinh;
+                request.SanPham.GiaBan = product.GiaBan;
+                request.SanPham.TrangThai = product.TrangThai;
+
+                request.MaVatLieus = await _context.LAMNEN.Where(x => x.MaSP == id).Select(x => x.MaVL).ToListAsync();
+                request.MaNhaCungCaps = await _context.CUNGCAP.Where(x => x.MaSP == id).Select(x => x.MaNcc).ToListAsync();
             }
 
-            bool tenTonTai = await _context.SANPHAM
-                .AnyAsync(x => x.TenSP == request.SanPham.TenSP && x.MaSP != id);
-
-            if (tenTonTai)
-            {
-                return BadRequest(new { message = "Tên sản phẩm đã tồn tại." });
-            }
+            bool tenTonTai = await _context.SANPHAM.AnyAsync(x => x.TenSP == request.SanPham.TenSP && x.MaSP != id);
+            if (tenTonTai) return BadRequest(new { message = "Tên sản phẩm đã tồn tại." });
 
             var reqMaVLs = request.MaVatLieus.Distinct().ToList();
             if (reqMaVLs.Any())
             {
                 var countVL = await _context.VATLIEU.CountAsync(x => reqMaVLs.Contains(x.MaVL));
                 if (countVL != reqMaVLs.Count)
-                {
                     return BadRequest(new { message = "Một hoặc nhiều mã vật liệu không tồn tại." });
-                }
             }
 
             var reqMaNCCs = request.MaNhaCungCaps.Distinct().ToList();
@@ -283,20 +284,23 @@ namespace Backend.Controllers
             {
                 var countNCC = await _context.NHACUNGCAP.CountAsync(x => reqMaNCCs.Contains(x.MaNcc));
                 if (countNCC != reqMaNCCs.Count)
-                {
                     return BadRequest(new { message = "Một hoặc nhiều mã nhà cung cấp không tồn tại." });
+            }
+
+            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh))
+            {
+                if (Uri.TryCreate(request.SanPham.HinhAnh, UriKind.Absolute, out Uri? uri))
+                {
+                    request.SanPham.HinhAnh = uri?.AbsolutePath;
                 }
             }
 
-            // 1. LƯU LẠI ĐƯỜNG DẪN ẢNH CŨ TRƯỚC KHI CẬP NHẬT
-            string oldImageUrl = product.HinhAnh;
-            string newImageUrl = request.SanPham.HinhAnh;
+            string? oldImageUrl = product.HinhAnh;
+            string? newImageUrl = request.SanPham.HinhAnh;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                // Cập nhật thuộc tính sản phẩm
                 product.MaMD = request.SanPham.MaMD;
                 product.MaNhomSP = request.SanPham.MaNhomSP;
                 product.TenSP = request.SanPham.TenSP;
@@ -307,22 +311,18 @@ namespace Backend.Controllers
                 product.HinhAnh = request.SanPham.HinhAnh;
                 product.TrangThai = request.SanPham.TrangThai;
 
-                // Xóa vật liệu & nhà cung cấp cũ
                 var oldVatLieus = await _context.LAMNEN.Where(x => x.MaSP == id).ToListAsync();
                 _context.LAMNEN.RemoveRange(oldVatLieus);
 
                 var oldNhaCC = await _context.CUNGCAP.Where(x => x.MaSP == id).ToListAsync();
                 _context.CUNGCAP.RemoveRange(oldNhaCC);
-
                 await _context.SaveChangesAsync();
 
-                // Thêm vật liệu mới
                 foreach (var maVL in reqMaVLs)
                 {
                     _context.LAMNEN.Add(new LAMNEN { MaSP = id, MaVL = maVL });
                 }
 
-                // Thêm nhà cung cấp mới
                 foreach (var maNCC in reqMaNCCs)
                 {
                     _context.CUNGCAP.Add(new CUNGCAP { MaSP = id, MaNcc = maNCC });
@@ -331,20 +331,14 @@ namespace Backend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // ====================================================
-                // 2. NẾU ẢNH BỊ THAY ĐỔI, TIẾN HÀNH XÓA FILE ẢNH CŨ
-                // ====================================================
                 if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != newImageUrl)
                 {
                     try
                     {
-                        // Lấy tên file cũ
                         string oldFileName = oldImageUrl.Substring(oldImageUrl.LastIndexOf('/') + 1);
-
                         string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         string oldFilePath = Path.Combine(webRootPath, "images", oldFileName);
 
-                        // Nếu file cũ tồn tại thì xóa
                         if (System.IO.File.Exists(oldFilePath))
                         {
                             System.IO.File.Delete(oldFilePath);
@@ -361,36 +355,25 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-
-                return BadRequest(new
-                {
-                    message = "Cập nhật sản phẩm thất bại.",
-                    error = ex.Message
-                });
+                return BadRequest(new { message = "Cập nhật sản phẩm thất bại.", error = ex.Message });
             }
         }
+
         // =====================================================
         // DELETE: api/san-pham/SP001
         // =====================================================
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Delete(string id)
         {
             var product = await _context.SANPHAM.FindAsync(id);
+            if (product == null) return NotFound(new { message = "Không tìm thấy sản phẩm." });
 
-            if (product == null)
-            {
-                return NotFound(new { message = "Không tìm thấy sản phẩm." });
-            }
-
-            // Giữ lại đường dẫn ảnh trước khi xóa dữ liệu
-            string oldImageUrl = product.HinhAnh;
-
+            string? oldImageUrl = product.HinhAnh;
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Xóa các bản ghi liên quan ở bảng trung gian
                 var vatLieus = await _context.LAMNEN.Where(x => x.MaSP == id).ToListAsync();
                 if (vatLieus.Any()) _context.LAMNEN.RemoveRange(vatLieus);
 
@@ -398,27 +381,18 @@ namespace Backend.Controllers
                 if (nhaCungCaps.Any()) _context.CUNGCAP.RemoveRange(nhaCungCaps);
 
                 await _context.SaveChangesAsync();
-
-                // Xóa sản phẩm
                 _context.SANPHAM.Remove(product);
-
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // ====================================================
-                // XÓA FILE ẢNH VẬT LÝ TRONG THƯ MỤC WWWROOT
-                // ====================================================
                 if (!string.IsNullOrEmpty(oldImageUrl))
                 {
                     try
                     {
-                        // Cắt lấy tên file từ chuỗi URL
                         string fileName = oldImageUrl.Substring(oldImageUrl.LastIndexOf('/') + 1);
-
                         string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                         string filePath = Path.Combine(webRootPath, "images", fileName);
 
-                        // Kiểm tra nếu file tồn tại trên máy thì xóa
                         if (System.IO.File.Exists(filePath))
                         {
                             System.IO.File.Delete(filePath);
@@ -435,18 +409,10 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-
-                return BadRequest(new
-                {
-                    message = "Xóa sản phẩm thất bại.",
-                    error = ex.Message
-                });
+                return BadRequest(new { message = "Xóa sản phẩm thất bại.", error = ex.Message });
             }
         }
 
-        // =====================================================
-        // DTO nhận dữ liệu từ Frontend
-        // =====================================================
         public class SanPhamRequest
         {
             public SANPHAM SanPham { get; set; } = new SANPHAM();

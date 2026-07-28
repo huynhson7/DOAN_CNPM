@@ -21,7 +21,14 @@ const API_SAN_PHAM = `${API_BASE}/san-pham`;
 const API_NHOM_SP = `${API_BASE}/nhom-san-pham`;
 const API_VAT_LIEU = `${API_BASE}/vat-lieu`;
 
-const DEFAULT_PRODUCT_IMAGE = "https://placehold.co/500x500?text=Luxury+Furniture";
+// Ảnh mặc định dùng SVG nội bộ (data URI) thay vì dịch vụ ngoài, để luôn hiển
+// thị được kể cả khi không có mạng hoặc dịch vụ ngoài ngừng hoạt động.
+const DEFAULT_PRODUCT_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500'>
+        <rect width='100%' height='100%' fill='#f0f0f0'/>
+        <text x='50%' y='50%' font-family='Arial, sans-serif' font-size='28' fill='#9e9e9e' text-anchor='middle' dominant-baseline='middle'>Luxury Furniture</text>
+    </svg>`
+);
 const PRODUCTS_PER_PAGE = 10; // Yêu cầu: 10 sản phẩm / trang
 
 // Ánh xạ giá trị "category" trên URL (được dùng bởi menu dropdown Sản Phẩm
@@ -55,6 +62,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
     applyCategoryFromQueryString();
     bindEvents();
+    bindCrossTabSync();
 
     showLoading();
     try {
@@ -64,6 +72,35 @@ async function init() {
     } catch (error) {
         console.error("Lỗi khởi tạo trang sản phẩm:", error);
         showError();
+    }
+}
+
+// ----------------------------------------------------------
+// 2b. ĐỒNG BỘ REAL-TIME VỚI TRANG QUẢN TRỊ (admin_sanpham.html)
+// Khi bên admin thêm/sửa/xóa sản phẩm thành công, admin_sanpham.js sẽ ghi
+// một mốc thời gian vào localStorage (key "luxuryProductsUpdatedAt"). Trình
+// duyệt sẽ tự bắn sự kiện "storage" tới MỌI tab khác đang mở cùng origin
+// (bao gồm cả tab sanpham.html này), nhờ đó trang cửa hàng có thể tự tải lại
+// danh sách sản phẩm và hiển thị ngay lập tức - không cần người dùng bấm F5.
+// ----------------------------------------------------------
+function bindCrossTabSync() {
+    window.addEventListener("storage", function (e) {
+        if (e.key === "luxuryProductsUpdatedAt") {
+            refreshProductsSilently();
+        }
+    });
+}
+
+// Tải lại dữ liệu sản phẩm (và danh mục lọc) trong nền, không hiện màn hình
+// "Đang tải..." để tránh giật/nháy giao diện khi người dùng đang xem trang.
+async function refreshProductsSilently() {
+    try {
+        await Promise.all([loadCategories(), loadMaterials()]);
+        await loadProducts();
+        renderProductList();
+    } catch (error) {
+        console.error("Lỗi khi tự động đồng bộ danh sách sản phẩm:", error);
+        // Giữ nguyên dữ liệu hiện có nếu đồng bộ thất bại, không làm phiền người dùng
     }
 }
 
@@ -194,6 +231,41 @@ function bindEvents() {
             renderProductList();
         });
     }
+
+    // "Thêm vào giỏ" trên từng thẻ sản phẩm - dùng event delegation vì lưới
+    // sản phẩm được render động (renderProducts) sau mỗi lần lọc/phân trang.
+    const productGrid = document.getElementById("productGrid");
+    if (productGrid) {
+        productGrid.addEventListener("click", function (e) {
+            const btn = e.target.closest("[data-ma-sp]");
+            if (!btn) return;
+            e.preventDefault();
+            handleQuickAddToCart(btn.getAttribute("data-ma-sp"));
+        });
+    }
+}
+
+// Thêm nhanh 1 sản phẩm (số lượng = 1) vào giỏ hàng ngay từ danh sách,
+// tái sử dụng dữ liệu đã có sẵn trong "allProducts" - không gọi lại API.
+function handleQuickAddToCart(maSP) {
+    const product = allProducts.find(p => (p.maSP || p.MaSP) === maSP);
+    if (!product) return;
+
+    const soLuongTon = product.soLuongTon !== undefined ? product.soLuongTon : (product.SoLuongTon || 0);
+    if (soLuongTon <= 0) {
+        showCartToast("Sản phẩm này hiện đã hết hàng.", "error");
+        return;
+    }
+
+    addToCart({
+        maSP,
+        tenSP: getTenSP(product),
+        giaBan: getGiaBan(product),
+        hinhAnh: product.hinhAnh || product.HinhAnh || DEFAULT_PRODUCT_IMAGE,
+        soLuongTon
+    }, 1);
+
+    showCartToast(`Đã thêm "${getTenSP(product)}" vào giỏ hàng.`);
 }
 
 function toggleFilterValue(set, value, isChecked) {
@@ -336,7 +408,7 @@ function buildProductCardHtml(p) {
             <div class="product-image">
                 <img src="${escapeHtml(hinhAnh || DEFAULT_PRODUCT_IMAGE)}"
                      alt="${escapeHtml(tenSP)}"
-                     onerror="this.onerror=null;this.src='${DEFAULT_PRODUCT_IMAGE}';">
+                     onerror="handleProductImgError(this)">
                 <div class="product-actions">
                     <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtml(maSP)}"><i class="fas fa-cart-plus"></i></button>
                     <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
@@ -478,6 +550,32 @@ function getVatLieuNames(p) {
         })
         .filter(Boolean)
         .join(", ");
+}
+
+// ----------------------------------------------------------
+// TỰ ĐỘNG THỬ TẢI LẠI ẢNH (fix lỗi phải F5 mới thấy ảnh vừa upload).
+// Khi <img> báo lỗi (onerror), thay vì rơi ngay về ảnh mặc định, hàm này sẽ
+// thử tải lại chính ảnh đó (kèm tham số chống cache) vài lần với độ trễ tăng
+// dần trước khi mới chịu thua và hiển thị ảnh mặc định.
+// ----------------------------------------------------------
+function handleProductImgError(imgEl) {
+    const attempt = parseInt(imgEl.dataset.retryAttempt || "0", 10);
+    const originalSrc = imgEl.dataset.originalSrc || imgEl.src.split('&__retry=')[0].split('?__retry=')[0];
+    imgEl.dataset.originalSrc = originalSrc;
+
+    const MAX_RETRY = 3;
+    if (attempt < MAX_RETRY) {
+        const nextAttempt = attempt + 1;
+        imgEl.dataset.retryAttempt = nextAttempt;
+        const delay = nextAttempt * 600; // 600ms, 1200ms, 1800ms
+        setTimeout(() => {
+            const sep = originalSrc.includes('?') ? '&' : '?';
+            imgEl.src = `${originalSrc}${sep}__retry=${nextAttempt}_${Date.now()}`;
+        }, delay);
+    } else {
+        imgEl.onerror = null;
+        imgEl.src = DEFAULT_PRODUCT_IMAGE;
+    }
 }
 
 // Tránh XSS khi chèn dữ liệu từ API vào innerHTML

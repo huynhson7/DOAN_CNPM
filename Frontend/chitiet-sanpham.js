@@ -11,6 +11,9 @@ const API_BASE = "http://localhost:5129/api";
 const API_SAN_PHAM = `${API_BASE}/san-pham`;
 const DEFAULT_PRODUCT_IMAGE = "https://placehold.co/800x800?text=Luxury+Furniture";
 
+// Sản phẩm đang xem, lưu lại sau khi tải xong để dùng cho nút "Thêm Vào Giỏ Hàng"
+let currentProduct = null;
+
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
@@ -25,9 +28,11 @@ async function init() {
 
     try {
         const product = await loadProductDetail(maSP);
+        currentProduct = product;
         hideDetailMessage();
         renderProductDetail(product);
         bindQuantityEvents();
+        bindAddToCartEvent(product);
     } catch (error) {
         console.error("Lỗi tải chi tiết sản phẩm:", error);
         if (error && error.notFound) {
@@ -158,6 +163,43 @@ function updateQty(change) {
 function bindQuantityEvents() {
     // Các nút +/- gọi trực tiếp qua onclick="updateQty(...)" có sẵn trong HTML,
     // hàm updateQty đã được định nghĩa ở phạm vi toàn cục (global) phía trên.
+}
+
+// ----------------------------------------------------------
+// THÊM VÀO GIỎ HÀNG (dùng module dùng chung js/cart.js)
+// ----------------------------------------------------------
+function bindAddToCartEvent(product) {
+    const btn = document.getElementById("addToCartBtn");
+    if (!btn) return;
+
+    const soLuongTon = product.soLuongTon !== undefined ? product.soLuongTon : (product.SoLuongTon || 0);
+
+    // Sản phẩm hết hàng thì khóa luôn nút, tránh cho vào giỏ số lượng không có thật
+    if (soLuongTon <= 0) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-ban"></i> Hết Hàng`;
+        return;
+    }
+
+    btn.addEventListener("click", () => {
+        const qtyInput = document.getElementById("product-quantity");
+        const soLuong = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
+
+        const tenSP = product.tenSP || product.TenSP || "";
+        const giaBan = Number(product.giaBan ?? product.GiaBan ?? 0);
+        const hinhAnh = product.hinhAnh || product.HinhAnh || DEFAULT_PRODUCT_IMAGE;
+        const maSP = product.maSP || product.MaSP || getProductIdFromQueryString();
+
+        addToCart({
+            maSP,
+            tenSP,
+            giaBan,
+            hinhAnh,
+            soLuongTon
+        }, soLuong);
+
+        showCartToast(`Đã thêm "${tenSP}" vào giỏ hàng.`);
+    });
 }
 
 // ----------------------------------------------------------

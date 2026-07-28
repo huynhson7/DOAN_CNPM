@@ -1274,6 +1274,13 @@ body {
     gap: 10px;
 }
 
+.add-cart-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #9e9e9e;
+    border-color: #9e9e9e;
+}
+
 /* --- Cam kết --- */
 .product-features {
     list-style: none;

@@ -6,46 +6,173 @@ const API_SAN_PHAM = `${API_BASE}/san-pham`;
 const API_NHOM_SP = `${API_BASE}/nhom-san-pham`;
 const API_MUC_DICH = `${API_BASE}/muc-dich-su-dung`;
 const API_VAT_LIEU = `${API_BASE}/vat-lieu`;
-const API_NHA_CUNG_CAP = `${API_BASE}/nha-cung-cap`;
+
+const API_NHA_CUNG_CAP_URLS = [
+    `${API_BASE}/nha-cung-cap`,
+    `${API_BASE}/nhacungcap`,
+    `${API_BASE}/NhaCungCap`
+];
 
 let mapNhomSP = {};
 let mapMucDich = {};
+let mapVatLieu = {};
+let mapNhaCungCap = {};
 
-// Hai biến này dùng để kiểm soát trạng thái khi Thêm hoặc Sửa
 let isEditMode = false; 
 let currentImageUrl = "";
+
+// ==========================================
+// ẢNH MẶC ĐỊNH (KHÔNG PHỤ THUỘC DỊCH VỤ NGOÀI - via.placeholder.com đã ngừng
+// hoạt động nên nếu ảnh lỗi vĩnh viễn sẽ luôn hiển thị icon vỡ). Dùng SVG
+// nội bộ (data URI) để luôn hiển thị được kể cả khi mất mạng.
+// ==========================================
+const NO_IMAGE_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'>
+        <rect width='100%' height='100%' fill='#f0f0f0'/>
+        <text x='50%' y='50%' font-family='Arial, sans-serif' font-size='16' fill='#9e9e9e' text-anchor='middle' dominant-baseline='middle'>No Image</text>
+    </svg>`
+);
+
+// ==========================================
+// TỰ ĐỘNG THỬ TẢI LẠI ẢNH (fix lỗi phải F5 mới thấy ảnh vừa upload).
+// Khi <img> báo lỗi (onerror), thay vì rơi ngay về ảnh mặc định, hàm này sẽ
+// thử tải lại chính ảnh đó (kèm tham số chống cache) vài lần với độ trễ tăng
+// dần trước khi mới chịu thua và hiển thị ảnh mặc định. Điều này giả lập
+// đúng những gì việc "F5 lại trang" từng làm được, nhưng tự động, không cần
+// người dùng phải bấm tải lại trang.
+// ==========================================
+function handleProductImgError(imgEl) {
+    const attempt = parseInt(imgEl.dataset.retryAttempt || "0", 10);
+    const originalSrc = imgEl.dataset.originalSrc || imgEl.src.split('&__retry=')[0].split('?__retry=')[0];
+    imgEl.dataset.originalSrc = originalSrc;
+
+    const MAX_RETRY = 3;
+    if (attempt < MAX_RETRY) {
+        const nextAttempt = attempt + 1;
+        imgEl.dataset.retryAttempt = nextAttempt;
+        const delay = nextAttempt * 600; // 600ms, 1200ms, 1800ms
+        setTimeout(() => {
+            const sep = originalSrc.includes('?') ? '&' : '?';
+            imgEl.src = `${originalSrc}${sep}__retry=${nextAttempt}_${Date.now()}`;
+        }, delay);
+    } else {
+        imgEl.onerror = null;
+        imgEl.src = NO_IMAGE_SVG;
+    }
+}
+
+// ==========================================
+// ĐỒNG BỘ REAL-TIME GIỮA CÁC TAB/TRANG (admin_sanpham.html <-> sanpham.html)
+// Dùng sự kiện "storage" của trình duyệt: khi tab này ghi vào localStorage,
+// mọi tab khác đang mở cùng origin (kể cả sanpham.html) sẽ nhận được sự kiện
+// "storage" và có thể tự tải lại danh sách sản phẩm - không cần F5.
+// ==========================================
+function notifyProductsChanged() {
+    try {
+        localStorage.setItem('luxuryProductsUpdatedAt', Date.now().toString());
+    } catch (e) {
+        console.warn('Không thể phát tín hiệu đồng bộ sản phẩm:', e);
+    }
+}
+
+// ==========================================
+// HÀM TIỆN ÍCH: Đọc lỗi trả về từ Backend an toàn
+// ==========================================
+async function getErrorMessage(response, fallbackMessage) {
+    let serverMessage = "";
+    try {
+        const text = await response.text();
+        if (text) {
+            try {
+                const json = JSON.parse(text);
+                serverMessage = json.message || json.title || "";
+            } catch {
+                serverMessage = "";
+            }
+        }
+    } catch {
+        // Bỏ qua lỗi đọc luồng mạng
+    }
+
+    if (response.status === 401) {
+        return serverMessage || "Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!";
+    }
+    if (response.status === 403) {
+        return serverMessage || "Tài khoản của bạn không có quyền thực hiện thao tác này!";
+    }
+    if (response.status >= 500) {
+        return serverMessage || "Lỗi phía máy chủ (Server Error). Vui lòng kiểm tra log Backend!";
+    }
+    return serverMessage || fallbackMessage;
+}
 
 // ==========================================
 // 2. LOGIC PHÂN QUYỀN (ROLE-BASED UI)
 // ==========================================
 document.addEventListener("DOMContentLoaded", function() {
-    // Vai trò lấy từ Token khi đăng nhập (xem AuthController.cs) có dạng
-    // "Quản trị Hệ thống" chứ KHÔNG PHẢI chuỗi literal "admin", nên phải
-    // kiểm tra theo cùng quy ước với các trang admin khác (nhanvien.js...),
-    // tuyệt đối không tự gán mặc định quyền admin khi chưa đăng nhập.
     const userRole = localStorage.getItem('userRole') || '';
-    const isAdmin = userRole.toLowerCase().includes('quản trị') || userRole.toLowerCase().includes('admin');
+    const isAdmin = userRole === 'Quản trị Hệ thống';
+    const isStaff = userRole === 'NV Bán Hàng';
+    const isAllowed = isAdmin || isStaff; // Khách hàng (hoặc chưa đăng nhập) KHÔNG được vào trang này
 
     const menuAdminSanPham = document.getElementById('menu-admin-sanpham');
     const menuAdminNhom = document.getElementById('menu-admin-nhom');
 
-    if (!isAdmin) {
+    if (!isAllowed) {
         if (menuAdminSanPham) menuAdminSanPham.style.display = 'none';
         if (menuAdminNhom) menuAdminNhom.style.display = 'none';
 
         if (window.location.pathname.includes('admin_sanpham.html') || window.location.pathname.includes('quantri.html')) {
-            alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên.");
+            alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
             window.location.href = 'login.html';
             return;
         }
     }
-    
+
+    // ==========================================
+    // PHÂN QUYỀN GIAO DIỆN THEO ROLE (SANPHAM - admin_sanpham.html)
+    // - Quản trị Hệ thống: Toàn quyền thêm, sửa, xóa, đổi GiaBan, đổi TrangThai.
+    // - NV Bán Hàng: Xem toàn bộ, chỉ được cập nhật SoLuongTon, MoTa, HinhAnh.
+    //   Không được thêm sản phẩm, không được xóa, không được tự đổi GiaBan.
+    //   (Backend cũng chặn lại việc này ở SanPhamController - đây chỉ là UI).
+    // ==========================================
+    applyProductPermissionUI(isAdmin);
+
     loadDropdownData().then(() => {
         loadProducts();
     });
     
     setupPriceFormatting();
 });
+
+function applyProductPermissionUI(isAdmin) {
+    window.__isAdminSanPham = isAdmin; // dùng lại khi render bảng (ẩn nút Xóa)
+
+    if (isAdmin) return; // Admin: giữ nguyên toàn quyền, không khóa gì cả
+
+    const btnAdd = document.querySelector('.btn-add[onclick="openSpModal()"]');
+    if (btnAdd) btnAdd.style.display = 'none';
+
+    // Nhân viên: chỉ được cập nhật SoLuongTon, MoTa, HinhAnh.
+    // Mọi trường khác trong form đều bị khóa (chỉ đọc / vô hiệu hóa).
+    const lockedInputIds = ['tenSP', 'donViTinh', 'giaBan'];
+    lockedInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.readOnly = true;
+        el.style.backgroundColor = '#e9ecef';
+        el.title = 'Chỉ Quản trị viên mới được thay đổi trường này.';
+    });
+
+    const lockedSelectIds = ['maNhomSP', 'maMD', 'trangThai', 'maVatLieu', 'maNCC'];
+    lockedSelectIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = true;
+        el.style.backgroundColor = '#e9ecef';
+        el.title = 'Chỉ Quản trị viên mới được thay đổi trường này.';
+    });
+}
 
 // ==========================================
 // 3. ĐỊNH DẠNG DẤU CHẤM CHO GIÁ TIỀN
@@ -65,65 +192,90 @@ function setupPriceFormatting() {
 }
 
 // ==========================================
-// 4. LOAD DANH MỤC & LƯU BẢN ÁNH XẠ (MAP TÊN)
+// 4. LOAD DANH MỤC "BỌC THÉP" 
 // ==========================================
 async function loadDropdownData() {
-    try {
-        const [resNhom, resMD, resVL, resNCC] = await Promise.all([
-            fetch(API_NHOM_SP), fetch(API_MUC_DICH), fetch(API_VAT_LIEU), fetch(API_NHA_CUNG_CAP)
-        ]);
-
-        const [nhomSP, mucDich, vatLieu, ncc] = await Promise.all([
-            resNhom.json(), resMD.json(), resVL.json(), resNCC.json()
-        ]);
-
-        nhomSP.forEach(n => {
-            const ma = n.maNhomSP || n.MaNhomSP;
-            const ten = n.tenNhomSP || n.TenNhomSP;
-            mapNhomSP[ma] = ten;
-        });
-
-        mucDich.forEach(m => {
-            const ma = m.maMD || m.MaMD;
-            const ten = m.tenMD || m.TenMD;
-            mapMucDich[ma] = ten;
-        });
-
-        let nhomHtml = '<option value="">-- Chọn Nhóm Sản Phẩm --</option>';
-        nhomSP.forEach(n => {
-            nhomHtml += `<option value="${n.maNhomSP || n.MaNhomSP}">${n.tenNhomSP || n.TenNhomSP}</option>`;
-        });
-        const domNhomSP = document.getElementById('maNhomSP');
-        if (domNhomSP) domNhomSP.innerHTML = nhomHtml;
-
-        let mdHtml = '<option value="">-- Chọn Mục Đích Sử Dụng --</option>';
-        mucDich.forEach(m => {
-            mdHtml += `<option value="${m.maMD || m.MaMD}">${m.tenMD || m.TenMD}</option>`;
-        });
-        const domMD = document.getElementById('maMD');
-        if (domMD) domMD.innerHTML = mdHtml;
-
-        let vlHtml = '';
-        vatLieu.forEach(v => {
-            vlHtml += `<option value="${v.maVL || v.MaVL}">${v.tenVL || v.TenVL}</option>`;
-        });
-        const domVatLieu = document.getElementById('maVatLieu');
-        if (domVatLieu) domVatLieu.innerHTML = vlHtml;
-
-        let nccHtml = '';
-        ncc.forEach(c => {
-            nccHtml += `<option value="${c.maNcc || c.MaNcc}">${c.tenNcc || c.TenNcc}</option>`;
-        });
-        const domNCC = document.getElementById('maNCC');
-        if (domNCC) domNCC.innerHTML = nccHtml;
-
-    } catch (error) {
-        console.error("Lỗi load danh mục:", error);
+    async function fetchSafe(urls) {
+        const urlArray = Array.isArray(urls) ? urls : [urls];
+        for (let url of urlArray) {
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    return await res.json();
+                }
+            } catch (err) {}
+        }
+        return [];
     }
+
+    function getSafeValue(obj, possibleKeys) {
+        const lowerKeys = possibleKeys.map(k => k.toLowerCase());
+        for (let key in obj) {
+            if (lowerKeys.includes(key.toLowerCase())) {
+                return obj[key];
+            }
+        }
+        return "";
+    }
+
+    const [nhomSP, mucDich, vatLieu, ncc] = await Promise.all([
+        fetchSafe(API_NHOM_SP),
+        fetchSafe(API_MUC_DICH),
+        fetchSafe(API_VAT_LIEU),
+        fetchSafe(API_NHA_CUNG_CAP_URLS)
+    ]);
+
+    let nhomHtml = '<option value="">-- Chọn Nhóm Sản Phẩm --</option>';
+    nhomSP.forEach(n => {
+        const ma = getSafeValue(n, ['maNhomSP', 'maNhom']).toString().trim();
+        const ten = getSafeValue(n, ['tenNhomSP', 'tenNhom']).toString().trim();
+        if (ma) {
+            mapNhomSP[ma] = ten;
+            nhomHtml += `<option value="${ma}">${ten}</option>`;
+        }
+    });
+    const domNhom = document.getElementById('maNhomSP');
+    if (domNhom) domNhom.innerHTML = nhomHtml;
+
+    let mdHtml = '<option value="">-- Chọn Mục Đích Sử Dụng --</option>';
+    mucDich.forEach(m => {
+        const ma = getSafeValue(m, ['maMD']).toString().trim();
+        const ten = getSafeValue(m, ['tenMD']).toString().trim();
+        if (ma) {
+            mapMucDich[ma] = ten;
+            mdHtml += `<option value="${ma}">${ten}</option>`;
+        }
+    });
+    const domMD = document.getElementById('maMD');
+    if (domMD) domMD.innerHTML = mdHtml;
+
+    let vlHtml = '';
+    vatLieu.forEach(v => {
+        const ma = getSafeValue(v, ['maVL', 'maVatLieu']).toString().trim();
+        const ten = getSafeValue(v, ['tenVL', 'tenVatLieu']).toString().trim();
+        if (ma) {
+            mapVatLieu[ma] = ten;
+            vlHtml += `<option value="${ma}">${ten}</option>`;
+        }
+    });
+    const domVL = document.getElementById('maVatLieu');
+    if (domVL) domVL.innerHTML = vlHtml || '<option value="">-- Trống --</option>';
+
+    let nccHtml = '';
+    ncc.forEach(c => {
+        const ma = getSafeValue(c, ['maNcc', 'maNhaCungCap', 'idNcc', 'ma']).toString().trim();
+        const ten = getSafeValue(c, ['tenNcc', 'tenNhaCungCap', 'name', 'ten']).toString().trim();
+        if (ma) {
+            mapNhaCungCap[ma] = ten; 
+            nccHtml += `<option value="${ma}">${ten}</option>`;
+        }
+    });
+    const domNCC = document.getElementById('maNCC');
+    if (domNCC) domNCC.innerHTML = nccHtml || '<option value="">-- Trống --</option>';
 }
 
 // ==========================================
-// 5. LOAD DANH SÁCH SẢN PHẨM RA BẢNG (Cache Busting)
+// 5. LOAD DANH SÁCH SẢN PHẨM RA BẢNG
 // ==========================================
 async function loadProducts() {
     try {
@@ -150,7 +302,7 @@ async function loadProducts() {
         }
 
         if (products.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: #757575; padding: 20px;">Chưa có sản phẩm nào trong cơ sở dữ liệu.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #757575; padding: 20px;">Chưa có sản phẩm nào trong cơ sở dữ liệu.</td></tr>`;
             return;
         }
 
@@ -162,17 +314,54 @@ async function loadProducts() {
                 ? '<span class="badge badge-active" style="white-space: nowrap;">Đang bán</span>' 
                 : '<span class="badge badge-inactive" style="white-space: nowrap;">Ngừng kinh doanh</span>';
             
+            // Xử lý hiển thị ảnh trực quan, tự bám theo domain hiện tại
             const hinhAnhVal = p.hinhAnh || p.HinhAnh;
-            
-            const imageDisplay = hinhAnhVal 
-                ? `<img src="${hinhAnhVal}" alt="Ảnh SP" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">` 
-                : '<i class="fas fa-image" style="color:#ccc; font-size:36px;"></i>';
+            let imageDisplay = '<i class="fas fa-image" style="color:#ccc; font-size:36px;"></i>';
+            if (hinhAnhVal) {
+                let finalImgUrl = hinhAnhVal;
+                if (hinhAnhVal.startsWith('/')) {
+                    finalImgUrl = `http://localhost:5129${hinhAnhVal}`;
+                }
+                imageDisplay = `<img src="${finalImgUrl}" alt="Ảnh SP" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;" onerror="handleProductImgError(this)">`;
+            }
 
-            const maMDVal = p.maMD || p.MaMD || '';
+            const maMDVal = (p.maMD || p.MaMD || '').toString().trim();
             const tenMDDisplay = mapMucDich[maMDVal] || maMDVal;
 
-            const maNhomVal = p.maNhomSP || p.MaNhomSP || '';
+            const maNhomVal = (p.maNhomSP || p.MaNhomSP || '').toString().trim();
             const tenNhomDisplay = mapNhomSP[maNhomVal] || maNhomVal;
+
+            let tenVatLieuList = [];
+            const lamNens = p.lamNens || p.LamNens || [];
+            if (Array.isArray(lamNens)) {
+                lamNens.forEach(ln => {
+                    const vlObj = ln.vatLieu || ln.VatLieu;
+                    if (vlObj) {
+                        const t = vlObj.tenVL || vlObj.TenVL || vlObj.tenVatLieu || vlObj.TenVatLieu;
+                        if (t) tenVatLieuList.push(t.trim());
+                    } else if (ln.maVL || ln.MaVL) {
+                        const ma = (ln.maVL || ln.MaVL).toString().trim();
+                        if (mapVatLieu[ma]) tenVatLieuList.push(mapVatLieu[ma]);
+                    }
+                });
+            }
+            const strVatLieu = tenVatLieuList.length > 0 ? tenVatLieuList.join(', ') : 'Chưa gán';
+
+            let tenNccList = [];
+            const cungCaps = p.cungCaps || p.CungCaps || [];
+            if (Array.isArray(cungCaps)) {
+                cungCaps.forEach(cc => {
+                    const nccObj = cc.nhaCungCap || cc.NhaCungCap;
+                    if (nccObj) {
+                        const t = nccObj.tenNcc || nccObj.TenNcc || nccObj.tenNCC || nccObj.TenNCC;
+                        if (t) tenNccList.push(t.trim());
+                    } else if (cc.maNcc || cc.MaNcc || cc.maNCC || cc.MaNCC) {
+                        const ma = (cc.maNcc || cc.MaNcc || cc.maNCC || cc.MaNCC).toString().trim();
+                        if (mapNhaCungCap[ma]) tenNccList.push(mapNhaCungCap[ma]);
+                    }
+                });
+            }
+            const strNhaCungCap = tenNccList.length > 0 ? tenNccList.join(', ') : 'Chưa gán';
 
             const maSPVal = p.maSP || p.MaSP || '';
             const tenSPVal = p.tenSP || p.TenSP || '';
@@ -180,10 +369,17 @@ async function loadProducts() {
             const soLuongVal = p.soLuongTon !== undefined ? p.soLuongTon : (p.SoLuongTon || 0);
             const moTaVal = p.moTa || p.MoTa || '';
 
+            const isAdminNow = window.__isAdminSanPham === true;
+            const deleteBtnHtml = isAdminNow
+                ? `<button class="btn-action delete" title="Xóa" onclick="deleteProduct('${maSPVal}')"><i class="fas fa-trash"></i></button>`
+                : '';
+
             html += `
                 <tr>
                     <td style="white-space: nowrap;"><strong>${maSPVal}</strong></td>
+                    <td style="white-space: normal; min-width: 140px; color: #2e7d32; font-weight: 500;">${strVatLieu}</td>
                     <td style="white-space: normal; min-width: 120px;">${tenMDDisplay}</td>
+                    <td style="white-space: normal; min-width: 150px; color: #1565c0; font-weight: 500;">${strNhaCungCap}</td>
                     <td style="white-space: normal; min-width: 120px;">${tenNhomDisplay}</td>
                     <td style="text-align: center;">${imageDisplay}</td>
                     <td style="white-space: normal; min-width: 180px;"><strong>${tenSPVal}</strong></td>
@@ -194,7 +390,7 @@ async function loadProducts() {
                     <td>${statusBadge}</td>
                     <td style="white-space: nowrap; min-width: 90px;">
                         <button class="btn-action edit" title="Sửa" onclick="editProduct('${maSPVal}')"><i class="fas fa-pen"></i></button>
-                        <button class="btn-action delete" title="Xóa" onclick="deleteProduct('${maSPVal}')"><i class="fas fa-trash"></i></button>
+                        ${deleteBtnHtml}
                     </td>
                 </tr>
             `;
@@ -205,7 +401,9 @@ async function loadProducts() {
             thead.style.whiteSpace = 'nowrap';
             thead.innerHTML = `
                 <th>Mã SP</th>
+                <th>Vật Liệu</th>
                 <th>Mục Đích Sử Dụng</th>
+                <th>Nhà Cung Cấp</th>
                 <th>Nhóm Sản Phẩm</th>
                 <th style="text-align: center;">Hình Ảnh</th>
                 <th>Tên Sản Phẩm</th>
@@ -225,12 +423,11 @@ async function loadProducts() {
 }
 
 // ==========================================
-// 6. XỬ LÝ SUBMIT (HỖ TRỢ CẢ THÊM VÀ SỬA)
+// 6. XỬ LÝ SUBMIT (THÊM VÀ SỬA)
 // ==========================================
 const formSanPham = document.getElementById('spForm');
 
 if (formSanPham) {
-    // Sự kiện reset form (khôi phục về trạng thái Thêm Mới)
     formSanPham.addEventListener('reset', function() {
         isEditMode = false;
         currentImageUrl = "";
@@ -262,12 +459,12 @@ if (formSanPham) {
             btnLuu.innerText = "Đang xử lý...";
         }
 
-        try {
-            // 1. XỬ LÝ UPLOAD ẢNH
-            const inputFile = document.getElementById('hinhAnhFile');
-            let hinhAnhUrl = currentImageUrl; // Mặc định dùng ảnh cũ nếu đang sửa
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || '';
 
-            // Nếu người dùng có chọn ảnh mới thì mới upload
+        try {
+            const inputFile = document.getElementById('hinhAnhFile');
+            let hinhAnhUrl = currentImageUrl;
+
             if (inputFile && inputFile.files.length > 0) {
                 if (btnLuu) btnLuu.innerText = "Đang tải ảnh lên...";
                 
@@ -276,6 +473,9 @@ if (formSanPham) {
 
                 const uploadRes = await fetch(`${API_SAN_PHAM}/upload-image`, {
                     method: 'POST',
+                    headers: {
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
                     body: formData
                 });
 
@@ -283,7 +483,8 @@ if (formSanPham) {
                     const uploadData = await uploadRes.json();
                     hinhAnhUrl = uploadData.url; 
                 } else {
-                    alert("Lỗi khi tải ảnh lên máy chủ!");
+                    const errMsg = await getErrorMessage(uploadRes, "Lỗi khi tải ảnh lên máy chủ!");
+                    alert(errMsg);
                     if (btnLuu) {
                         btnLuu.disabled = false;
                         btnLuu.innerText = isEditMode ? "Cập Nhật Sản Phẩm" : "Lưu Sản Phẩm";
@@ -292,7 +493,6 @@ if (formSanPham) {
                 }
             }
 
-            // 2. GỬI DATA SẢN PHẨM VỀ C#
             const rawGiaBan = document.getElementById('giaBan').value.replace(/\./g, "");
             
             const payload = {
@@ -312,7 +512,6 @@ if (formSanPham) {
                 MaNhaCungCaps: selectedNcc
             };
 
-            // Xác định gọi API POST (Thêm) hay PUT (Sửa)
             const apiUrl = isEditMode ? `${API_SAN_PHAM}/${payload.SanPham.MaSP}` : API_SAN_PHAM;
             const apiMethod = isEditMode ? 'PUT' : 'POST';
 
@@ -320,25 +519,25 @@ if (formSanPham) {
 
             const response = await fetch(apiUrl, {
                 method: apiMethod,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
-                const result = await response.json();
-                alert(result.message || "Lỗi khi lưu dữ liệu sản phẩm!");
+                const errMsg = await getErrorMessage(response, "Lỗi khi lưu dữ liệu sản phẩm!");
+                alert(errMsg);
                 return;
             }
 
             alert(isEditMode ? "Cập nhật Sản Phẩm thành công!" : "Thêm Sản Phẩm thành công!");
             
-            // Xóa trắng form và đưa về chế độ mặc định
             formSanPham.reset(); 
-            
             if (typeof closeSpModal === 'function') closeSpModal();
-            
-            // THÊM AWAIT VÀO ĐÂY ĐỂ ĐỢI TẢI XONG DỮ LIỆU RỒI MỚI MỞ NÚT ẤN
             await loadProducts();
+            notifyProductsChanged(); // Báo cho tab sanpham.html (nếu đang mở) tự cập nhật ngay
 
         } catch (error) {
             console.error("Lỗi:", error);
@@ -346,7 +545,6 @@ if (formSanPham) {
         } finally {
             if (btnLuu) {
                 btnLuu.disabled = false;
-                // Text sẽ tự khôi phục do hàm event 'reset' chạy
             }
         }
     });
@@ -358,17 +556,23 @@ if (formSanPham) {
 async function deleteProduct(id) {
     if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${id} không?`)) return;
 
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || '';
+
     try {
         const response = await fetch(`${API_SAN_PHAM}/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
         });
 
         if (response.ok) {
             alert("Xóa sản phẩm thành công!");
-            await loadProducts(); // Nên thêm await ở đây cho chắc chắn dữ liệu load kịp
+            await loadProducts();
+            notifyProductsChanged(); // Báo cho tab sanpham.html (nếu đang mở) tự cập nhật ngay
         } else {
-            const result = await response.json();
-            alert(result.message || "Xóa thất bại!");
+            const errMsg = await getErrorMessage(response, "Xóa thất bại!");
+            alert(errMsg);
         }
     } catch (error) {
         console.error("Lỗi xóa:", error);
@@ -397,56 +601,69 @@ if (searchInput) {
 }
 
 // ==========================================
-// ==========================================
-// 9. CHỈNH SỬA SẢN PHẨM (ĐỔ DỮ LIỆU LÊN FORM & HIỂN THỊ MODAL)
+// 9. CHỈNH SỬA SẢN PHẨM (GÁN DỮ LIỆU VÀO FORM)
 // ==========================================
 async function editProduct(maSP) {
     try {
         const response = await fetch(`${API_SAN_PHAM}/${maSP}`, { cache: 'no-store' });
         if (!response.ok) throw new Error("Không thể lấy thông tin sản phẩm.");
-        
         const p = await response.json();
         
-        // Bật chế độ sửa và lưu URL ảnh cũ
         isEditMode = true;
         currentImageUrl = p.hinhAnh || p.HinhAnh || "";
 
-        // Đổ dữ liệu vào các input
         const txtMaSP = document.getElementById('maSP');
         if (txtMaSP) {
             txtMaSP.value = p.maSP || p.MaSP;
-            txtMaSP.readOnly = true; // Khóa không cho sửa Mã
+            txtMaSP.readOnly = true; 
             txtMaSP.style.backgroundColor = "#e9ecef"; 
         }
-
-        document.getElementById('tenSP').value = p.tenSP || p.TenSP;
-        document.getElementById('maNhomSP').value = p.maNhomSP || p.MaNhomSP;
-        document.getElementById('maMD').value = p.maMD || p.MaMD;
-        document.getElementById('donViTinh').value = p.donViTinh || p.DonViTinh;
+        document.getElementById('tenSP').value = p.tenSP || p.TenSP || '';
+        document.getElementById('donViTinh').value = p.donViTinh || p.DonViTinh || '';
         document.getElementById('soLuongTon').value = p.soLuongTon !== undefined ? p.soLuongTon : (p.SoLuongTon || 0);
-        
-        const gia = p.giaBan || p.GiaBan || 0;
-        document.getElementById('giaBan').value = Number(gia).toLocaleString('vi-VN');
-        
         document.getElementById('moTa').value = p.moTa || p.MoTa || '';
         document.getElementById('trangThai').value = p.trangThai !== undefined ? p.trangThai : p.TrangThai;
         
-        // Đổi chữ trên nút Submit
+        const gia = p.giaBan || p.GiaBan || 0;
+        document.getElementById('giaBan').value = Number(gia).toLocaleString('vi-VN');
+
+        function setSelectSafe(id, value) {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const target = (value || '').toString().trim();
+            Array.from(select.options).forEach(opt => {
+                if (opt.value.trim() === target) opt.selected = true;
+            });
+        }
+
+        setSelectSafe('maNhomSP', p.maNhomSP || p.MaNhomSP);
+        setSelectSafe('maMD', p.maMD || p.MaMD);
+
+        const listVL = p.maVatLieus || p.MaVatLieus || [];
+        const selectVL = document.getElementById('maVatLieu');
+        if (selectVL) {
+            Array.from(selectVL.options).forEach(opt => {
+                opt.selected = listVL.some(x => x.toString().trim() === opt.value.trim());
+            });
+        }
+
+        const listNCC = p.maNhaCungCaps || p.MaNhaCungCaps || [];
+        const selectNCC = document.getElementById('maNCC');
+        if (selectNCC) {
+            Array.from(selectNCC.options).forEach(opt => {
+                opt.selected = listNCC.some(x => x.toString().trim() === opt.value.trim());
+            });
+        }
+
         const btnLuu = document.querySelector('button[form="spForm"]');
         if (btnLuu) btnLuu.innerText = "Cập Nhật Thay Đổi";
         
-        // MỞ FORM / MODAL LÊN
-        // Nếu bạn có hàm mở modal, nó sẽ chạy ở đây
         if (typeof openSpModal === 'function') {
             openSpModal();
         } else {
-            // Trường hợp bạn quản lý hiển thị bằng class/style (như display: block)
-            const modal = document.getElementById('spModal'); // Thay bằng ID thẻ form/modal của bạn nếu cần
-            if (modal) {
-                modal.style.display = 'block'; // Hoặc 'flex' tùy CSS của bạn
-            }
+            const modal = document.getElementById('spModal'); 
+            if (modal) modal.style.display = 'block'; 
         }
-
     } catch (error) {
         console.error("Lỗi edit:", error);
         alert("Lỗi khi tải dữ liệu sản phẩm để sửa!");
