@@ -6,6 +6,17 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cấu hình CORS: Cho phép Frontend gọi API thoải mái (Đã gộp gọn lại)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 
 // Bổ sung Swagger
@@ -15,18 +26,10 @@ builder.Services.AddSwaggerGen();
 // Cấu hình Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddMemoryCache();
 
-// [THÊM MỚI] Cấu hình CORS: Cho phép Frontend (như cổng 5500) gọi API thoải mái
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
-});
+// [THÊM MỚI] Đăng ký EmailService để gửi mã OTP
+builder.Services.AddScoped<Backend.Services.EmailService>();
 
 // Cấu hình JWT
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -58,7 +61,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// [THÊM MỚI] Kích hoạt CORS (Bắt buộc phải đặt TRƯỚC Authentication và Authorization)
+// Kích hoạt CORS (Bắt buộc phải đặt TRƯỚC Authentication và Authorization)
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

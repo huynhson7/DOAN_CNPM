@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Đăng Ký - Cửa Hàng Nội Thất Hiện Đại</title>
-    <!-- Tái sử dụng file style.css để giữ nguyên giao diện -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -13,25 +12,27 @@
         <p class="subtitle">Bắt đầu không gian sống mơ ước của bạn</p>
         
         <form id="registerForm">
-            <!-- Khớp với thuộc tính TenKhachHang trong DB -->
             <div class="input-group">
                 <label for="fullname">Họ và tên</label>
                 <input type="text" id="fullname" placeholder="VD: Nguyễn Văn A" required>
             </div>
             
-            <!-- Khớp với thuộc tính SDTKhachHang trong DB -->
             <div class="input-group">
                 <label for="phone">Số điện thoại</label>
                 <input type="tel" id="phone" placeholder="Nhập số điện thoại" required>
             </div>
 
-            <!-- Khớp với thuộc tính TenDangNhap trong DB -->
+            <!-- Ô nhập Email -->
+            <div class="input-group">
+                <label for="reg-email">Email</label>
+                <input type="email" id="reg-email" placeholder="VD: email@example.com" required>
+            </div>
+
             <div class="input-group">
                 <label for="reg-username">Tên đăng nhập</label>
                 <input type="text" id="reg-username" placeholder="Nhập tên đăng nhập" required>
             </div>
             
-            <!-- Khớp với thuộc tính MatKhau trong DB -->
             <div class="input-group">
                 <label for="reg-password">Mật khẩu</label>
                 <input type="password" id="reg-password" placeholder="••••••••" required>
@@ -39,21 +40,12 @@
             
             <button type="submit" class="btn-primary">Đăng Ký</button>
 
-            <!-- Link chuyển về trang Đăng nhập -->
             <div class="auth-links">
                 <p>Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
             </div>
         </form>
     </div>
 
-    <script>
-        // Javascript cơ bản ngăn load lại trang khi bấm Đăng ký
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Tạm thời giả lập chuyển hướng về trang đăng nhập sau khi đăng ký xong
-            alert("Đăng ký thành công! Vui lòng đăng nhập.");
-            window.location.href = 'login.html';
-        });
-    </script>
+    <script src="register.js"></script>
 </body>
 </html>

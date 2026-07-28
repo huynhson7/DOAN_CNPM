@@ -26,6 +26,11 @@ namespace Backend.Data
         [StringLength(255)]
         public string? DiaChiKhachHang { get; set; }
 
+        // Bổ sung cột Email bắt buộc
+        [Required(ErrorMessage = "Email không được để trống")]
+        [StringLength(100)]
+        public string Email { get; set; } = string.Empty;
+
         public int? TrangThai { get; set; }
     }
 }
