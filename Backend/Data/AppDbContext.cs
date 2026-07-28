@@ -22,9 +22,38 @@ namespace Backend.Data
         public DbSet<CUNGCAP> CUNGCAP { get; set; }
         public DbSet<HOADON> HOADON { get; set; }
         public DbSet<CHITIETHOADON> CHITIETHOADON { get; set; }
+        // [THÊM MỚI] Bảng lưu Reset Token cho chức năng Quên mật khẩu
+        public DbSet<PASSWORDRESETTOKEN> PASSWORDRESETTOKEN { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            //=========================================================
+            // [THÊM MỚI] Ràng buộc UNIQUE: Email/Username không trùng lặp
+            // giữa các tài khoản (bắt buộc cho Login/Google Login/Forgot Password)
+            //=========================================================
+            modelBuilder.Entity<KHACHHANG>()
+                .HasIndex(x => x.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<KHACHHANG>()
+                .HasIndex(x => x.TenDangNhap)
+                .IsUnique()
+                .HasFilter("[TenDangNhap] IS NOT NULL");
+
+            modelBuilder.Entity<NHANVIEN>()
+                .HasIndex(x => x.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<NHANVIEN>()
+                .HasIndex(x => x.TenDangNhap)
+                .IsUnique()
+                .HasFilter("[TenDangNhap] IS NOT NULL");
+
+            // [THÊM MỚI] Tra cứu nhanh Reset Token theo Token khi người dùng bấm link trong email
+            modelBuilder.Entity<PASSWORDRESETTOKEN>()
+                .HasIndex(x => x.Token)
+                .IsUnique();
 
             //=========================================================
             // LAM_NEN (SANPHAM - VATLIEU)

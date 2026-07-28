@@ -1,21 +1,12 @@
 using Backend.Data;
+using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Cấu hình CORS: Cho phép Frontend gọi API thoải mái (Đã gộp gọn lại)
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
 
 builder.Services.AddControllers();
 
@@ -26,10 +17,29 @@ builder.Services.AddSwaggerGen();
 // Cấu hình Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    builder.Services.AddMemoryCache();
 
-// [THÊM MỚI] Đăng ký EmailService để gửi mã OTP
-builder.Services.AddScoped<Backend.Services.EmailService>();
+// [SỬA] Thu hẹp CORS: chỉ cho phép đúng domain Frontend đang chạy (thay vì AllowAnyOrigin)
+// Đọc từ appsettings.json mục "Frontend:AllowedOrigins" để dễ đổi khi deploy.
+var allowedOrigins = builder.Configuration.GetSection("Frontend:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://127.0.0.1:5500", "http://localhost:5500" };
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy",
+        policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
+
+// [THÊM MỚI] Đăng ký các Service cho Authentication/Authorization
+builder.Services.AddHttpClient(); // Cần cho GoogleAuthService gọi verify token
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
 // Cấu hình JWT
 var jwtKey = builder.Configuration["Jwt:Key"];
@@ -48,7 +58,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
         };
+
+        // [THÊM MỚI] Thu hồi JWT theo yêu cầu nghiệp vụ (đổi/reset mật khẩu => JWT cũ vô hiệu ngay lập tức)
+        // bằng cách so sánh Claim "SecurityStamp" trong Token với giá trị mới nhất trong Database.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var securityStampClaim = context.Principal?.FindFirst("SecurityStamp")?.Value;
+                var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var role = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                if (string.IsNullOrEmpty(securityStampClaim) || string.IsNullOrEmpty(userId))
+                {
+                    context.Fail("Token không hợp lệ.");
+                    return;
+                }
+
+                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                string? currentStamp = null;
+
+                if (role == "Quản trị Hệ thống" || role == "NV Bán Hàng")
+                {
+                    currentStamp = (await dbContext.NHANVIEN.FindAsync(userId))?.SecurityStamp;
+                }
+                else
+                {
+                    currentStamp = (await dbContext.KHACHHANG.FindAsync(userId))?.SecurityStamp;
+                }
+
+                if (currentStamp == null || currentStamp != securityStampClaim)
+                {
+                    // Mật khẩu đã được đổi/reset sau khi Token này được cấp -> Token cũ bị vô hiệu ngay lập tức.
+                    context.Fail("Phiên đăng nhập đã hết hiệu lực. Vui lòng đăng nhập lại.");
+                }
+            }
+        };
     });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -62,11 +110,34 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Kích hoạt CORS (Bắt buộc phải đặt TRƯỚC Authentication và Authorization)
-app.UseCors("AllowAll");
+app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles(); // Cho phép truy cập các file tĩnh (như ảnh) từ wwwroot
 app.MapControllers();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var hasher = new PasswordHasher<NHANVIEN>();
+
+    var nhanViens = db.NHANVIEN.ToList();
+
+    foreach (var nv in nhanViens)
+    {
+        // Chỉ hash những mật khẩu đang ở dạng thường
+        if (!string.IsNullOrEmpty(nv.MatKhau) &&
+            !nv.MatKhau.StartsWith("AQAAAA"))
+        {
+            nv.MatKhau = hasher.HashPassword(nv, nv.MatKhau);
+        }
+    }
+
+    db.SaveChanges();
+
+    Console.WriteLine("Đã hash xong toàn bộ mật khẩu nhân viên.");
+}
 app.Run();

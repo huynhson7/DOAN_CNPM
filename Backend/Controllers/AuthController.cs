@@ -1,15 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Backend.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
+using Backend.DTOs;
+using Backend.Helpers;
 using Backend.Services;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.EntityFrameworkCore; // Thêm thư viện này để quản lý State của Entity Framework
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -17,214 +11,128 @@ namespace Backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
-        private readonly AppDbContext _context;
-        private readonly EmailService _emailService;
-        private readonly IMemoryCache _cache;
 
-        public AuthController(IConfiguration configuration, AppDbContext context, EmailService emailService, IMemoryCache cache)
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
+            _authService = authService;
             _configuration = configuration;
-            _context = context;
-            _emailService = emailService;
-            _cache = cache;
         }
 
+        // POST: api/auth/login
+        // Màn hình đăng nhập DUY NHẤT cho cả Admin/NhanVien/KhachHang - Backend tự xác định Role.
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
-            string userRole = "";
-            string hoTen = "";
-            string maUser = "";
-
-            var nhanVien = _context.NHANVIEN.FirstOrDefault(nv => nv.TenDangNhap == request.Username && nv.MatKhau == request.Password);
-            
-            if (nhanVien != null)
-            {
-                if (nhanVien.TrangThai == 0) 
-                    return Unauthorized(new { message = "Tài khoản nhân viên đã bị khóa hoặc ngừng hoạt động." });
-                
-                userRole = string.IsNullOrWhiteSpace(nhanVien.VaiTroKhuVucPhuTrach) 
-                            ? "Nhân viên" 
-                            : nhanVien.VaiTroKhuVucPhuTrach.Trim(); 
-                            
-                hoTen = nhanVien.TenNV;
-                maUser = nhanVien.MaNV;
-            }
-            else
-            {
-                var khachHang = _context.KHACHHANG.FirstOrDefault(kh => kh.TenDangNhap == request.Username && kh.MatKhau == request.Password);
-                
-                if (khachHang != null)
-                {
-                    if (khachHang.TrangThai == 0) 
-                        return Unauthorized(new { message = "Tài khoản khách hàng đã bị khóa." });
-
-                    userRole = "Khách hàng"; 
-                    hoTen = khachHang.TenKhachHang;
-                    maUser = khachHang.MaKhachHang;
-                }
-            }
-
-            if (string.IsNullOrEmpty(userRole))
-            {
-                return Unauthorized(new { message = "Tên đăng nhập hoặc mật khẩu không chính xác!" });
-            }
-
-            var issuer = _configuration["Jwt:Issuer"];
-            var audience = _configuration["Jwt:Audience"];
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, maUser),
-                    new Claim("Username", request.Username),
-                    new Claim(ClaimTypes.Name, hoTen ?? ""),
-                    new Claim(ClaimTypes.Role, userRole),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(120),
-                Issuer = issuer,
-                Audience = audience,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var jwtToken = tokenHandler.WriteToken(token);
-
-            return Ok(new 
-            { 
-                token = jwtToken,
-                role = userRole,
-                hoTen = hoTen,
-                maUser = maUser
-            });
-        }
-
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterRequest request)
-        {
-            bool isExistInNV = _context.NHANVIEN.Any(nv => nv.TenDangNhap == request.TenDangNhap);
-            bool isExistInKH = _context.KHACHHANG.Any(kh => kh.TenDangNhap == request.TenDangNhap);
-
-            if (isExistInNV || isExistInKH)
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác." });
-
-            bool isEmailExist = _context.KHACHHANG.Any(kh => kh.Email == request.Email);
-            if (isEmailExist)
-                return BadRequest(new { message = "Email này đã được sử dụng cho một tài khoản khác." });
-
-            string newMaKH = "KH" + DateTime.Now.ToString("yyMMddHHmmss");
-
-            var newKhachHang = new KHACHHANG
-            {
-                MaKhachHang = newMaKH,
-                TenKhachHang = request.TenKhachHang,
-                SDTKhachHang = request.SDTKhachHang,
-                TenDangNhap = request.TenDangNhap,
-                MatKhau = request.MatKhau,
-                Email = request.Email,
-                TrangThai = 1 
-            };
-
-            _context.KHACHHANG.Add(newKhachHang);
-            _context.SaveChanges();
-
-            return Ok(new { message = "Đăng ký tài khoản thành công!" });
-        }
-
-        [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
-        {
-            var user = _context.KHACHHANG.FirstOrDefault(k => k.Email == request.Email);
-            if (user == null)
-            {
-                return NotFound(new { message = "Email này chưa được đăng ký trong hệ thống." });
-            }
-
-            Random random = new Random();
-            string otpCode = random.Next(100000, 999999).ToString();
-
-            _cache.Set(request.Email, otpCode, TimeSpan.FromMinutes(5));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try
             {
-                await _emailService.SendOtpEmailAsync(request.Email, otpCode);
-                return Ok(new { message = "Mã xác nhận OTP đã được gửi đến email của bạn. Mã có hiệu lực trong 5 phút." });
+                var result = await _authService.LoginAsync(request);
+                return Ok(result);
             }
-            catch (Exception ex)
+            catch (AuthOperationException ex)
             {
-                return StatusCode(500, new { message = "Lỗi hệ thống khi gửi email: " + ex.Message });
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
             }
         }
 
-        [HttpPost("verify-otp")]
-        public IActionResult VerifyOtp([FromBody] VerifyOtpRequest request)
+        // POST: api/auth/register
+        // Đăng ký công khai - CHỈ dành cho Khách hàng, Role luôn = KhachHang, không nhận input Role từ Client.
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {
-            if (_cache.TryGetValue(request.Email, out string? savedOtp))
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            try
             {
-                if (savedOtp == request.Otp)
-                {
-                    return Ok(new { message = "Xác nhận OTP thành công! Bạn có thể đặt lại mật khẩu." });
-                }
+                var result = await _authService.RegisterAsync(request);
+                return Ok(result);
             }
-            
-            return BadRequest(new { message = "Mã OTP nhập vào không đúng hoặc đã hết hạn." });
+            catch (AuthOperationException ex)
+            {
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
+            }
         }
 
+        // POST: api/auth/google
+        // Dùng chung cho cả Google Login lẫn Google Register theo đúng chuẩn OAuth
+        // (Backend tự kiểm tra Email đã tồn tại hay chưa để quyết định tạo mới hay đăng nhập).
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _authService.GoogleLoginAsync(request);
+                return Ok(result);
+            }
+            catch (AuthOperationException ex)
+            {
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
+            }
+        }
+
+        // POST: api/auth/forgot-password
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            // Gốc URL của Frontend để dựng link reset - lấy từ cấu hình, không cho Client tự truyền lên
+            // (tránh Open Redirect / Host Header Injection).
+            //var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
+
+            var frontendBaseUrl = "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
+
+            await _authService.ForgotPasswordAsync(request, frontendBaseUrl);
+
+            // Luôn trả về cùng 1 thông báo dù Email có tồn tại hay không - không tiết lộ thông tin tài khoản.
+            return Ok(new { message = "Nếu Email tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu." });
+        }
+
+        // POST: api/auth/reset-password
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
         {
-            var user = _context.KHACHHANG.FirstOrDefault(k => k.Email == request.Email);
-            if (user == null)
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            try
             {
-                return NotFound(new { message = "Không tìm thấy tài khoản để đặt lại mật khẩu." });
+                await _authService.ResetPasswordAsync(request);
+                return Ok(new { message = "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại." });
             }
-
-            // Cập nhật mật khẩu mới và ép Entity Framework ghi nhận trạng thái Modified
-            user.MatKhau = request.NewPassword;
-            _context.Entry(user).State = EntityState.Modified;
-            _context.SaveChanges();
-
-            // Xóa mã OTP khỏi bộ nhớ
-            _cache.Remove(request.Email);
-
-            return Ok(new { message = "Đặt lại mật khẩu thành công! Hãy đăng nhập lại bằng mật khẩu mới." });
+            catch (AuthOperationException ex)
+            {
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
+            }
         }
-    }
 
-    public class LoginRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
+        // POST: api/auth/change-password
+        // Yêu cầu đã đăng nhập. Không yêu cầu nhập mật khẩu hiện tại (theo đúng yêu cầu nghiệp vụ).
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-    public class RegisterRequest
-    {
-        public string TenKhachHang { get; set; } = string.Empty;
-        public string SDTKhachHang { get; set; } = string.Empty;
-        public string TenDangNhap { get; set; } = string.Empty;
-        public string MatKhau { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty; 
-    }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role = User.FindFirstValue(ClaimTypes.Role);
 
-    public class ForgotPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-    }
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(role))
+                return Unauthorized();
 
-    public class VerifyOtpRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Otp { get; set; } = string.Empty;
-    }
-
-    public class ResetPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
+            try
+            {
+                await _authService.ChangePasswordAsync(userId, role, request);
+                return Ok(new { message = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại." });
+            }
+            catch (AuthOperationException ex)
+            {
+                return StatusCode(ex.StatusCode, new { message = ex.Message });
+            }
+        }
     }
 }

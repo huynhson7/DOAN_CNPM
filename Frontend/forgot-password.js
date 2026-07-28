@@ -1,91 +1,40 @@
-const apiUrl = 'https://localhost:5129'; // THAY ĐỔI PORT CHO ĐÚNG VỚI BACKEND CỦA BẠN
-let countdownInterval;
+const API_BASE_URL = "http://localhost:5129/api";
 
-async function guiMaOTP() {
-    const email = document.getElementById('txtEmail').value;
-    if (!email) {
-        alert("Vui lòng nhập email!");
-        return;
-    }
+document.getElementById('forgotPasswordForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-    try {
-        const response = await fetch(`${apiUrl}/api/Auth/forgot-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
-        });
+    const email = document.getElementById('email').value.trim();
+    const messageBox = document.getElementById('formMessage');
+    const btnSubmit = this.querySelector('button[type="submit"]');
 
-        const result = await response.json();
+    messageBox.style.color = '';
+    messageBox.textContent = '';
 
-        if (response.ok) {
-            alert(result.message);
-            // Hiện khu vực nhập OTP, khóa ô nhập email lại
-            document.getElementById('otpSection').style.display = 'block';
-            document.getElementById('txtEmail').disabled = true;
-            document.getElementById('btnSendOtp').disabled = true;
-            
-            batDauDemNguoc();
-        } else {
-            alert("Lỗi: " + result.message);
-        }
-    } catch (error) {
-        alert("Lỗi kết nối đến server!");
-    }
-}
+    if (!email) return;
 
-function batDauDemNguoc() {
-    let timeLeft = 60;
-    document.getElementById('btnResend').style.display = 'none';
-    document.getElementById('timerText').style.display = 'inline';
-    document.getElementById('countdown').innerText = timeLeft;
-
-    countdownInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('countdown').innerText = timeLeft;
-
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            // Hết 60s -> Hiện nút Gửi lại, ẩn chữ đếm ngược
-            document.getElementById('timerText').style.display = 'none';
-            document.getElementById('btnResend').style.display = 'inline-block';
-        }
-    }, 1000);
-}
-
-function guiLaiOTP() {
-    // Xóa interval cũ nếu có và gọi lại hàm gửi OTP
-    clearInterval(countdownInterval);
-    guiMaOTP(); 
-}
-
-async function xacNhanOTP() {
-    const email = document.getElementById('txtEmail').value;
-    const otp = document.getElementById('txtOtp').value;
-
-    if (!otp) {
-        alert("Vui lòng nhập mã OTP!");
-        return;
-    }
+    btnSubmit.disabled = true;
+    btnSubmit.innerText = 'Đang gửi...';
 
     try {
-        const response = await fetch(`${apiUrl}/api/Auth/verify-otp`, {
+        const response = await fetch(`${API_BASE_URL}/Auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, otp: otp })
+            body: JSON.stringify({ Email: email })
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
-        if (response.ok) {
-            alert(result.message);
-            // Lưu tạm email vào LocalStorage để trang sau sử dụng
-            localStorage.setItem("resetEmail", email);
-            // CHUYỂN HƯỚNG SANG TRANG ĐẶT LẠI MẬT KHẨU
-            window.location.href = "reset-password.html";
-        } else {
-            alert("Lỗi: " + result.message);
-        }
+        // Backend LUÔN trả về cùng 1 thông báo dù Email có tồn tại hay không
+        // (tránh lộ thông tin tài khoản nào tồn tại trong hệ thống).
+        messageBox.style.color = '#27ae60';
+        messageBox.textContent = data.message || 'Nếu Email tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.';
+        this.reset();
     } catch (error) {
-        alert("Lỗi kết nối đến server!");
+        console.error('Lỗi quên mật khẩu:', error);
+        messageBox.style.color = '#c0392b';
+        messageBox.textContent = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = 'Gửi liên kết đặt lại mật khẩu';
     }
-}
+});

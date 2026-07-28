@@ -1,5 +1,11 @@
 const API_BASE_URL = "http://localhost:5129/api";
 
+// Yêu cầu đăng nhập trước khi vào trang này
+const existingToken = localStorage.getItem('token');
+if (!existingToken) {
+    window.location.href = 'login.html';
+}
+
 const newPasswordInput = document.getElementById('new-password');
 const confirmPasswordInput = document.getElementById('confirm-password');
 const passwordChecklistBox = document.getElementById('passwordChecklist');
@@ -9,17 +15,7 @@ const messageBox = document.getElementById('formMessage');
 attachPasswordChecklist(newPasswordInput, passwordChecklistBox);
 const checkConfirmPassword = attachConfirmPasswordCheck(newPasswordInput, confirmPasswordInput, confirmPasswordErrorBox);
 
-// Lấy Token từ query string của link trong email: reset-password.html?token=xxxx
-const urlParams = new URLSearchParams(window.location.search);
-const resetToken = urlParams.get('token');
-
-if (!resetToken) {
-    messageBox.style.color = '#c0392b';
-    messageBox.textContent = 'Liên kết không hợp lệ. Vui lòng yêu cầu đặt lại mật khẩu lại từ đầu.';
-    document.getElementById('resetPasswordForm').querySelector('button[type="submit"]').disabled = true;
-}
-
-document.getElementById('resetPasswordForm').addEventListener('submit', async function (e) {
+document.getElementById('changePasswordForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     messageBox.style.color = '';
     messageBox.textContent = '';
@@ -39,11 +35,13 @@ document.getElementById('resetPasswordForm').addEventListener('submit', async fu
     btnSubmit.innerText = 'Đang xử lý...';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/Auth/reset-password`, {
+        const response = await fetch(`${API_BASE_URL}/Auth/change-password`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({
-                Token: resetToken,
                 NewPassword: newPasswordInput.value,
                 ConfirmPassword: confirmPasswordInput.value
             })
@@ -53,19 +51,24 @@ document.getElementById('resetPasswordForm').addEventListener('submit', async fu
 
         if (response.ok) {
             messageBox.style.color = '#27ae60';
-            messageBox.textContent = data.message || 'Đặt lại mật khẩu thành công. Đang chuyển đến trang đăng nhập...';
-            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+            messageBox.textContent = data.message || 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.';
+            // JWT hiện tại đã bị thu hồi ở Backend (SecurityStamp mới) -> bắt buộc đăng nhập lại
+            setTimeout(() => { logout(); }, 1500);
+        } else if (response.status === 401) {
+            messageBox.style.color = '#c0392b';
+            messageBox.textContent = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+            setTimeout(() => { logout(); }, 1500);
         } else {
             messageBox.style.color = '#c0392b';
-            messageBox.textContent = data.message || 'Đặt lại mật khẩu thất bại.';
+            messageBox.textContent = data.message || 'Đổi mật khẩu thất bại.';
             btnSubmit.disabled = false;
-            btnSubmit.innerText = 'Đặt lại mật khẩu';
+            btnSubmit.innerText = 'Đổi mật khẩu';
         }
     } catch (error) {
-        console.error('Lỗi đặt lại mật khẩu:', error);
+        console.error('Lỗi đổi mật khẩu:', error);
         messageBox.style.color = '#c0392b';
         messageBox.textContent = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
         btnSubmit.disabled = false;
-        btnSubmit.innerText = 'Đặt lại mật khẩu';
+        btnSubmit.innerText = 'Đổi mật khẩu';
     }
 });

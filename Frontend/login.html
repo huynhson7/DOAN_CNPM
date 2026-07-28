@@ -6,7 +6,6 @@
     <title>Đăng Nhập - Cửa Hàng Nội Thất Hiện Đại</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body class="login-page">
@@ -28,6 +27,9 @@
                 <input type="password" id="password" placeholder="••••••••" required>
             </div>
 
+            <!-- Hiển thị lỗi đăng nhập ngay dưới Form - không dùng Alert -->
+            <div id="loginError" class="field-error"></div>
+
             <!-- Tính năng: Quên mật khẩu -->
             <div class="forgot-password">
                 <a href="forgot-password.html">Quên mật khẩu?</a>
@@ -37,10 +39,18 @@
             <button type="submit" class="btn-primary">Đăng Nhập</button>
 
             <!-- Nút Google Login -->
-            <div class="divider"><span>Hoặc</span></div>
-            
-            <!-- Đặt nút Google chuẩn nằm trọn trong form tại đây -->
-            <div id="buttonDiv" style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px;"></div>
+            <div class="divider">
+                <span>Hoặc</span>
+            </div>
+
+            <div class="google-btn-wrapper">
+                <div id="googleSignInButton"></div>
+            </div>
+            <!-- <div class="divider"><span>Hoặc</span></div>
+            <button type="button" class="btn-google" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                Tiếp tục với Google
+            </button>
 
             <!-- Tính năng: Đăng ký -->
             <div class="auth-links">
@@ -49,55 +59,10 @@
         </form>
     </div>
 
+    <!-- Thư viện Google Identity Services cho nút "Tiếp tục với Google" -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Script xử lý -->
     <script src="login.js"></script>
-
-    <script>
-    // Hàm xử lý khi Google trả về kết quả đăng nhập thành công
-    async function handleCredentialResponse(response) {
-        const idToken = response.credential;
-
-        try {
-            // Gửi ID Token này lên Backend ASP.NET Core để xác thực
-            const res = await fetch('http://localhost:5129/api/AuthGoogle/google-login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ idToken: idToken })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Đăng nhập thành công!");
-                localStorage.setItem("jwtToken", data.token);
-                localStorage.setItem("role", data.role);
-                localStorage.setItem("hoTen", data.hoTen);
-                localStorage.setItem("maUser", data.maUser);
-                window.location.href = "index.html";
-            } else {
-                alert("Lỗi: " + data.message);
-            }
-        } catch (error) {
-            console.error("Lỗi kết nối server:", error);
-            alert("Không thể kết nối đến máy chủ Backend.");
-        }
-    }
-
-    window.onload = function () {
-        google.accounts.id.initialize({
-            client_id: "752944647798-uboq7mb4rco6hfrl8heo503tcens0kbq.apps.googleusercontent.com",
-            callback: handleCredentialResponse
-        });
-
-        // Render nút Google chuẩn của Google lấp đầy khung form với kích thước lớn
-        google.accounts.id.renderButton(
-            document.getElementById("buttonDiv"),
-            { theme: "outline", size: "large", width: "400", text: "continue_with" } 
-        );
-    };
-    </script>
-
 </body>
 
 </html>

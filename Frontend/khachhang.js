@@ -3,22 +3,22 @@
 // ==========================================
 const khModal = document.getElementById("khModal");
 const formKhachHang = document.getElementById('khForm');
-let isEditModeKH = false; 
+let isEditModeKH = false;
 
-function openKhModal() { 
+function openKhModal() {
     isEditModeKH = false;
-    formKhachHang.reset(); 
+    formKhachHang.reset();
     document.getElementById('maKhachHang').readOnly = false;
     document.getElementById('sdtError').style.display = "none"; // Ẩn lỗi cũ đi
     document.querySelector('button[form="khForm"]').innerText = "Lưu Khách Hàng";
-    khModal.style.display = "flex"; 
+    khModal.style.display = "flex";
 }
 
-function closeKhModal() { 
-    khModal.style.display = "none"; 
+function closeKhModal() {
+    khModal.style.display = "none";
 }
 
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target === khModal) closeKhModal();
 }
 
@@ -32,16 +32,30 @@ const API_KHACH_HANG = "http://localhost:5129/api/khach-hang";
 // ==========================================
 async function loadDanhSachKH() {
     try {
-        const response = await fetch(API_KHACH_HANG);
-        if (!response.ok) throw new Error("Lỗi mạng");
-        
+        const token = localStorage.getItem('token'); // Lấy token đã lưu khi đăng nhập
+        const response = await fetch(API_KHACH_HANG, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                alert("Phiên làm việc đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại!");
+                // window.location.href = 'login.html'; // Chuyển hướng về trang đăng nhập nếu cần
+            }
+            throw new Error("Lỗi mạng hoặc không có quyền truy cập");
+        }
+
         const danhSach = await response.json();
         const tbody = document.getElementById('bangKhachHang');
-        tbody.innerHTML = ""; 
+        tbody.innerHTML = "";
 
         danhSach.forEach(kh => {
-            const trangThaiHTML = kh.trangThai === 1 
-                ? `<span style="color: green; font-weight: bold;">Hoạt động</span>` 
+            const trangThaiHTML = kh.trangThai === 1
+                ? `<span style="color: green; font-weight: bold;">Hoạt động</span>`
                 : `<span style="color: red; font-weight: bold;">Đã khóa</span>`;
 
             const row = `
@@ -72,15 +86,23 @@ document.addEventListener("DOMContentLoaded", loadDanhSachKH);
 // ==========================================
 async function openEditModalKH(maKH) {
     try {
-        const response = await fetch(`${API_KHACH_HANG}/${maKH}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_KHACH_HANG}/${maKH}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (!response.ok) throw new Error("Lỗi lấy thông tin");
-        
+
         const kh = await response.json();
 
         // Đổ dữ liệu vào form
         document.getElementById('maKhachHang').value = kh.maKhachHang;
-        document.getElementById('maKhachHang').readOnly = true; 
-        
+        document.getElementById('maKhachHang').readOnly = true;
+
         document.getElementById('tenDangNhap').value = kh.tenDangNhap;
         document.getElementById('matKhau').value = kh.matKhau;
         document.getElementById('tenKhachHang').value = kh.tenKhachHang;
@@ -91,7 +113,7 @@ async function openEditModalKH(maKH) {
         document.getElementById('sdtError').style.display = "none";
         isEditModeKH = true;
         document.querySelector('button[form="khForm"]').innerText = "Lưu Thay Đổi";
-        
+
         khModal.style.display = "flex";
     } catch (error) {
         alert("Lỗi tải thông tin khách hàng!");
@@ -104,10 +126,14 @@ async function openEditModalKH(maKH) {
 async function deleteKhachHang(maKH) {
     if (confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
         try {
-            const response = await fetch(`${API_KHACH_HANG}/${maKH}`, { method: 'DELETE' });
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_KHACH_HANG}/${maKH}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (response.ok) {
                 alert("Xóa thành công!");
-                loadDanhSachKH(); 
+                loadDanhSachKH();
             } else {
                 alert("Không thể xóa khách hàng!");
             }
@@ -122,8 +148,8 @@ async function deleteKhachHang(maKH) {
 // ==========================================
 const regexSdt = /^\d{10}$/; // Yêu cầu chính xác 10 chữ số
 
-formKhachHang.addEventListener('submit', async function(event) {
-    event.preventDefault(); 
+formKhachHang.addEventListener('submit', async function (event) {
+    event.preventDefault();
 
     const sdtInput = document.getElementById('sdtKhachHang');
     const sdtError = document.getElementById('sdtError');
@@ -134,9 +160,9 @@ formKhachHang.addEventListener('submit', async function(event) {
         sdtError.innerText = "Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 chữ số.";
         sdtError.style.display = "block";
         sdtInput.focus();
-        return; 
+        return;
     } else {
-        sdtError.style.display = "none"; 
+        sdtError.style.display = "none";
     }
 
     // ĐÓNG GÓI DỮ LIỆU JSON CHUẨN DB
@@ -147,7 +173,7 @@ formKhachHang.addEventListener('submit', async function(event) {
         tenKhachHang: document.getElementById('tenKhachHang').value.trim(),
         sdtKhachHang: sdtValue,
         diaChiKhachHang: document.getElementById('diaChiKhachHang').value.trim(),
-        trangThai: parseInt(document.getElementById('trangThai').value) 
+        trangThai: parseInt(document.getElementById('trangThai').value)
     };
 
     const btnLuu = document.querySelector('button[form="khForm"]');
@@ -158,9 +184,13 @@ formKhachHang.addEventListener('submit', async function(event) {
         btnLuu.disabled = true;
         btnLuu.innerText = "Đang lưu...";
 
+        const token = localStorage.getItem('token');
         const response = await fetch(apiUrl, {
             method: apiMethod,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(payload)
         });
 
@@ -170,13 +200,13 @@ formKhachHang.addEventListener('submit', async function(event) {
             sdtError.innerText = errorData.message || "Số điện thoại này đã được đăng ký!";
             sdtError.style.display = "block";
             sdtInput.focus();
-            return; 
+            return;
         }
 
         if (response.ok) {
             alert(isEditModeKH ? "Cập nhật thành công!" : "Thêm Khách hàng thành công!");
-            closeKhModal();  
-            loadDanhSachKH(); 
+            closeKhModal();
+            loadDanhSachKH();
         } else {
             alert("Lỗi khi lưu dữ liệu!");
         }
@@ -194,14 +224,14 @@ formKhachHang.addEventListener('submit', async function(event) {
 // ==========================================
 const searchInput = document.getElementById('searchInput');
 if (searchInput) {
-    searchInput.addEventListener('keyup', function() {
+    searchInput.addEventListener('keyup', function () {
         const keyword = this.value.toLowerCase().trim();
         const rows = document.querySelectorAll('#bangKhachHang tr');
-        
+
         rows.forEach(row => {
             // Lấy toàn bộ nội dung text của cả dòng thay vì từng cột lẻ
             const rowData = row.textContent.toLowerCase();
-            
+
             // Ẩn/hiện dòng dựa trên từ khóa tìm kiếm
             if (rowData.includes(keyword)) {
                 row.style.display = '';

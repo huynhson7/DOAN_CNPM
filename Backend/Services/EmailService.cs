@@ -1,49 +1,63 @@
 using System.Net;
 using System.Net.Mail;
-using System;
-using System.Threading.Tasks;
 
 namespace Backend.Services
 {
-    public class EmailService
+    /// <summary>
+    /// Gửi Email qua Gmail SMTP. Cấu hình đọc từ appsettings.json (mục "Smtp").
+    /// Yêu cầu dùng "App Password" của Gmail (KHÔNG dùng mật khẩu đăng nhập Gmail thường)
+    /// vì Google đã tắt "Less secure app access". Xem hướng dẫn tạo App Password tại:
+    /// https://myaccount.google.com/apppasswords
+    /// </summary>
+    public class EmailService : IEmailService
     {
-        public async Task SendOtpEmailAsync(string toEmail, string otpCode)
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
+
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
-            string fromEmail = "limbusbleed321@gmail.com"; 
-            string appPassword = "ztammcaqvmropidi"; 
+            _configuration = configuration;
+            _logger = logger;
+        }
 
-            Console.WriteLine($"[EMAIL SERVICE] Đang chuẩn bị gửi OTP tới: {toEmail}");
+        public async Task SendPasswordResetEmailAsync(string toEmail, string toName, string resetLink)
+        {
+            var host = _configuration["Smtp:Host"] ?? "smtp.gmail.com";
+            var port = int.Parse(_configuration["Smtp:Port"] ?? "587");
+            var senderEmail = _configuration["Smtp:SenderEmail"];
+            var senderPassword = _configuration["Smtp:SenderAppPassword"];
+            var senderDisplayName = _configuration["Smtp:SenderDisplayName"] ?? "Cửa Hàng Nội Thất";
 
-            MailMessage message = new MailMessage(fromEmail, toEmail)
+            if (string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
             {
-                Subject = "Mã xác nhận đặt lại mật khẩu - Cửa Hàng Nội Thất",
-                Body = $@"
-                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
-                        <h2 style='color: #333;'>Cửa Hàng Nội Thất - Khôi phục mật khẩu</h2>
-                        <p style='color: #555; font-size: 16px;'>Mã xác nhận (OTP) của bạn là:</p>
-                        <h1 style='color: #4CAF50; letter-spacing: 5px; text-align: center; background-color: #f9f9f9; padding: 15px; border-radius: 5px;'>{otpCode}</h1>
-                        <p style='color: #777; font-size: 14px;'>Mã có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ cho bất kỳ ai.</p>
-                    </div>",
-                IsBodyHtml = true
+                // Không throw để tránh lộ chi tiết cấu hình ra ngoài, chỉ log để dev tự kiểm tra appsettings.json
+                _logger.LogError("Chưa cấu hình Smtp:SenderEmail / Smtp:SenderAppPassword trong appsettings.json");
+                throw new InvalidOperationException("Hệ thống chưa cấu hình gửi Email. Vui lòng liên hệ quản trị viên.");
+            }
+
+            using var client = new SmtpClient(host, port)
+            {
+                Credentials = new NetworkCredential(senderEmail, senderPassword),
+                EnableSsl = true
             };
 
-            using (SmtpClient smtpClient = new SmtpClient("smtp.gmail.com"))
+            var mail = new MailMessage
             {
-                smtpClient.Port = 587;
-                smtpClient.Credentials = new NetworkCredential(fromEmail, appPassword);
-                smtpClient.EnableSsl = true;
+                From = new MailAddress(senderEmail, senderDisplayName),
+                Subject = "Yêu cầu đặt lại mật khẩu",
+                IsBodyHtml = true,
+                Body = $@"
+                    <div style='font-family:Arial,sans-serif;max-width:480px;margin:auto'>
+                        <h2>Xin chào {WebUtility.HtmlEncode(toName)},</h2>
+                        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+                        <p>Liên kết dưới đây chỉ có hiệu lực trong <b>5 phút</b>:</p>
+                        <p><a href='{resetLink}' style='display:inline-block;padding:10px 20px;background:#2d6cdf;color:#fff;text-decoration:none;border-radius:6px'>Đặt lại mật khẩu</a></p>
+                        <p>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.</p>
+                    </div>"
+            };
+            mail.To.Add(toEmail);
 
-                try
-                {
-                    await smtpClient.SendMailAsync(message);
-                    Console.WriteLine($"[EMAIL SERVICE] Gửi thành công tới: {toEmail}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[EMAIL SERVICE ERROR] Lỗi khi gửi tới {toEmail}: " + ex.ToString());
-                    throw new Exception("Lỗi khi gửi email: " + ex.Message);
-                }
-            }
+            await client.SendMailAsync(mail);
         }
     }
 }

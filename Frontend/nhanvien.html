@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +10,11 @@
     <link rel="stylesheet" href="admin.css">
     <!-- CSS TÁCH RIÊNG CHO MODULE NHÂN VIÊN -->
     <link rel="stylesheet" href="nhanvien.css">
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body class="admin-body">
 
     <!-- Sidebar Admin -->
@@ -22,18 +24,18 @@
         </div>
         <ul class="sidebar-menu">
             <li class="menu-title">TỔNG QUAN</li>
-            <li><a href="bangdieukhien.html"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
-            
+            <li><a href="#"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
+
             <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
-            <li><a href="admin_sanpham.html"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
+            <li><a href="#"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
             <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
-            <li><a href="vatlieu.html"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
-            <li><a href="mucdichsudung.html"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
-            <li><a href="nhacungcap.html"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
-            
+            <li><a href="#"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+            <li><a href="#"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
+            <li><a href="#"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+
             <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
-            <li><a href="hoadon.html"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
-            <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
+            <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> Khách Hàng</a></li>
             <li><a href="nhanvien.html" class="active"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
         </ul>
         <div class="sidebar-footer">
@@ -58,7 +60,8 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Quản Lý Nhân Sự</h2>
-                <button class="btn-primary" onclick="openNvModal()"><i class="fas fa-user-plus"></i> Thêm Nhân Viên</button>
+                <button class="btn-primary" onclick="openNvModal()"><i class="fas fa-user-plus"></i> Thêm Nhân
+                    Viên</button>
             </div>
 
             <div class="data-card">
@@ -88,7 +91,7 @@
                 <h3>Thêm Hồ Sơ Nhân Viên</h3>
                 <span class="close-btn" onclick="closeNvModal()">&times;</span>
             </div>
-            
+
             <div class="modal-body">
                 <form id="nvForm">
                     <div class="form-grid">
@@ -105,10 +108,11 @@
                                     <input type="tel" id="soDT" placeholder="09xxxx" required maxlength="15">
                                 </div>
                             </div>
-                            
+
                             <div class="input-group">
                                 <label>Họ và Tên Nhân Viên <span style="color:red">*</span></label>
-                                <input type="text" id="tenNV" placeholder="Nhập họ tên đầy đủ..." required maxlength="50">
+                                <input type="text" id="tenNV" placeholder="Nhập họ tên đầy đủ..." required
+                                    maxlength="50">
                             </div>
 
                             <div class="form-row">
@@ -134,28 +138,53 @@
                         <!-- Cột 2: Cấp tài khoản & Công việc -->
                         <div class="form-column">
                             <h4 class="form-section-title"><i class="fas fa-user-shield"></i> Tài Khoản & Vai Trò</h4>
-                            
+
                             <div class="input-group">
                                 <label>Tên Đăng Nhập <span style="color:red">*</span></label>
-                                <input type="text" id="tenDangNhap" placeholder="Ví dụ: tan.nguyen" required maxlength="50">
+                                <input type="text" id="tenDangNhap" placeholder="Ví dụ: tan.nguyen" required
+                                    maxlength="50">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Email <span style="color:red">*</span></label>
+                                <input type="email" id="nvEmail" placeholder="Ví dụ: [email protected]" required
+                                    maxlength="150">
                             </div>
 
                             <div class="input-group password-group">
                                 <label>Mật Khẩu Mặc Định <span style="color:red">*</span></label>
                                 <div class="password-wrapper">
-                                    <input type="password" id="nvPassword" placeholder="Tạo mật khẩu cấp cho NV..." required maxlength="100">
+                                    <input type="password" id="nvPassword" placeholder="Tạo mật khẩu cấp cho NV..."
+                                        required maxlength="100">
                                     <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
                                 </div>
                             </div>
 
                             <div class="input-group">
-                                <label>Vai Trò / Khu Vực Phụ Trách</label>
+                                <label>Xác Nhận Mật Khẩu <span style="color:red">*</span></label>
+                                <input type="password" id="nvConfirmPassword" placeholder="Nhập lại mật khẩu..."
+                                    required maxlength="100">
+                            </div>
+
+                            <!-- [THÊM MỚI] Vai trò HỆ THỐNG - quyết định quyền hạn (JWT/Authorize), KHÁC với
+                                 "Vai Trò / Khu Vực Phụ Trách" bên dưới (chỉ là chức danh hiển thị) -->
+                            <div class="input-group">
+                                <label>Vai Trò Hệ Thống (Phân quyền) <span style="color:red">*</span></label>
+                                <select id="vaiTroHeThong" required>
+                                    <option value="NV Bán Hàng">NV Bán Hàng (Nhân viên)</option>
+                                    <option value="Quản trị Hệ thống">Quản trị Hệ thống (Admin)</option>
+                                </select>
+                            </div>
+
+                            <!-- [THÊM MỚI] Vai trò / Khu Vực Phụ Trách (chỉ hiển thị chức danh) 
+                            <div class="input-group">
+                                //<label>Vai Trò / Khu Vực Phụ Trách</label>
                                 <select id="vaiTroKhuVucPhuTrach">
                                     <option value="Quản lý Cửa hàng">Quản lý Cửa hàng</option>
                                     <option value="NV Bán Hàng">NV Bán Hàng</option>
                                     <option value="NV Kho">NV Kho</option>
                                 </select>
-                            </div>
+                            </div>-->
 
                             <div class="input-group">
                                 <label>Trạng Thái Làm Việc</label>
@@ -168,7 +197,7 @@
                     </div>
                 </form>
             </div>
-            
+
             <div class="modal-footer">
                 <button class="btn-outline" onclick="closeNvModal()">Hủy Bỏ</button>
                 <button type="submit" form="nvForm" class="btn-primary" style="width: auto;">Lưu Nhân Viên</button>
@@ -179,4 +208,5 @@
     <!-- GỌI FILE JAVASCRIPT BÊN NGOÀI -->
     <script src="nhanvien.js"></script>
 </body>
+
 </html>

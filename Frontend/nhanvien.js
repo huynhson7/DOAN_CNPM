@@ -14,19 +14,19 @@
 const nvModal = document.getElementById("nvModal");
 let isEditMode = false;
 
-function openNvModal() { 
+function openNvModal() {
     isEditMode = false;
     document.getElementById('nvForm').reset();
     document.getElementById('maNV').readOnly = false;
     document.querySelector('button[form="nvForm"]').innerText = "Lưu Nhân Viên";
-    nvModal.style.display = "flex"; 
+    nvModal.style.display = "flex";
 }
 
-function closeNvModal() { 
-    nvModal.style.display = "none"; 
+function closeNvModal() {
+    nvModal.style.display = "none";
 }
 
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target === nvModal) {
         closeNvModal();
     }
@@ -77,10 +77,10 @@ async function loadDanhSachNhanVien() {
         }
 
         if (!response.ok) throw new Error("Lỗi mạng khi tải dữ liệu");
-        
+
         const danhSachNV = await response.json();
         const tbody = document.getElementById('bangNhanVien');
-        tbody.innerHTML = ""; 
+        tbody.innerHTML = "";
 
         danhSachNV.forEach(nv => {
             let roleClass = nv.vaiTroKhuVucPhuTrach === "Quản lý Cửa hàng" ? "role-manager" : "role-staff";
@@ -91,7 +91,7 @@ async function loadDanhSachNhanVien() {
                     <td>${nv.maNV}</td>
                     <td>${nv.tenNV}</td>
                     <td>${nv.soDT}</td>
-                    <td><span class="role-badge ${roleClass}">${nv.vaiTroKhuVucPhuTrach}</span></td>
+                    <td><span class="role-badge ${roleClass}">${nv.vaiTro}</span></td>
                     <td><span class="badge ${statusClass}">${nv.trangThaiLamViec}</span></td>
                     <td>
                         <button class="btn-action edit" title="Sửa" onclick="openEditModal('${nv.maNV}')"><i class="fas fa-pen"></i></button>
@@ -118,23 +118,23 @@ async function openEditModal(maNV) {
             method: 'GET',
             headers: getAuthHeaders()
         });
-        
+
         if (response.status === 401) {
             alert("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
             return;
         }
 
         if (!response.ok) throw new Error("Không thể lấy thông tin nhân viên.");
-        
+
         const nv = await response.json();
 
         document.getElementById('maNV').value = nv.maNV;
-        document.getElementById('maNV').readOnly = true; 
-        
+        document.getElementById('maNV').readOnly = true;
+
         document.getElementById('tenDangNhap').value = nv.tenDangNhap;
         document.getElementById('nvPassword').value = nv.matKhau;
         document.getElementById('tenNV').value = nv.tenNV;
-        
+
         if (nv.ngaySinh) {
             const dateObj = new Date(nv.ngaySinh);
             const year = dateObj.getFullYear();
@@ -146,7 +146,7 @@ async function openEditModal(maNV) {
         document.getElementById('gioiTinh').value = nv.gioiTinh;
         document.getElementById('soDT').value = nv.soDT;
         document.getElementById('diaChiNV').value = nv.diaChiNV;
-        document.getElementById('vaiTroKhuVucPhuTrach').value = nv.vaiTroKhuVucPhuTrach;
+        //document.getElementById('vaiTroKhuVucPhuTrach').value = nv.vaiTroKhuVucPhuTrach;
         document.getElementById('trangThaiLamViec').value = nv.trangThaiLamViec;
 
         isEditMode = true;
@@ -163,7 +163,7 @@ async function openEditModal(maNV) {
 // ==========================================
 async function deleteNhanVien(maNV) {
     const xacNhan = confirm("Bạn có chắc chắn muốn xóa nhân viên này!");
-    
+
     if (xacNhan) {
         try {
             const response = await fetch(`${API_NHAN_VIEN}/${maNV}`, {
@@ -178,7 +178,7 @@ async function deleteNhanVien(maNV) {
 
             if (response.ok) {
                 alert("Xóa nhân viên thành công!");
-                loadDanhSachNhanVien(); 
+                loadDanhSachNhanVien();
             } else {
                 const errorData = await response.json();
                 alert(errorData.message || "Lỗi khi xóa nhân viên");
@@ -195,8 +195,8 @@ async function deleteNhanVien(maNV) {
 // ==========================================
 const formNhanVien = document.getElementById('nvForm');
 
-formNhanVien.addEventListener('submit', async function(event) {
-    event.preventDefault(); 
+formNhanVien.addEventListener('submit', async function (event) {
+    event.preventDefault();
 
     const dateInput = document.getElementById('ngaySinh').value;
     const ngaySinhISO = new Date(dateInput).toISOString();
@@ -204,15 +204,18 @@ formNhanVien.addEventListener('submit', async function(event) {
     const payload = {
         maNV: document.getElementById('maNV').value.trim(),
         tenDangNhap: document.getElementById('tenDangNhap').value.trim(),
+        email: document.getElementById('nvEmail').value.trim(),
         matKhau: document.getElementById('nvPassword').value,
+        confirmMatKhau: document.getElementById('nvConfirmPassword').value,
         tenNV: document.getElementById('tenNV').value.trim(),
         ngaySinh: ngaySinhISO,
         gioiTinh: document.getElementById('gioiTinh').value,
         soDT: document.getElementById('soDT').value.trim(),
         diaChiNV: document.getElementById('diaChiNV').value.trim(),
-        vaiTroKhuVucPhuTrach: document.getElementById('vaiTroKhuVucPhuTrach').value,
+        //vaiTroKhuVucPhuTrach: document.getElementById('vaiTroKhuVucPhuTrach').value,
+        vaiTro: document.getElementById('vaiTroHeThong').value, // Vai trò phân quyền thật sự: "Quản trị Hệ thống" | "NV Bán Hàng"
         trangThaiLamViec: document.getElementById('trangThaiLamViec').value,
-        trangThai: 0 
+        trangThai: 0
     };
 
     const btnLuu = document.querySelector('button[form="nvForm"]');
@@ -236,12 +239,12 @@ formNhanVien.addEventListener('submit', async function(event) {
 
         if (response.ok) {
             alert(isEditMode ? "Cập nhật hồ sơ nhân viên thành công!" : "Thêm hồ sơ nhân viên thành công!");
-            formNhanVien.reset(); 
-            closeNvModal();  
-            loadDanhSachNhanVien(); 
+            formNhanVien.reset();
+            closeNvModal();
+            loadDanhSachNhanVien();
         } else {
             const errorData = await response.json();
-            alert(errorData.message); 
+            alert(errorData.message);
         }
     } catch (error) {
         console.error("Lỗi gửi dữ liệu:", error);
@@ -258,17 +261,17 @@ formNhanVien.addEventListener('submit', async function(event) {
 const searchInput = document.getElementById('timKiemNV');
 
 if (searchInput) {
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function () {
         const keyword = this.value.toLowerCase().trim();
         const rows = document.querySelectorAll('#bangNhanVien tr');
 
         rows.forEach(row => {
             const rowData = row.textContent.toLowerCase();
-            
+
             if (rowData.includes(keyword)) {
-                row.style.display = ""; 
+                row.style.display = "";
             } else {
-                row.style.display = "none"; 
+                row.style.display = "none";
             }
         });
     });

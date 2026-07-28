@@ -1,58 +1,130 @@
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
+const API_BASE_URL = "http://localhost:5129/api";
+
+const fullnameInput = document.getElementById('fullname');
+const emailInput = document.getElementById('email');
+const phoneInput = document.getElementById('phone');
+const usernameInput = document.getElementById('reg-username');
+const passwordInput = document.getElementById('reg-password');
+const confirmPasswordInput = document.getElementById('reg-confirm-password');
+
+const usernameErrorBox = document.getElementById('usernameError');
+const confirmPasswordErrorBox = document.getElementById('confirmPasswordError');
+const passwordChecklistBox = document.getElementById('passwordChecklist');
+const registerErrorBox = document.getElementById('registerError');
+
+// Validate real-time: Username, Password checklist, Confirm Password (không dùng Alert/Popup)
+const checkUsername = attachUsernameCheck(usernameInput, usernameErrorBox);
+attachPasswordChecklist(passwordInput, passwordChecklistBox);
+const checkConfirmPassword = attachConfirmPasswordCheck(passwordInput, confirmPasswordInput, confirmPasswordErrorBox);
+
+document.getElementById('registerForm').addEventListener('submit', async function (e) {
     e.preventDefault();
+    registerErrorBox.textContent = '';
 
-    const fullname = document.getElementById('fullname').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const username = document.getElementById('reg-username').value.trim();
-    const password = document.getElementById('reg-password').value.trim();
-    
-    const btnSubmit = this.querySelector('button[type="submit"]');
+    const isUsernameOk = checkUsername();
+    const isConfirmOk = checkConfirmPassword();
+    const isPasswordOk = isPasswordValid(passwordInput.value);
 
-    if (!fullname || !phone || !email || !username || !password) {
-        alert("Vui lòng điền đầy đủ thông tin!");
+    if (!isUsernameOk || !isPasswordOk || !isConfirmOk) {
+        if (!isPasswordOk) {
+            registerErrorBox.textContent = 'Mật khẩu chưa đáp ứng đủ các tiêu chí bên trên.';
+        }
         return;
     }
 
+    const btnSubmit = this.querySelector('button[type="submit"]');
     btnSubmit.disabled = true;
-    btnSubmit.innerText = "Đang xử lý...";
+    btnSubmit.innerText = 'Đang xử lý...';
 
     try {
-        const response = await fetch('http://localhost:5129/api/Auth/register', {
+        const response = await fetch(`${API_BASE_URL}/Auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                TenKhachHang: fullname,
-                SDTKhachHang: phone,
-                Email: email,
-                TenDangNhap: username,
-                MatKhau: password
+                HoTen: fullnameInput.value.trim(),
+                Email: emailInput.value.trim(),
+                SoDienThoai: phoneInput.value.trim(),
+                Username: usernameInput.value.trim(),
+                Password: passwordInput.value,
+                ConfirmPassword: confirmPasswordInput.value
             })
         });
 
-        // Đọc dữ liệu trả về dưới dạng văn bản trước để tránh lỗi parse JSON khi server báo lỗi 500
-        const responseText = await response.text();
-        let data;
-
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error("Lỗi từ server (không phải JSON):", responseText);
-            alert("Lỗi hệ thống Backend: Vui lòng kiểm tra Console (F12) để xem chi tiết lỗi từ C#.");
-            return;
-        }
+        const data = await response.json();
 
         if (response.ok) {
-            alert(data.message || "Đăng ký thành công! Vui lòng đăng nhập.");
-            window.location.href = 'login.html';
+            saveSessionAndRedirect(data);
         } else {
-            alert(data.message);
+            registerErrorBox.textContent = data.message || 'Đăng ký thất bại. Vui lòng thử lại.';
         }
     } catch (error) {
-        console.error("Lỗi mạng/Kết nối:", error);
-        alert("Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại Backend (Port có đúng không)!");
+        console.error('Lỗi đăng ký:', error);
+        registerErrorBox.textContent = 'Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại Backend đang chạy hay chưa.';
     } finally {
         btnSubmit.disabled = false;
-        btnSubmit.innerText = "Đăng Ký";
+        btnSubmit.innerText = 'Đăng Ký';
     }
 });
+
+function saveSessionAndRedirect(data) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userRole', data.role);
+    localStorage.setItem('hoTen', data.hoTen);
+    localStorage.setItem('userId', data.maUser);
+    window.location.href = 'index.html';
+}
+
+// ============================================================
+// Google Register (dùng chung endpoint /api/auth/google với Login)
+// ============================================================
+const GOOGLE_CLIENT_ID = "76373804606-5hbi96pkn7v0sjrjkarh9roous8nlmr2.apps.googleusercontent.com";
+
+window.addEventListener('load', () => {
+    if (typeof google === 'undefined') {
+        registerErrorBox.textContent = 'Không tải được thư viện Google. Vui lòng kiểm tra kết nối mạng.';
+        return;
+    }
+
+    const googleButton = document.getElementById('googleSignInButton');
+    if (!googleButton) return;
+
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse
+    });
+
+    google.accounts.id.renderButton(googleButton, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signup_with',
+        shape: 'pill',
+        width: 320
+    });
+});
+
+async function handleGoogleCredentialResponse(response) {
+    if (!response?.credential) {
+        registerErrorBox.textContent = 'Không nhận được Google ID Token.';
+        return;
+    }
+
+    try {
+        const apiResponse = await fetch(`${API_BASE_URL}/Auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ IdToken: response.credential })
+        });
+
+        const data = await apiResponse.json();
+
+        if (apiResponse.ok) {
+            saveSessionAndRedirect(data);
+        } else {
+            registerErrorBox.textContent = data.message || 'Đăng ký Google thất bại.';
+        }
+    } catch (error) {
+        console.error('Lỗi đăng ký Google:', error);
+        registerErrorBox.textContent = 'Không thể kết nối tới máy chủ.';
+    }
+}
