@@ -32,7 +32,9 @@ namespace Backend.Data
         [StringLength(200)]
         public string? MoTa { get;set;}
 
-        [StringLength(500)]
+        // Lưu Base64 (data URI) của ảnh trực tiếp trong CSDL để ảnh luôn đi kèm dữ liệu SQL
+        // khi chuyển/khôi phục Database sang máy khác, không phụ thuộc file vật lý trong wwwroot.
+        [Column(TypeName = "nvarchar(max)")]
         public string? HinhAnh { get;set;}
 
         public int? TrangThai { get;set;}

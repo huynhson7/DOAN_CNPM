@@ -66,3 +66,36 @@ function applyRoleBasedUI() {
 }
 
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
+
+/**
+ * Chặn truy cập TRỰC TIẾP vào một trang nếu Role hiện tại không nằm trong danh sách cho phép.
+ * Gọi hàm này ở NGAY ĐẦU <body> (trước khi nội dung trang render) của các trang chỉ dành riêng
+ * cho 1 số Role nhất định, ví dụ: requireRole(['Quản trị Hệ thống']).
+ *
+ * Đây LÀ lớp bảo vệ giao diện (chặn hiển thị/điều hướng đi nơi khác), giúp Nhân viên/Khách hàng
+ * không thể vào trang bằng cách gõ thẳng URL. Tuy nhiên lớp bảo vệ THẬT SỰ vẫn luôn là Backend
+ * ([Authorize(Roles = ...)]) - Frontend chỉ hỗ trợ trải nghiệm người dùng.
+ *
+ * @param {string[]} allowedRoles - Danh sách Role được phép xem trang này.
+ * @param {string} redirectUrl - Nơi điều hướng tới nếu không có quyền (mặc định: login.html).
+ */
+function requireRole(allowedRoles, redirectUrl) {
+    const user = getCurrentUser();
+
+    if (!user) {
+        // Chưa đăng nhập -> về trang đăng nhập
+        window.location.replace('login.html');
+        return;
+    }
+
+    if (!allowedRoles.includes(user.role)) {
+        // Đã đăng nhập nhưng không đủ quyền -> đưa về trang phù hợp với Role của họ,
+        // không cho thấy dù chỉ 1 khung hình của trang bị chặn.
+        const fallback = redirectUrl || (
+            (user.role === 'Quản trị Hệ thống' || user.role === 'NV Bán Hàng')
+                ? 'admin_sanpham.html'
+                : 'index.html'
+        );
+        window.location.replace(fallback);
+    }
+}

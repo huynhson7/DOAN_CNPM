@@ -11,9 +11,19 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
+
+    <!-- Bảo vệ trang: CHỈ Role "Quản trị Hệ thống" mới được xem trang này.
+         Đặt ngay đầu <body> và chạy ngay lập tức (không đợi DOMContentLoaded)
+         để Nhân viên/Khách hàng bị điều hướng đi trước khi kịp thấy nội dung. -->
+    <script src="js/auth-guard.js"></script>
+    <script>
+        requireRole(['Quản trị Hệ thống']);
+    </script>
 
     <!-- Sidebar Admin -->
     <aside class="sidebar">
@@ -44,7 +54,7 @@
         </div>
 
         <!-- Nút Đăng xuất -->
-        <a href="login.html" class="logout-btn">
+        <a href="#" class="logout-btn" onclick="logout(); return false;">
             <i class="fas fa-sign-out-alt"></i> Đăng xuất
         </a>
     </aside>
@@ -52,9 +62,12 @@
     <main class="main-content">
         <!-- Header -->
         <header class="top-header">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm nhanh...">
+            <div class="search-bar-wrapper">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="dashboardSearchInput" placeholder="Tìm kiếm hóa đơn, khách hàng, sản phẩm..." autocomplete="off">
+                </div>
+                <div class="search-results-dropdown" id="dashboardSearchResults"></div>
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=222222&color=fff" alt="Admin">
@@ -75,7 +88,7 @@
                     <i class="fas fa-wallet stat-icon"></i>
                     <div class="stat-details">
                         <h3>Tổng Doanh Thu</h3>
-                        <p class="stat-number">125.500.000 ₫</p>
+                        <p class="stat-number" id="statDoanhThu">0 ₫</p>
                     </div>
                 </div>
 
@@ -83,7 +96,7 @@
                     <i class="fas fa-shopping-bag stat-icon"></i>
                     <div class="stat-details">
                         <h3>Đơn Hàng Mới</h3>
-                        <p class="stat-number">14</p>
+                        <p class="stat-number" id="statDonHangMoi">0</p>
                     </div>
                 </div>
 
@@ -91,7 +104,7 @@
                     <i class="fas fa-users stat-icon"></i>
                     <div class="stat-details">
                         <h3>Tổng Khách Hàng</h3>
-                        <p class="stat-number">320</p>
+                        <p class="stat-number" id="statKhachHang">0</p>
                     </div>
                 </div>
 
@@ -99,8 +112,20 @@
                     <i class="fas fa-couch stat-icon"></i>
                     <div class="stat-details">
                         <h3>Sản Phẩm Trong Kho</h3>
-                        <p class="stat-number">85</p>
+                        <p class="stat-number" id="statSanPham">0</p>
                     </div>
+                </div>
+            </div>
+
+            <div class="dashboard-chart-card">
+                <div class="chart-card-header">
+                    <h3>Biểu Đồ Doanh Thu (30 Ngày Gần Đây)</h3>
+                    <button class="btn-export-excel" id="btnXuatExcelDoanhThu">
+                        <i class="fas fa-file-excel"></i> Xuất Excel
+                    </button>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="bieuDoDoanhThu"></canvas>
                 </div>
             </div>
 
@@ -119,27 +144,9 @@
                                 <th>Trạng Thái</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tblDonHangMoiGanDay">
                             <tr>
-                                <td><strong>HD099</strong></td>
-                                <td>Nguyễn Văn A</td>
-                                <td>18/07/2026</td>
-                                <td class="price-text">25.500.000 ₫</td>
-                                <td><span class="status-badge status-warning">Đang xử lý</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>HD098</strong></td>
-                                <td>Trần Thị B</td>
-                                <td>17/07/2026</td>
-                                <td class="price-text">12.800.000 ₫</td>
-                                <td><span class="status-badge status-success">Đã giao hàng</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>HD097</strong></td>
-                                <td>Lê Minh C</td>
-                                <td>16/07/2026</td>
-                                <td class="price-text">4.200.000 ₫</td>
-                                <td><span class="status-badge status-success">Đã giao hàng</span></td>
+                                <td colspan="5" style="text-align:center; padding:20px;">Đang tải dữ liệu...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -166,6 +173,8 @@
             </div>
         </div>
     </main>
+
+    <script src="bangdieukhien.js"></script>
 
 </body>
 

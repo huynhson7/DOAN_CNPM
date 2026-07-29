@@ -25,34 +25,50 @@ namespace Backend.Controllers
             _env = env;
         }
 
+        // Các định dạng ảnh được chấp nhận và giới hạn dung lượng cho việc lưu Base64 vào CSDL.
+        private static readonly Dictionary<string, string> _allowedImageContentTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            [".jpg"] = "image/jpeg",
+            [".jpeg"] = "image/jpeg",
+            [".png"] = "image/png",
+            [".gif"] = "image/gif",
+            [".webp"] = "image/webp",
+        };
+        private const long MaxImageBytes = 5 * 1024 * 1024; // 5MB
+
         // =====================================================
         // POST: api/san-pham/upload-image
         // =====================================================
+        // [SỬA] Không lưu ảnh ra file vật lý trong wwwroot nữa. Thay vào đó, ảnh được
+        // đọc thành chuỗi Base64 (data URI) và trả về để Frontend lưu thẳng vào cột
+        // HinhAnh trong CSDL (xem SanPhamRequest -> Create/Update bên dưới).
+        //
+        // LÝ DO: file vật lý trong wwwroot/images KHÔNG đi theo khi export/import hay
+        // backup/restore Database sang máy khác => ảnh "mất" dù dữ liệu SQL vẫn còn.
+        // Lưu thẳng Base64 vào SQL đảm bảo ảnh luôn đi kèm dữ liệu, mở dự án ở máy nào
+        // (miễn là dùng đúng Database đó) cũng thấy được ảnh trên web.
         [HttpPost("upload-image")]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "Không có file nào được tải lên." });
 
-            string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            string uploadsFolder = Path.Combine(webRootPath, "images");
+            if (file.Length > MaxImageBytes)
+                return BadRequest(new { message = "Ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB." });
 
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
+            string ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext) || !_allowedImageContentTypes.TryGetValue(ext, out var mimeType))
+                return BadRequest(new { message = "Định dạng ảnh không được hỗ trợ. Chỉ chấp nhận JPG, PNG, GIF, WEBP." });
 
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            string base64 = Convert.ToBase64String(memoryStream.ToArray());
+            string dataUri = $"data:{mimeType};base64,{base64}";
 
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(fileStream);
-            }
-
-            string baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
-            string fileUrl = $"{baseUrl}/images/{uniqueFileName}";
-            return Ok(new { url = fileUrl });
+            return Ok(new { url = dataUri });
         }
+
         
 
         // =====================================================
@@ -87,8 +103,10 @@ namespace Backend.Controllers
 
             foreach (var item in list)
             {
-                if (!string.IsNullOrEmpty(item.HinhAnh))
+                if (!string.IsNullOrEmpty(item.HinhAnh) && !item.HinhAnh.StartsWith("data:"))
                 {
+                    // Ảnh mới (Base64/data URI) giữ nguyên - chỉ ảnh CŨ (file vật lý còn sót lại
+                    // từ trước khi chuyển sang lưu Base64) mới cần chuẩn hóa URL theo baseUrl.
                     if (item.HinhAnh.StartsWith("/images/"))
                     {
                         item.HinhAnh = baseUrl + item.HinhAnh;
@@ -119,7 +137,7 @@ namespace Backend.Controllers
                 return NotFound(new { message = "Không tìm thấy sản phẩm." });
             }
 
-            if (!string.IsNullOrEmpty(item.HinhAnh))
+            if (!string.IsNullOrEmpty(item.HinhAnh) && !item.HinhAnh.StartsWith("data:"))
             {
                 var baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
                 if (item.HinhAnh.StartsWith("/images/"))
@@ -197,7 +215,7 @@ namespace Backend.Controllers
                     return BadRequest(new { message = "Một hoặc nhiều mã nhà cung cấp không tồn tại." });
             }
 
-            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh))
+            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh) && !request.SanPham.HinhAnh.StartsWith("data:"))
             {
                 if (Uri.TryCreate(request.SanPham.HinhAnh, UriKind.Absolute, out Uri? uri))
                 {
@@ -287,7 +305,7 @@ namespace Backend.Controllers
                     return BadRequest(new { message = "Một hoặc nhiều mã nhà cung cấp không tồn tại." });
             }
 
-            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh))
+            if (!string.IsNullOrEmpty(request.SanPham.HinhAnh) && !request.SanPham.HinhAnh.StartsWith("data:"))
             {
                 if (Uri.TryCreate(request.SanPham.HinhAnh, UriKind.Absolute, out Uri? uri))
                 {
@@ -331,7 +349,8 @@ namespace Backend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != newImageUrl)
+                if (!string.IsNullOrEmpty(oldImageUrl) && oldImageUrl != newImageUrl
+                    && !oldImageUrl.StartsWith("data:") && oldImageUrl.Contains("/images/"))
                 {
                     try
                     {
@@ -385,7 +404,7 @@ namespace Backend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                if (!string.IsNullOrEmpty(oldImageUrl))
+                if (!string.IsNullOrEmpty(oldImageUrl) && !oldImageUrl.StartsWith("data:") && oldImageUrl.Contains("/images/"))
                 {
                     try
                     {
