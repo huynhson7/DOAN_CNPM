@@ -25,7 +25,7 @@ namespace Backend.Controllers
             _env = env;
         }
 
-        // Các định dạng ảnh được chấp nhận và giới hạn dung lượng cho việc lưu Base64 vào CSDL.
+        // Các định dạng ảnh được chấp nhận và giới hạn dung lượng khi lưu file vật lý vào wwwroot/images.
         private static readonly Dictionary<string, string> _allowedImageContentTypes = new(StringComparer.OrdinalIgnoreCase)
         {
             [".jpg"] = "image/jpeg",
@@ -39,14 +39,14 @@ namespace Backend.Controllers
         // =====================================================
         // POST: api/san-pham/upload-image
         // =====================================================
-        // [SỬA] Không lưu ảnh ra file vật lý trong wwwroot nữa. Thay vào đó, ảnh được
-        // đọc thành chuỗi Base64 (data URI) và trả về để Frontend lưu thẳng vào cột
-        // HinhAnh trong CSDL (xem SanPhamRequest -> Create/Update bên dưới).
+        // Lưu ảnh ra file vật lý trong wwwroot/images (đặt tên bằng GUID để tránh trùng),
+        // sau đó trả về URL công khai của ảnh để Frontend lưu vào cột HinhAnh trong CSDL
+        // (xem SanPhamRequest -> Create/Update bên dưới, các hàm này tự chuẩn hoá URL
+        // tuyệt đối về lại đường dẫn tương đối "/images/..." trước khi lưu SQL).
         //
-        // LÝ DO: file vật lý trong wwwroot/images KHÔNG đi theo khi export/import hay
-        // backup/restore Database sang máy khác => ảnh "mất" dù dữ liệu SQL vẫn còn.
-        // Lưu thẳng Base64 vào SQL đảm bảo ảnh luôn đi kèm dữ liệu, mở dự án ở máy nào
-        // (miễn là dùng đúng Database đó) cũng thấy được ảnh trên web.
+        // LƯU Ý KHI CHUYỂN DỰ ÁN SANG MÁY KHÁC: vì ảnh giờ là file vật lý, phải copy
+        // theo cả thư mục Backend/wwwroot/images sang máy mới (không chỉ Database),
+        // nếu không ảnh sẽ không hiển thị dù dữ liệu SQL vẫn còn nguyên đường dẫn.
         [HttpPost("upload-image")]
         [AllowAnonymous]
         public async Task<IActionResult> UploadImage(IFormFile file)
@@ -58,16 +58,29 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "Ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB." });
 
             string ext = Path.GetExtension(file.FileName);
-            if (string.IsNullOrEmpty(ext) || !_allowedImageContentTypes.TryGetValue(ext, out var mimeType))
+            if (string.IsNullOrEmpty(ext) || !_allowedImageContentTypes.ContainsKey(ext))
                 return BadRequest(new { message = "Định dạng ảnh không được hỗ trợ. Chỉ chấp nhận JPG, PNG, GIF, WEBP." });
 
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            string base64 = Convert.ToBase64String(memoryStream.ToArray());
-            string dataUri = $"data:{mimeType};base64,{base64}";
+            string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string imagesFolder = Path.Combine(webRootPath, "images");
+            Directory.CreateDirectory(imagesFolder); // Đảm bảo thư mục tồn tại (tránh lỗi nếu máy mới chưa có sẵn)
 
-            return Ok(new { url = dataUri });
+            // Tên file duy nhất: GUID + tên gốc, giữ nguyên đuôi file
+            string safeOriginalName = Path.GetFileNameWithoutExtension(file.FileName);
+            string fileName = $"{Guid.NewGuid()}_{safeOriginalName}{ext}";
+            string filePath = Path.Combine(imagesFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            string relativeUrl = $"/images/{fileName}";
+            string baseUrl = $"{Request.Scheme}://{Request.Host.Value}";
+
+            return Ok(new { url = $"{baseUrl}{relativeUrl}" });
         }
+
 
         
 

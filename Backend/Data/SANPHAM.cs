@@ -32,8 +32,10 @@ namespace Backend.Data
         [StringLength(200)]
         public string? MoTa { get;set;}
 
-        // Lưu Base64 (data URI) của ảnh trực tiếp trong CSDL để ảnh luôn đi kèm dữ liệu SQL
-        // khi chuyển/khôi phục Database sang máy khác, không phụ thuộc file vật lý trong wwwroot.
+        // Lưu đường dẫn tương đối (vd: /images/xxx.jpg) tới file ảnh vật lý trong
+        // wwwroot/images. Khi chuyển dự án sang máy khác cần copy theo cả thư mục
+        // wwwroot/images (không chỉ Database) để ảnh hiển thị đầy đủ.
+        // Giữ kiểu nvarchar(max) để tương thích ngược với dữ liệu Base64 cũ (nếu có).
         [Column(TypeName = "nvarchar(max)")]
         public string? HinhAnh { get;set;}
 

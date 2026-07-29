@@ -271,7 +271,7 @@ create table SANPHAM
    SoLuongTon int null,
    GiaBan decimal(18,2) null,
    MoTa nvarchar(200) null,
-   HinhAnh varchar(500) null,
+   HinhAnh nvarchar(max) null,
    TrangThai int null,
    constraint PK_SANPHAM primary key (MaSP)
 )
