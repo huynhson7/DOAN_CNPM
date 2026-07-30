@@ -6,7 +6,7 @@
     --accent-color: #b08968;
     --bg-color: #f7f9fa;
     --text-color: #444444;
-    --sidebar-width: 250px;
+    --sidebar-width: 260px;
     --border-color: #eaeaea;
 }
 
@@ -46,7 +46,7 @@ a {
 }
 
 .sidebar-header {
-    padding: 25px 20px;
+    padding: 20px;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
 }
@@ -69,28 +69,29 @@ a {
 }
 
 .menu-title {
-    font-size: 12px; /* Tăng lên 12px */
+    font-size: 11px;
     color: #999;
-    margin: 15px 20px 10px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    margin-top: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .sidebar-menu li a {
     display: flex;
     align-items: center;
-    padding: 14px 20px; /* Tăng độ rộng vùng click */
+    padding: 12px 20px;
     color: #555;
     font-weight: 500;
-    font-size: 15px; /* Chữ menu to và rõ hơn */
+    font-size: 15px;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
 }
 
 .sidebar-menu li a i {
-    width: 30px; /* Tăng khoảng cách icon và chữ */
-    font-size: 18px; /* Tăng cỡ icon */
+    width: 24px;
+    font-size: 16px;
     color: #888;
 }
 
@@ -106,10 +107,14 @@ a {
     color: var(--accent-color);
 }
 
-.logout-btn {
+.sidebar-footer {
     padding: 20px;
     border-top: 1px solid var(--border-color);
-    color: #d32f2f;
+}
+
+.sidebar-footer a {
+    color: #e74c3c;
+    text-decoration: none;
     font-weight: 600;
     font-size: 15px;
     display: flex;
@@ -118,8 +123,8 @@ a {
     transition: 0.2s;
 }
 
-.logout-btn:hover {
-    background-color: #fff1f0;
+.sidebar-footer a:hover {
+    color: #c0392b;
 }
 
 /* =========================================

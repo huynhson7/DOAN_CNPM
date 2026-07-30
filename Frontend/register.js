@@ -53,7 +53,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         const data = await response.json();
 
         if (response.ok) {
-            saveSessionAndRedirect(data);
+            showRegisterSuccessModal();
         } else {
             registerErrorBox.textContent = data.message || 'Đăng ký thất bại. Vui lòng thử lại.';
         }
@@ -66,12 +66,28 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     }
 });
 
-function saveSessionAndRedirect(data) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userRole', data.role);
-    localStorage.setItem('hoTen', data.hoTen);
-    localStorage.setItem('userId', data.maUser);
-    window.location.href = 'index.html';
+// ============================================================
+// Modal Thông Báo Đăng Ký Thành Công
+// ============================================================
+// Không tự động đăng nhập sau khi đăng ký nữa. Thay vào đó hiện Modal
+// thông báo thành công, người dùng bấm "Chuyển hướng đăng nhập" để
+// quay lại login.html và tự nhập tài khoản vừa tạo.
+const registerSuccessModal = document.getElementById('registerSuccessModal');
+const btnGoToLogin = document.getElementById('btnGoToLogin');
+
+function showRegisterSuccessModal() {
+    if (registerSuccessModal) {
+        registerSuccessModal.style.display = 'flex';
+    } else {
+        // Dự phòng nếu modal không tồn tại trong DOM vì lý do nào đó
+        window.location.href = 'login.html';
+    }
+}
+
+if (btnGoToLogin) {
+    btnGoToLogin.addEventListener('click', function () {
+        window.location.href = 'login.html';
+    });
 }
 
 // ============================================================
@@ -119,7 +135,7 @@ async function handleGoogleCredentialResponse(response) {
         const data = await apiResponse.json();
 
         if (apiResponse.ok) {
-            saveSessionAndRedirect(data);
+            showRegisterSuccessModal();
         } else {
             registerErrorBox.textContent = data.message || 'Đăng ký Google thất bại.';
         }

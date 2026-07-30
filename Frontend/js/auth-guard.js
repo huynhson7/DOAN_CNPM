@@ -107,6 +107,37 @@ document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
 document.addEventListener('DOMContentLoaded', renderAccountGreeting);
 
 /**
+ * Dùng cho các trang Storefront (index.html, sanpham.html, ...): các trang này
+ * mặc định hiển thị nút "Đăng Nhập" (không phải Header kiểu Admin). Nếu người
+ * dùng ĐÃ đăng nhập, ẩn nút "Đăng Nhập" đi và hiện khối "#navUserProfile"
+ * (avatar + "Xin chào, ...!") - nội dung avatar/tên do renderAccountGreeting()
+ * ở trên tự động điền vào vì cùng dùng chung class ".user-profile".
+ *
+ * Yêu cầu HTML của trang phải có:
+ *   <a id="navAuthAction" class="btn-outline">Đăng Nhập</a>
+ *   <div class="user-profile" id="navUserProfile" style="display:none;">
+ *       <img src="" alt="">
+ *       <span></span>
+ *   </div>
+ */
+function toggleStorefrontAuthUI() {
+    const loginBtn = document.getElementById('navAuthAction');
+    const profileEl = document.getElementById('navUserProfile');
+    if (!loginBtn || !profileEl) return;
+
+    const token = localStorage.getItem('token');
+    if (token) {
+        loginBtn.style.display = 'none';
+        profileEl.style.display = 'flex';
+    } else {
+        loginBtn.style.display = '';
+        profileEl.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', toggleStorefrontAuthUI);
+
+/**
  * Chặn truy cập TRỰC TIẾP vào một trang nếu Role hiện tại không nằm trong danh sách cho phép.
  * Gọi hàm này ở NGAY ĐẦU <body> (trước khi nội dung trang render) của các trang chỉ dành riêng
  * cho 1 số Role nhất định, ví dụ: requireRole(['Quản trị Hệ thống']).

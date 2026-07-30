@@ -62,6 +62,27 @@
         </form>
     </div>
 
+    <!-- Modal Thông Báo Đăng Ký Thành Công -->
+    <div id="registerSuccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle" style="color:#2ecc71;"></i> Đăng ký thành công</h3>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <p style="font-size:15px; color:var(--text-color, #444);">
+                    Tài khoản của bạn đã được tạo thành công.<br>
+                    Vui lòng đăng nhập để tiếp tục sử dụng.
+                </p>
+            </div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button type="button" id="btnGoToLogin" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Chuyển hướng đăng nhập
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="js/validators.js"></script>
     <script src="register.js"></script>
