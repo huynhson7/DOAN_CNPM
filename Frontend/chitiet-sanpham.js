@@ -155,15 +155,44 @@ function updateQty(change) {
     const qtyInput = document.getElementById("product-quantity");
     if (!qtyInput) return;
 
-    const newQty = parseInt(qtyInput.value, 10) + change;
-    if (newQty >= 1) {
-        qtyInput.value = newQty;
+    const soLuongTon = currentProduct
+        ? (currentProduct.soLuongTon !== undefined ? currentProduct.soLuongTon : (currentProduct.SoLuongTon || 0))
+        : Infinity;
+
+    let newQty = parseInt(qtyInput.value, 10) + change;
+    if (isNaN(newQty) || newQty < 1) newQty = 1;
+
+    if (newQty > soLuongTon) {
+        newQty = soLuongTon;
+        showCartToast(`Chỉ còn ${soLuongTon} sản phẩm trong kho.`, "error");
     }
+
+    qtyInput.value = newQty;
 }
 
 function bindQuantityEvents() {
     // Các nút +/- gọi trực tiếp qua onclick="updateQty(...)" có sẵn trong HTML,
     // hàm updateQty đã được định nghĩa ở phạm vi toàn cục (global) phía trên.
+
+    // Chặn luôn trường hợp người dùng gõ tay số lượng lớn hơn tồn kho.
+    const qtyInput = document.getElementById("product-quantity");
+    if (!qtyInput) return;
+
+    qtyInput.addEventListener("change", () => {
+        const soLuongTon = currentProduct
+            ? (currentProduct.soLuongTon !== undefined ? currentProduct.soLuongTon : (currentProduct.SoLuongTon || 0))
+            : Infinity;
+
+        let qty = parseInt(qtyInput.value, 10);
+        if (isNaN(qty) || qty < 1) qty = 1;
+
+        if (qty > soLuongTon) {
+            qty = soLuongTon;
+            showCartToast(`Chỉ còn ${soLuongTon} sản phẩm trong kho.`, "error");
+        }
+
+        qtyInput.value = qty;
+    });
 }
 
 // ----------------------------------------------------------

@@ -65,7 +65,46 @@ function applyRoleBasedUI() {
     });
 }
 
+/**
+ * Hiển thị thông tin tài khoản đang đăng nhập ở khu vực ".user-profile" trên
+ * góc phải Header - áp dụng cho MỌI trang Admin (được gọi cùng lúc với
+ * applyRoleBasedUI() mỗi khi trang tải xong).
+ *
+ * Quy tắc hiển thị:
+ * - Quản trị Hệ thống (Admin) -> "Xin chào, Admin!"
+ * - NV Bán Hàng             -> "Xin chào, {Tên nhân viên}!"
+ * - Các trường hợp khác     -> "Xin chào, {Họ tên}!" (nếu có)
+ */
+function renderAccountGreeting() {
+    const nameEl = document.querySelector('.user-profile span');
+    const imgEl = document.querySelector('.user-profile img');
+    if (!nameEl) return;
+
+    const hoTen = localStorage.getItem('hoTen');
+    const role = localStorage.getItem('userRole');
+
+    if (!role && !hoTen) return; // Chưa đăng nhập - giữ nguyên chữ mặc định có sẵn trong HTML
+
+    let text;
+    if (role === 'Quản trị Hệ thống') {
+        text = 'Xin chào, Admin!';
+    } else if (hoTen) {
+        text = `Xin chào, ${hoTen}!`;
+    } else {
+        text = 'Xin chào!';
+    }
+
+    nameEl.textContent = text;
+
+    if (imgEl) {
+        const avatarName = role === 'Quản trị Hệ thống' ? 'Admin' : (hoTen || 'User');
+        imgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=1a1a1a&color=fff`;
+        imgEl.alt = avatarName;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', applyRoleBasedUI);
+document.addEventListener('DOMContentLoaded', renderAccountGreeting);
 
 /**
  * Chặn truy cập TRỰC TIẾP vào một trang nếu Role hiện tại không nằm trong danh sách cho phép.
