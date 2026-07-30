@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -73,6 +74,25 @@ namespace Backend.Controllers
                     message = "Tên nhóm sản phẩm đã tồn tại."
                 });
             }
+
+            // =====================================================
+            // TỰ SINH FolderName CHO CLOUDINARY (Do_Noi_That/{FolderName})
+            // =====================================================
+            // Nếu người dùng không tự nhập FolderName, chuẩn hoá từ TenNhomSP (bỏ dấu,
+            // khoảng trắng -> gạch dưới). FolderName phải là duy nhất để không bị 2 nhóm
+            // sản phẩm khác nhau dùng chung 1 thư mục Cloudinary.
+            string candidateFolder = string.IsNullOrWhiteSpace(model.FolderName)
+                ? CloudinaryFolderHelper.ToFolderName(model.TenNhomSP)
+                : CloudinaryFolderHelper.ToFolderName(model.FolderName);
+
+            string finalFolder = candidateFolder;
+            int suffix = 1;
+            while (await _context.NHOMSANPHAM.AnyAsync(x => x.FolderName == finalFolder))
+            {
+                finalFolder = $"{candidateFolder}_{suffix}";
+                suffix++;
+            }
+            model.FolderName = finalFolder;
 
             _context.NHOMSANPHAM.Add(model);
 

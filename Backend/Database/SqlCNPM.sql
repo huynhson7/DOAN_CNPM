@@ -271,7 +271,7 @@ create table SANPHAM
    SoLuongTon int null,
    GiaBan decimal(18,2) null,
    MoTa nvarchar(200) null,
-   HinhAnh nvarchar(max) null,
+   HinhAnh varchar(500) null,
    TrangThai int null,
    constraint PK_SANPHAM primary key (MaSP)
 )
@@ -874,5 +874,56 @@ ALTER TABLE NHANVIEN
 DROP COLUMN VaiTroKhuVucPhuTrach;
 GO
 
-SELECT MatKhau
+SELECT *
 FROM NHANVIEN
+
+-- ---------------------------------------------------------------------
+-- 1. SANPHAM: thêm cột PublicId (Cloudinary Public ID để quản lý asset).
+--    KHÔNG đổi tên/đổi kiểu cột HinhAnh hiện có, KHÔNG thêm cột ImageUrl.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (
+    SELECT 1
+FROM sys.columns
+WHERE object_id = OBJECT_ID('SANPHAM') AND name = 'PublicId'
+)
+BEGIN
+   ALTER TABLE SANPHAM
+    ADD PublicId NVARCHAR(500) NULL;
+END
+GO
+
+-- ---------------------------------------------------------------------
+-- 2. NHOMSANPHAM: thêm cột FolderName (tên thư mục con trên Cloudinary:
+--    Do_Noi_That/{FolderName}). Liên quan trực tiếp tới đường dẫn Cloudinary
+--    nên nằm trong phạm vi cho phép chỉnh sửa NHOMSANPHAM.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (
+    SELECT 1
+FROM sys.columns
+WHERE object_id = OBJECT_ID('NHOMSANPHAM') AND name = 'FolderName'
+)
+BEGIN
+   ALTER TABLE NHOMSANPHAM
+    ADD FolderName NVARCHAR(100) NULL;
+END
+GO
+
+-- ---------------------------------------------------------------------
+-- 3. Gán FolderName CỐ ĐỊNH cho 5 nhóm sản phẩm hiện có, khớp đúng với
+--    5 Folder đã tồn tại sẵn trên Cloudinary (Bed, Chairs, Sofa_Salon,
+--    Table, Tu_Ke). LƯU Ý: đây KHÔNG phải kết quả của việc sanitize tự
+--    động tên tiếng Việt (vd "Bàn" sanitize ra "Ban" chứ không phải
+--    "Table") - phải gán thủ công đúng bằng tay cho 5 nhóm này.
+--    Nếu bộ mã Nhóm Sản Phẩm (NSP01..NSP05) trên máy bạn khác với mã dưới
+--    đây, hãy đối chiếu lại theo TenNhomSP trước khi chạy.
+-- ---------------------------------------------------------------------
+UPDATE NHOMSANPHAM SET FolderName = 'Sofa_Salon' WHERE MaNhomSP = 'NSP01';
+-- Sofa & Salon
+UPDATE NHOMSANPHAM SET FolderName = 'Table'      WHERE MaNhomSP = 'NSP02';
+-- Bàn
+UPDATE NHOMSANPHAM SET FolderName = 'Chairs'     WHERE MaNhomSP = 'NSP03';
+-- Ghế
+UPDATE NHOMSANPHAM SET FolderName = 'Bed'        WHERE MaNhomSP = 'NSP04';
+-- Giường ngủ
+UPDATE NHOMSANPHAM SET FolderName = 'Tu_Ke'      WHERE MaNhomSP = 'NSP05'; -- Tủ & Kệ
+GO

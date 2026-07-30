@@ -195,11 +195,22 @@
 
                     <div class="form-row" style="display: flex; gap: 15px;">
                         <div class="input-group" style="flex: 2;">
-                            <label>Hình Ảnh (Chọn file từ máy)</label>
-                            <!-- [THÊM MỚI] Sự kiện onchange để xem trước hình ảnh -->
-                            <input type="file" id="hinhAnhFile" class="input-file-custom" accept=".jpg, .png, .webp" onchange="previewImg(this)">
-                            <!-- [THÊM MỚI] Vùng hiển thị ảnh xem trước -->
-                            <img id="imgPreview" src="" style="display:none; width: 120px; height: 120px; object-fit: cover; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" alt="Preview">
+                            <label>Hình Ảnh Sản Phẩm</label>
+
+                            <!-- [CLOUDINARY] Khi sửa sản phẩm: luôn hiển thị URL + ảnh HIỆN TẠI
+                                 trước, để người dùng biết rõ ảnh nào đang được dùng. Không được
+                                 gán URL này vào input type="file" (trình duyệt không cho phép). -->
+                            <div id="currentImageBlock" style="display:none; margin-bottom: 12px;">
+                                <label style="font-weight: normal; font-size: 12px; color: #666;">URL ảnh hiện tại</label>
+                                <input type="text" id="currentImageUrlInput" readonly style="width: 100%; box-sizing: border-box; background: #f0f0f0; color: #555;">
+                                <img id="currentImagePreview" src="" style="display:none; width: 120px; height: 120px; object-fit: cover; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd;" alt="Ảnh hiện tại">
+                            </div>
+
+                            <label style="font-weight: normal; font-size: 12px; color: #666;">Chọn ảnh mới (để trống nếu muốn giữ nguyên ảnh cũ)</label>
+                            <input type="file" id="hinhAnhFile" class="input-file-custom" accept=".jpg, .jpeg, .png, .webp" onchange="previewImg(this)">
+                            <span id="newFileNameLabel" style="display:block; font-size: 12px; color: #666; margin-top: 4px;"></span>
+                            <!-- [THÊM MỚI] Vùng hiển thị ảnh mới xem trước -->
+                            <img id="imgPreview" src="" style="display:none; width: 120px; height: 120px; object-fit: cover; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" alt="Preview ảnh mới">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>Trạng Thái</label>
@@ -230,16 +241,29 @@
         function closeSpModal() { 
             modalSP.style.display = "none"; 
             document.getElementById("spForm").reset();
-            // Ẩn khung xem trước ảnh khi đóng
+            // Ẩn khung xem trước ảnh MỚI khi đóng
             const preview = document.getElementById("imgPreview");
             preview.src = "";
             preview.style.display = "none";
+
+            const label = document.getElementById("newFileNameLabel");
+            if (label) label.textContent = "";
+
+            // Ẩn khối ảnh HIỆN TẠI (chỉ hiển thị lại khi mở lại form Sửa)
+            const curBlock = document.getElementById("currentImageBlock");
+            const curUrlInput = document.getElementById("currentImageUrlInput");
+            const curPreview = document.getElementById("currentImagePreview");
+            if (curBlock) curBlock.style.display = "none";
+            if (curUrlInput) curUrlInput.value = "";
+            if (curPreview) { curPreview.src = ""; curPreview.style.display = "none"; }
         }
 
-        // [THÊM MỚI] Hàm xử lý hiển thị ảnh tức thì khi vừa chọn xong
+        // [THÊM MỚI] Hàm xử lý hiển thị ảnh MỚI tức thì khi vừa chọn xong
         function previewImg(input) {
             const preview = document.getElementById('imgPreview');
+            const label = document.getElementById('newFileNameLabel');
             if (input.files && input.files[0]) {
+                if (label) label.textContent = `Đã chọn ảnh mới: ${input.files[0].name}`;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
@@ -247,6 +271,7 @@
                 }
                 reader.readAsDataURL(input.files[0]);
             } else {
+                if (label) label.textContent = '';
                 preview.src = '';
                 preview.style.display = 'none';
             }

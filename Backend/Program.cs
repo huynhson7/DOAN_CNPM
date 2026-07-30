@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Options;
 using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,6 +41,12 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+
+// [THÊM MỚI] Cấu hình & Service Cloudinary cho chức năng quản lý hình ảnh sản phẩm.
+// ApiKey/ApiSecret PHẢI được cấu hình qua User Secrets (development) hoặc Environment
+// Variables (production) - xem hướng dẫn README, KHÔNG commit lên Git trong appsettings.json.
+builder.Services.Configure<CloudinaryOptions>(builder.Configuration.GetSection(CloudinaryOptions.SectionName));
+builder.Services.AddSingleton<ICloudinaryImageService, CloudinaryImageService>();
 
 // Cấu hình JWT
 var jwtKey = builder.Configuration["Jwt:Key"];

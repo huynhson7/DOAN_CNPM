@@ -32,12 +32,17 @@ namespace Backend.Data
         [StringLength(200)]
         public string? MoTa { get;set;}
 
-        // Lưu đường dẫn tương đối (vd: /images/xxx.jpg) tới file ảnh vật lý trong
-        // wwwroot/images. Khi chuyển dự án sang máy khác cần copy theo cả thư mục
-        // wwwroot/images (không chỉ Database) để ảnh hiển thị đầy đủ.
-        // Giữ kiểu nvarchar(max) để tương thích ngược với dữ liệu Base64 cũ (nếu có).
+        // Secure URL của ảnh sản phẩm trên Cloudinary, dùng để hiển thị trực tiếp ở Frontend.
+        // Ví dụ: https://res.cloudinary.com/xxx/image/upload/v123/Do_Noi_That/Table/abc123.webp
+        // Giữ kiểu nvarchar(max) để tương thích ngược với dữ liệu cũ (đường dẫn local /images/...
+        // của các sản phẩm chưa được migrate lên Cloudinary).
         [Column(TypeName = "nvarchar(max)")]
         public string? HinhAnh { get;set;}
+
+        // Public ID của Cloudinary dùng để quản lý (xoá/di chuyển) asset. Chỉ Backend sử dụng,
+        // không nhất thiết phải trả về Frontend. NULL với các sản phẩm chưa migrate.
+        [StringLength(500)]
+        public string? PublicId { get; set; }
 
         public int? TrangThai { get;set;}
 

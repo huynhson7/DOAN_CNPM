@@ -408,6 +408,7 @@ function buildProductCardHtml(p) {
             <div class="product-image">
                 <img src="${escapeHtml(hinhAnh || DEFAULT_PRODUCT_IMAGE)}"
                      alt="${escapeHtml(tenSP)}"
+                     loading="lazy"
                      onerror="handleProductImgError(this)">
                 <div class="product-actions">
                     <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtml(maSP)}"><i class="fas fa-cart-plus"></i></button>

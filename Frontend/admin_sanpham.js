@@ -20,6 +20,9 @@ let mapNhaCungCap = {};
 
 let isEditMode = false; 
 let currentImageUrl = "";
+// [CLOUDINARY] PublicId của ảnh MỚI vừa upload (nếu người dùng chọn ảnh mới trong lần
+// submit này). PublicId của ảnh CŨ không cần Frontend biết/gửi lên - Backend tự đọc từ CSDL.
+let newUploadedPublicId = "";
 
 // ==========================================
 // ẢNH MẶC ĐỊNH (KHÔNG PHỤ THUỘC DỊCH VỤ NGOÀI - via.placeholder.com đã ngừng
@@ -314,13 +317,16 @@ async function loadProducts() {
                 ? '<span class="badge badge-active" style="white-space: nowrap;">Đang bán</span>' 
                 : '<span class="badge badge-inactive" style="white-space: nowrap;">Ngừng kinh doanh</span>';
             
-            // Xử lý hiển thị ảnh trực quan, tự bám theo domain hiện tại
+            // Ảnh Cloudinary (HinhAnh) đã là URL tuyệt đối (https://res.cloudinary.com/...)
+            // nên hiển thị trực tiếp, không cần ghép domain. Nhánh startsWith('/') dưới đây
+            // CHỈ còn là fallback cho các sản phẩm CŨ chưa chạy migrate lên Cloudinary
+            // (HinhAnh vẫn là đường dẫn local kiểu "/images/xxx.jpg").
             const hinhAnhVal = p.hinhAnh || p.HinhAnh;
             let imageDisplay = '<i class="fas fa-image" style="color:#ccc; font-size:36px;"></i>';
             if (hinhAnhVal) {
                 let finalImgUrl = hinhAnhVal;
                 if (hinhAnhVal.startsWith('/')) {
-                    finalImgUrl = `http://localhost:5129${hinhAnhVal}`;
+                    finalImgUrl = `${new URL(API_BASE).origin}${hinhAnhVal}`;
                 }
                 imageDisplay = `<img src="${finalImgUrl}" alt="Ảnh SP" style="width: 110px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;" onerror="handleProductImgError(this)">`;
             }
@@ -431,6 +437,7 @@ if (formSanPham) {
     formSanPham.addEventListener('reset', function() {
         isEditMode = false;
         currentImageUrl = "";
+        newUploadedPublicId = "";
         
         const txtMaSP = document.getElementById('maSP');
         if (txtMaSP) {
@@ -464,12 +471,16 @@ if (formSanPham) {
         try {
             const inputFile = document.getElementById('hinhAnhFile');
             let hinhAnhUrl = currentImageUrl;
+            let publicIdMoi = ""; // [CLOUDINARY] chỉ có giá trị nếu vừa upload ảnh mới thành công
 
             if (inputFile && inputFile.files.length > 0) {
                 if (btnLuu) btnLuu.innerText = "Đang tải ảnh lên...";
                 
                 const formData = new FormData();
                 formData.append("file", inputFile.files[0]);
+                // Backend cần biết Nhóm Sản Phẩm để upload đúng thư mục Cloudinary
+                // (Do_Noi_That/{FolderName của nhóm}).
+                formData.append("maNhomSP", document.getElementById('maNhomSP').value);
 
                 const uploadRes = await fetch(`${API_SAN_PHAM}/upload-image`, {
                     method: 'POST',
@@ -481,7 +492,9 @@ if (formSanPham) {
 
                 if (uploadRes.ok) {
                     const uploadData = await uploadRes.json();
-                    hinhAnhUrl = uploadData.url; 
+                    hinhAnhUrl = uploadData.secureUrl;
+                    publicIdMoi = uploadData.publicId;
+                    newUploadedPublicId = publicIdMoi;
                 } else {
                     const errMsg = await getErrorMessage(uploadRes, "Lỗi khi tải ảnh lên máy chủ!");
                     alert(errMsg);
@@ -505,7 +518,10 @@ if (formSanPham) {
                     SoLuongTon: parseInt(document.getElementById('soLuongTon').value) || 0,
                     GiaBan: parseFloat(rawGiaBan) || 0,
                     MoTa: document.getElementById('moTa').value.trim(),
-                    HinhAnh: hinhAnhUrl, 
+                    HinhAnh: hinhAnhUrl,
+                    // Chỉ gửi PublicId khi VỪA upload ảnh mới trong lần submit này; nếu không
+                    // đổi ảnh thì để trống - Backend tự giữ nguyên PublicId đang có trong CSDL.
+                    PublicId: publicIdMoi || null,
                     TrangThai: parseInt(document.getElementById('trangThai').value)
                 },
                 MaVatLieus: selectedVatLieu,
@@ -611,6 +627,24 @@ async function editProduct(maSP) {
         
         isEditMode = true;
         currentImageUrl = p.hinhAnh || p.HinhAnh || "";
+        newUploadedPublicId = "";
+
+        // [CLOUDINARY] Hiển thị URL + ảnh HIỆN TẠI ngay khi mở form Sửa (không được gán vào
+        // input type="file"). Nếu người dùng không chọn ảnh mới, ảnh này được giữ nguyên.
+        const curBlock = document.getElementById('currentImageBlock');
+        const curUrlInput = document.getElementById('currentImageUrlInput');
+        const curPreview = document.getElementById('currentImagePreview');
+        if (curUrlInput) curUrlInput.value = currentImageUrl;
+        if (curPreview) {
+            if (currentImageUrl) {
+                curPreview.src = currentImageUrl;
+                curPreview.style.display = 'block';
+                curPreview.onerror = function() { this.onerror = null; this.src = NO_IMAGE_SVG; };
+            } else {
+                curPreview.style.display = 'none';
+            }
+        }
+        if (curBlock) curBlock.style.display = currentImageUrl ? 'block' : 'none';
 
         const txtMaSP = document.getElementById('maSP');
         if (txtMaSP) {

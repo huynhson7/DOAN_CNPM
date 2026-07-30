@@ -4,6 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Cần để chạy `dotnet user-secrets` lưu Cloudinary ApiSecret ngoài appsettings.json / Git -->
+    <UserSecretsId>a1a6c8e2-6b6b-4a2a-9f0e-cnpm-cloudinary-secrets</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +18,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
+    <PackageReference Include="CloudinaryDotNet" Version="1.26.2" />
   </ItemGroup>
 
 </Project>

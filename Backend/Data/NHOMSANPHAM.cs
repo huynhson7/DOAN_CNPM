@@ -14,6 +14,13 @@ namespace Backend.Data
         [StringLength(100)]
         public string TenNhomSP { get; set; } = string.Empty;
 
+        // Tên thư mục con trên Cloudinary tương ứng với nhóm sản phẩm này:
+        // Do_Noi_That/{FolderName}. Được gán 1 lần khi tạo nhóm (tự sinh từ TenNhomSP nếu
+        // không truyền lên) và GIỮ NGUYÊN ổn định sau đó - không tự đổi theo TenNhomSP khi
+        // cập nhật, để không làm "lạc" các ảnh sản phẩm đã upload vào thư mục cũ trên Cloudinary.
+        [StringLength(100)]
+        public string? FolderName { get; set; }
+
         public int? TrangThai { get; set; }
     }
 }
