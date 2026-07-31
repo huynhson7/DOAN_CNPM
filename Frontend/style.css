@@ -871,6 +871,13 @@ body {
     /* Làm mờ phần phía sau cực kỳ hiện đại */
     align-items: center;
     justify-content: center;
+    padding: 40px 15px;
+    /* Chừa lề trên/dưới để hộp thoại không dính sát mép màn hình trên các máy màn hình thấp */
+    box-sizing: border-box;
+    /* KHÔNG đặt overflow-y ở đây: bản thân .modal-content bên dưới đã tự giới hạn
+       chiều cao (max-height) và tự cuộn bên trong nó. Nếu để lớp nền ".modal" này
+       cũng overflow-y: auto thì sẽ sinh ra 1 thanh cuộn thứ 2 thừa, chồng lên thanh
+       cuộn của .modal-content -> đây chính là lỗi "2 thanh cuộn thừa" đã gặp. */
 }
 
 .modal-content {
@@ -878,6 +885,10 @@ body {
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
+    max-height: calc(100vh - 80px);
+    /* Giới hạn chiều cao để phần bên trong modal tự cuộn (đúng 1 thanh cuộn duy nhất)
+       thay vì bị tràn ra ngoài và làm mất phần tiêu đề/nút đóng phía trên */
+    overflow-y: auto;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     animation: slideDownFade 0.3s ease-out;
     /* Hiệu ứng trượt xuống nhẹ nhàng */

@@ -9,6 +9,34 @@
     <link rel="stylesheet" href="sanpham.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Khu vực Đăng Nhập / Xin chào + Đăng Xuất bên navbar (đồng bộ với sanpham.html) */
+        .nav-auth-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .nav-user-profile img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .nav-greeting {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 
 <body>
@@ -40,7 +68,9 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">2</span>
                 </a>
-                <a href="login.html" class="btn-outline">Đăng Nhập</a>
+                <div class="nav-auth-area" id="navAuthArea">
+                    <a href="login.html" class="btn-outline" id="btnDangNhap">Đăng Nhập</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -140,11 +170,45 @@
         </div>
     </footer>
 
+    <!-- Script kiểm tra trạng thái đăng nhập: hiện "Xin chào, ..." + cho phép xem thông tin tài khoản/Đăng Xuất -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userRole = localStorage.getItem('userRole');
+            const hoTen = localStorage.getItem('hoTen');
+            const token = localStorage.getItem('token');
+
+            const navAuthArea = document.getElementById('navAuthArea');
+            if (token && navAuthArea) {
+                const displayName = userRole === 'Quản trị Hệ thống' ? 'Admin' : (hoTen || 'Khách hàng');
+                navAuthArea.innerHTML =
+                    `<div class="nav-user-profile" id="navUserProfile" title="Xem thông tin tài khoản">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a1a&color=fff" alt="${displayName}">
+                        <span class="nav-greeting">Xin chào, ${displayName}!</span>
+                     </div>
+                     <a href="#" class="btn-outline" onclick="dangXuatHethong(event)"><i class="fas fa-sign-out-alt"></i> Đăng Xuất</a>`;
+
+                const navUserProfile = document.getElementById('navUserProfile');
+                if (navUserProfile && typeof openAccountInfoModal === 'function') {
+                    navUserProfile.addEventListener('click', openAccountInfoModal);
+                }
+            }
+        });
+
+        function dangXuatHethong(event) {
+            event.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+
     <!-- Module giỏ hàng dùng chung (localStorage) -->
     <script src="js/cart.js"></script>
 
     <!-- Tải dữ liệu sản phẩm thật từ API + tương tác ảnh/số lượng + thêm vào giỏ -->
     <script src="chitiet-sanpham.js"></script>
+
+    <!-- Nhận biết Role từ JWT + cung cấp Modal xem thông tin tài khoản dùng chung -->
+    <script src="js/auth-guard.js"></script>
 </body>
 
 </html>

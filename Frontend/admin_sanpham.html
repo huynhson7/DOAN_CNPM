@@ -7,19 +7,26 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Tùy chỉnh Modal lớn có thanh cuộn mượt mà, không bị che nút */
-        .modal-large {
-            max-width: 800px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-body {
-            overflow-y: auto;
-            max-height: calc(90vh - 130px);
-            padding: 25px;
-        }
+   <style>
+    /* Tùy chỉnh Modal lớn có thanh cuộn mượt mà, không bị che nút */
+    .modal-large {
+        max-width: 800px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        /* .modal-content (style.css) đã có sẵn overflow-y: auto cho trường hợp
+           chung; ở modal này ta muốn CHỈ riêng phần .modal-body cuộn (để phần
+           tiêu đề + nút Lưu/Hủy luôn cố định, không bị cuộn theo) nên phải chặn
+           (overflow: hidden) không cho chính khung .modal-large này cuộn nữa -
+           nếu không sẽ có 2 thanh cuộn lồng nhau (khung ngoài + .modal-body). */
+    }
+    .modal-body {
+        overflow-y: auto;
+        max-height: calc(90vh - 130px);
+        padding: 25px;
+    }
+    /* các rule phía dưới (.input-file-custom, ...) giữ nguyên không đổi */
         /* Style cho input file chọn ảnh */
         .input-file-custom {
             padding: 8px 12px;
