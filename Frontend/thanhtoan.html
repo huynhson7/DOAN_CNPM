@@ -50,9 +50,8 @@
                 <!-- Mục Sản Phẩm dạng Dropdown -->
                 <div class="dropdown">
                     <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
-                    <div class="dropdown-content">
-                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
-                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    <div class="dropdown-content" id="dropdownMucDich">
+                        <!-- Danh sách Mục Đích Sử Dụng được render động từ API /api/muc-dich-su-dung (đồng bộ với index.html) -->
                     </div>
                 </div>
                 
@@ -195,6 +194,34 @@
     <!-- Module giỏ hàng dùng chung (localStorage) + logic riêng của trang thanh toán -->
     <script src="js/cart.js"></script>
     <script src="thanhtoan.js"></script>
+
+    <!-- Tải danh sách Mục Đích Sử Dụng cho dropdown "Sản Phẩm" (đồng bộ với index.html) -->
+    <script>
+        (function () {
+            const API_MUC_DICH = "http://localhost:5129/api/muc-dich-su-dung";
+
+            async function loadMucDichDropdown() {
+                const dropdown = document.getElementById("dropdownMucDich");
+                if (!dropdown) return;
+
+                try {
+                    const res = await fetch(API_MUC_DICH);
+                    if (!res.ok) throw new Error("Không thể tải mục đích sử dụng.");
+                    const data = await res.json();
+
+                    dropdown.innerHTML = data.map(m => {
+                        const ma = m.maMD || m.MaMD;
+                        const ten = m.tenMD || m.TenMD;
+                        return `<a href="sanpham.html?mucdich=${encodeURIComponent(ma)}">${escapeHtmlCart(ten)}</a>`;
+                    }).join("");
+                } catch (error) {
+                    console.error("Lỗi tải Mục Đích Sử Dụng cho dropdown Sản Phẩm:", error);
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", loadMucDichDropdown);
+        })();
+    </script>
 
     <!-- Nhận biết Role từ JWT + cung cấp Modal xem thông tin tài khoản dùng chung -->
     <script src="js/auth-guard.js"></script>
