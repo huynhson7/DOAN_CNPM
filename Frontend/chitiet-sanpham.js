@@ -110,8 +110,7 @@ function renderProductDetail(p) {
         }
     }
 
-    // Ảnh chính + thumbnail. CSDL hiện chỉ lưu 1 ảnh / sản phẩm nên chỉ có
-    // đúng 1 thumbnail tương ứng (không tạo thêm ảnh giả để tránh hardcode).
+    // Ảnh chính (CSDL hiện chỉ lưu 1 ảnh / sản phẩm).
     const mainImg = document.getElementById("main-product-img");
     if (mainImg) {
         mainImg.src = hinhAnh;
@@ -120,11 +119,6 @@ function renderProductDetail(p) {
             this.onerror = null;
             this.src = DEFAULT_PRODUCT_IMAGE;
         };
-    }
-
-    const thumbList = document.getElementById("productThumbnails");
-    if (thumbList) {
-        thumbList.innerHTML = `<img src="${escapeHtml(hinhAnh)}" class="active-thumb" onclick="changeImage(this)" onerror="this.onerror=null;this.src='${DEFAULT_PRODUCT_IMAGE}';">`;
     }
 }
 
