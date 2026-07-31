@@ -54,13 +54,12 @@
                 <div class="dropdown">
                     <a href="#" class="dropbtn active">Sản Phẩm <i class="fas fa-chevron-down"
                             style="font-size: 10px; margin-left: 4px;"></i></a>
-                    <div class="dropdown-content">
-                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
-                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    <div class="dropdown-content" id="dropdownMucDich">
+                        <!-- Danh sách Mục Đích Sử Dụng được render động từ API /api/muc-dich-su-dung -->
                     </div>
                 </div>
 
-                <a href="#">Liên Hệ</a>
+                <a href="#" class="zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">Liên Hệ</a>
             </div>
 
             <div class="nav-actions">
@@ -206,6 +205,9 @@
 
     <!-- Nhận biết Role từ JWT + cung cấp Modal xem thông tin tài khoản dùng chung -->
     <script src="js/auth-guard.js"></script>
+
+    <!-- Modal mã QR Zalo dùng chung cho mục "Liên Hệ" trên navbar -->
+    <script src="js/zalo-contact.js"></script>
 </body>
 
 </html>

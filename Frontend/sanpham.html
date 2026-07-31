@@ -118,6 +118,25 @@
             70% { box-shadow: 0 0 0 14px rgba(0, 104, 255, 0); }
             100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); }
         }
+
+        /* Ảnh nền sống động phong cách nội thất hiện đại tối giản cho banner
+           "Bộ Sưu Tập Nội Thất" (chỉ áp dụng riêng trang sanpham.html qua
+           #shopPageBanner, không đụng tới .page-banner dùng chung với
+           giohang.html), phối theo cùng phong cách overlay tối như
+           .hero-section ở trang index.html. */
+        #shopPageBanner {
+            background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+                url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600') center/cover no-repeat;
+            padding: 90px 20px;
+        }
+
+        #shopPageBanner h2 {
+            color: #fff;
+        }
+
+        #shopPageBanner p {
+            color: #eee;
+        }
     </style>
 </head>
 
@@ -152,7 +171,7 @@
         </div>
     </nav>
 
-    <div class="page-banner">
+    <div class="page-banner" id="shopPageBanner">
         <h2>Bộ Sưu Tập Nội Thất</h2>
         <p>Trang chủ / Sản phẩm</p>
     </div>

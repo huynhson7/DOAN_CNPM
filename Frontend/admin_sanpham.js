@@ -20,6 +20,13 @@ let mapNhaCungCap = {};
 
 let isEditMode = false; 
 let currentImageUrl = "";
+
+// [PHÂN TRANG] Lưu toàn bộ sản phẩm tải được từ API + trang hiện tại đang xem.
+// Cứ 20 sản phẩm sẽ gom thành 1 trang, các sản phẩm còn lại sẽ nằm ở (các)
+// trang tiếp theo, đồng bộ cách làm với phân trang ở trang sanpham.html.
+let allAdminProducts = [];
+let adminCurrentPage = 1;
+const ADMIN_PRODUCTS_PER_PAGE = 20;
 // [CLOUDINARY] PublicId của ảnh MỚI vừa upload (nếu người dùng chọn ảnh mới trong lần
 // submit này). PublicId của ảnh CŨ không cần Frontend biết/gửi lên - Backend tự đọc từ CSDL.
 let newUploadedPublicId = "";
@@ -304,13 +311,38 @@ async function loadProducts() {
             dataCard.style.overflowX = 'auto'; 
         }
 
-        if (products.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #757575; padding: 20px;">Chưa có sản phẩm nào trong cơ sở dữ liệu.</td></tr>`;
-            return;
+        // Lưu lại toàn bộ sản phẩm để phục vụ phân trang (20 sản phẩm/trang) và tìm kiếm.
+        allAdminProducts = products;
+
+        const thead = document.querySelector('.data-table thead tr');
+        if (thead) {
+            thead.style.whiteSpace = 'nowrap';
+            thead.innerHTML = `
+                <th>Mã SP</th>
+                <th>Vật Liệu</th>
+                <th>Mục Đích Sử Dụng</th>
+                <th>Nhà Cung Cấp</th>
+                <th>Nhóm Sản Phẩm</th>
+                <th style="text-align: center;">Hình Ảnh</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Đơn Vị Tính</th>
+                <th>Tồn Kho</th>
+                <th>Giá Bán</th>
+                <th>Mô Tả</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+            `;
         }
 
-        let html = '';
-        products.forEach(p => {
+        renderAdminProductsPage(allAdminProducts, 1);
+    } catch (error) {
+        console.error("Lỗi load sản phẩm:", error);
+    }
+}
+
+// [PHÂN TRANG] Dựng HTML cho 1 dòng sản phẩm (tách riêng từ vòng lặp cũ để
+// có thể tái sử dụng khi chỉ hiển thị 20 sản phẩm của trang hiện tại).
+function buildProductRowHtml(p) {
             const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.giaBan || p.GiaBan || 0);
             const trangThaiVal = p.trangThai !== undefined ? p.trangThai : p.TrangThai;
             const statusBadge = trangThaiVal === 1 
@@ -380,7 +412,7 @@ async function loadProducts() {
                 ? `<button class="btn-action delete" title="Xóa" onclick="deleteProduct('${maSPVal}')"><i class="fas fa-trash"></i></button>`
                 : '';
 
-            html += `
+            return `
                 <tr>
                     <td style="white-space: nowrap;"><strong>${maSPVal}</strong></td>
                     <td style="white-space: normal; min-width: 140px; color: #2e7d32; font-weight: 500;">${strVatLieu}</td>
@@ -400,32 +432,64 @@ async function loadProducts() {
                     </td>
                 </tr>
             `;
-        });
+}
 
-        const thead = document.querySelector('.data-table thead tr');
-        if (thead) {
-            thead.style.whiteSpace = 'nowrap';
-            thead.innerHTML = `
-                <th>Mã SP</th>
-                <th>Vật Liệu</th>
-                <th>Mục Đích Sử Dụng</th>
-                <th>Nhà Cung Cấp</th>
-                <th>Nhóm Sản Phẩm</th>
-                <th style="text-align: center;">Hình Ảnh</th>
-                <th>Tên Sản Phẩm</th>
-                <th>Đơn Vị Tính</th>
-                <th>Tồn Kho</th>
-                <th>Giá Bán</th>
-                <th>Mô Tả</th>
-                <th>Trạng Thái</th>
-                <th>Thao Tác</th>
-            `;
-        }
+// [PHÂN TRANG] Cứ 20 sản phẩm gom thành 1 trang; hiển thị đúng 20 sản phẩm
+// (hoặc ít hơn ở trang cuối) của "page" đang chọn + vẽ lại thanh phân trang.
+function renderAdminProductsPage(products, page) {
+    const tbody = document.getElementById('bangDuLieu');
+    if (!tbody) return;
 
-        tbody.innerHTML = html;
-    } catch (error) {
-        console.error("Lỗi load sản phẩm:", error);
+    if (!products || products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #757575; padding: 20px;">Chưa có sản phẩm nào trong cơ sở dữ liệu.</td></tr>`;
+        renderAdminPagination(products || [], 0, 1);
+        return;
     }
+
+    const totalItems = products.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / ADMIN_PRODUCTS_PER_PAGE));
+    if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
+    adminCurrentPage = page;
+
+    const startIndex = (page - 1) * ADMIN_PRODUCTS_PER_PAGE;
+    const pageItems = products.slice(startIndex, startIndex + ADMIN_PRODUCTS_PER_PAGE);
+
+    tbody.innerHTML = pageItems.map(buildProductRowHtml).join('');
+
+    renderAdminPagination(products, totalPages, page);
+}
+
+// [PHÂN TRANG] Vẽ thanh phân trang dạng "< 1 2 3 4 5 >" (đồng bộ giao diện
+// với .pagination đã dùng ở trang sanpham.html).
+function renderAdminPagination(products, totalPages, currentPage) {
+    const pagination = document.getElementById('adminSpPagination');
+    if (!pagination) return;
+
+    if (!products || products.length === 0 || totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    html += `<a href="#" data-page="${currentPage - 1}" class="${currentPage === 1 ? 'disabled' : ''}"><i class="fas fa-chevron-left"></i></a>`;
+    for (let page = 1; page <= totalPages; page++) {
+        html += `<a href="#" data-page="${page}" class="${page === currentPage ? 'active' : ''}">${page}</a>`;
+    }
+    html += `<a href="#" data-page="${currentPage + 1}" class="${currentPage === totalPages ? 'disabled' : ''}"><i class="fas fa-chevron-right"></i></a>`;
+
+    pagination.innerHTML = html;
+
+    pagination.querySelectorAll('a[data-page]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const page = Number(this.dataset.page);
+            if (!page || page < 1 || page > totalPages || page === adminCurrentPage) return;
+            renderAdminProductsPage(products, page);
+            const dataCard = document.querySelector('.data-card');
+            if (dataCard) dataCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
 }
 
 // ==========================================
@@ -603,16 +667,15 @@ const searchInput = document.getElementById('searchInput');
 if (searchInput) {
     searchInput.addEventListener('keyup', function() {
         const keyword = this.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#bangDuLieu tr');
-        
-        rows.forEach(row => {
-            const rowData = row.textContent.toLowerCase();
-            if (rowData.includes(keyword)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
+
+        // [PHÂN TRANG] Lọc trên toàn bộ allAdminProducts (không chỉ 20 dòng
+        // đang hiển thị) rồi render lại từ trang 1, để tìm kiếm luôn đúng
+        // dù kết quả nằm ở trang nào.
+        const filtered = !keyword
+            ? allAdminProducts
+            : allAdminProducts.filter(p => JSON.stringify(p).toLowerCase().includes(keyword));
+
+        renderAdminProductsPage(filtered, 1);
     });
 }
 

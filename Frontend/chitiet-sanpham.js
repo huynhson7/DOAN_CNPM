@@ -9,12 +9,38 @@
 
 const API_BASE = "http://localhost:5129/api";
 const API_SAN_PHAM = `${API_BASE}/san-pham`;
+const API_MUC_DICH = `${API_BASE}/muc-dich-su-dung`;
 const DEFAULT_PRODUCT_IMAGE = "https://placehold.co/800x800?text=Luxury+Furniture";
 
 // Sản phẩm đang xem, lưu lại sau khi tải xong để dùng cho nút "Thêm Vào Giỏ Hàng"
 let currentProduct = null;
 
 document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", loadMucDichDropdown);
+
+// Dropdown "Sản Phẩm" trên navbar: đồng bộ với index.html/sanpham.html - thay
+// 2 mục tĩnh (Phòng Khách/Phòng Ngủ) cũ bằng danh sách MỤC ĐÍCH SỬ DỤNG THẬT
+// lấy từ API /api/muc-dich-su-dung. Ấn vào 1 mục sẽ chuyển sang sanpham.html
+// kèm ?mucdich=<MaMD> để lọc đúng sản phẩm tương ứng.
+async function loadMucDichDropdown() {
+    const dropdown = document.getElementById("dropdownMucDich");
+    if (!dropdown) return;
+
+    try {
+        const res = await fetch(API_MUC_DICH);
+        if (!res.ok) throw new Error("Không thể tải mục đích sử dụng.");
+        const data = await res.json();
+
+        dropdown.innerHTML = data.map(m => {
+            const ma = m.maMD || m.MaMD;
+            const ten = m.tenMD || m.TenMD;
+            return `<a href="sanpham.html?mucdich=${encodeURIComponent(ma)}">${escapeHtmlCart(ten)}</a>`;
+        }).join("");
+    } catch (error) {
+        console.error("Lỗi tải Mục Đích Sử Dụng cho dropdown Sản Phẩm:", error);
+        dropdown.innerHTML = "";
+    }
+}
 
 async function init() {
     const maSP = getProductIdFromQueryString();
