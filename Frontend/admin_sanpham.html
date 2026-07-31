@@ -21,7 +21,12 @@
            (overflow: hidden) không cho chính khung .modal-large này cuộn nữa -
            nếu không sẽ có 2 thanh cuộn lồng nhau (khung ngoài + .modal-body). */
     }
-    .modal-body {
+    /* CHỈ áp dụng cuộn riêng cho phần thân của Modal LỚN (thêm/sửa sản phẩm)
+       -> KHÔNG được áp dụng cho .modal-body nói chung (VD: Modal "Thông Tin
+       Tài Khoản" do auth-guard.js tạo), vì .modal-content (style.css) đã tự
+       overflow-y: auto rồi. Nếu để chọn ".modal-body" chung chung như cũ thì
+       Modal "Thông Tin Tài Khoản" sẽ có 2 vùng cuộn lồng nhau -> 2 thanh cuộn thừa. */
+    .modal-large .modal-body {
         overflow-y: auto;
         max-height: calc(90vh - 130px);
         padding: 25px;

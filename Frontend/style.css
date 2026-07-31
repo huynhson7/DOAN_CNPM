@@ -522,6 +522,14 @@ body {
     overflow: hidden;
 }
 
+/* Thẻ <a> bọc quanh ảnh sản phẩm (để click vào ảnh chuyển hướng sang trang
+   chi tiết) cần chiếm trọn khung .product-image, vì <a> mặc định là inline. */
+.product-image > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .product-image img {
     width: 100%;
     height: 100%;

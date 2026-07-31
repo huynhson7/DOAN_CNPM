@@ -20,6 +20,7 @@ const API_BASE = "http://localhost:5129/api";
 const API_SAN_PHAM = `${API_BASE}/san-pham`;
 const API_NHOM_SP = `${API_BASE}/nhom-san-pham`;
 const API_VAT_LIEU = `${API_BASE}/vat-lieu`;
+const API_MUC_DICH = `${API_BASE}/muc-dich-su-dung`;
 
 // Ảnh mặc định dùng SVG nội bộ (data URI) thay vì dịch vụ ngoài, để luôn hiển
 // thị được kể cả khi không có mạng hoặc dịch vụ ngoài ngừng hoạt động.
@@ -66,7 +67,7 @@ async function init() {
 
     showLoading();
     try {
-        await Promise.all([loadCategories(), loadMaterials()]);
+        await Promise.all([loadCategories(), loadMaterials(), loadMucDichDropdown()]);
         await loadProducts();
         renderProductList();
     } catch (error) {
@@ -104,12 +105,21 @@ async function refreshProductsSilently() {
     }
 }
 
-// Đọc ?category= trên URL để lọc theo Mục đích sử dụng (tái sử dụng menu có sẵn)
+// Đọc ?category= (menu cũ, vẫn giữ để không phá các liên kết ở trang khác:
+// index.html, giohang.html, thanhtoan.html, chitiet-sanpham.html) và
+// ?mucdich= (dropdown "Sản Phẩm" MỚI trên chính trang sanpham.html, trỏ
+// thẳng bằng MaMD lấy từ API /api/muc-dich-su-dung) để lọc theo Mục đích sử dụng.
 function applyCategoryFromQueryString() {
     const params = new URLSearchParams(window.location.search);
+
     const category = params.get("category");
     if (category && CATEGORY_TO_MA_MD[category]) {
         state.maMD = CATEGORY_TO_MA_MD[category];
+    }
+
+    const mucDich = params.get("mucdich");
+    if (mucDich) {
+        state.maMD = mucDich;
     }
 }
 
@@ -133,6 +143,30 @@ async function loadCategories() {
     } catch (error) {
         console.error("Lỗi tải nhóm sản phẩm:", error);
         list.innerHTML = "";
+    }
+}
+
+// Dropdown "Sản Phẩm" trên navbar: thay 2 mục tĩnh (Phòng Khách/Phòng Ngủ) cũ
+// bằng danh sách MỤC ĐÍCH SỬ DỤNG THẬT lấy từ API /api/muc-dich-su-dung. Ấn
+// vào 1 mục sẽ tải lại chính trang sanpham.html kèm ?mucdich=<MaMD> để lọc
+// đúng sản phẩm tương ứng (đọc bởi applyCategoryFromQueryString() ở trên).
+async function loadMucDichDropdown() {
+    const dropdown = document.getElementById("dropdownMucDich");
+    if (!dropdown) return;
+
+    try {
+        const res = await fetch(API_MUC_DICH);
+        if (!res.ok) throw new Error("Không thể tải mục đích sử dụng.");
+        const data = await res.json();
+
+        dropdown.innerHTML = data.map(m => {
+            const ma = m.maMD || m.MaMD;
+            const ten = m.tenMD || m.TenMD;
+            return `<a href="sanpham.html?mucdich=${encodeURIComponent(ma)}">${escapeHtml(ten)}</a>`;
+        }).join("");
+    } catch (error) {
+        console.error("Lỗi tải Mục Đích Sử Dụng cho dropdown Sản Phẩm:", error);
+        dropdown.innerHTML = "";
     }
 }
 
@@ -406,10 +440,12 @@ function buildProductCardHtml(p) {
     return `
         <div class="product-card">
             <div class="product-image">
-                <img src="${escapeHtml(hinhAnh || DEFAULT_PRODUCT_IMAGE)}"
-                     alt="${escapeHtml(tenSP)}"
-                     loading="lazy"
-                     onerror="handleProductImgError(this)">
+                <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" title="Xem chi tiết">
+                    <img src="${escapeHtml(hinhAnh || DEFAULT_PRODUCT_IMAGE)}"
+                         alt="${escapeHtml(tenSP)}"
+                         loading="lazy"
+                         onerror="handleProductImgError(this)">
+                </a>
                 <div class="product-actions">
                     <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtml(maSP)}"><i class="fas fa-cart-plus"></i></button>
                     <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>

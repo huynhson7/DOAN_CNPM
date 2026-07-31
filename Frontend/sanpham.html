@@ -133,12 +133,11 @@
                 <div class="dropdown">
                     <a href="#" class="dropbtn active">Sản Phẩm <i class="fas fa-chevron-down"
                             style="font-size: 10px; margin-left: 4px;"></i></a>
-                    <div class="dropdown-content">
-                        <a href="sanpham.html?category=phong-khach">Phòng Khách</a>
-                        <a href="sanpham.html?category=phong-ngu">Phòng Ngủ</a>
+                    <div class="dropdown-content" id="dropdownMucDich">
+                        <!-- Danh sách Mục Đích Sử Dụng được render động từ API /api/muc-dich-su-dung (sanpham.js) -->
                     </div>
                 </div>
-                <a href="#">Liên Hệ</a>
+                <a href="#" class="zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">Liên Hệ</a>
             </div>
 
             <div class="nav-actions">
@@ -289,7 +288,7 @@
     </script>
 
     <!-- Nút Zalo nổi - kết nối trực tiếp với nhân viên chăm sóc khách hàng -->
-    <a href="http://zaloapp.com/qr/p/7p4gsfmcohvt" target="_blank" rel="noopener noreferrer" class="zalo-float-btn" title="Chat Zalo với nhân viên chăm sóc khách hàng">
+    <a href="#" class="zalo-float-btn zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">
         <i class="fas fa-comment-dots"></i>
     </a>
 
@@ -301,6 +300,9 @@
 
     <!-- Nhận biết Role từ JWT + cung cấp Modal xem thông tin tài khoản dùng chung -->
     <script src="js/auth-guard.js"></script>
+
+    <!-- Modal mã QR Zalo dùng chung cho icon nổi + mục "Liên Hệ" trên navbar -->
+    <script src="js/zalo-contact.js"></script>
 </body>
 
 </html>
