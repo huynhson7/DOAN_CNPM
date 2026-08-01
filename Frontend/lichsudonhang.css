@@ -1,0 +1,51 @@
+/* =========================================
+   CSS RIÊNG CHO TRANG "LỊCH SỬ ĐƠN HÀNG" (KHÁCH HÀNG)
+========================================= */
+
+.lshd-container {
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+
+/* Bộ lọc trạng thái - dùng lại khung .invoice-filters của module hóa đơn
+   nhưng chỉ có 1 trường nên không cần chiếm hết chiều rộng */
+.lshd-container .invoice-filters {
+    max-width: 320px;
+}
+
+.lshd-container .invoice-filters .input-group {
+    margin-bottom: 0;
+}
+
+/* Khối thông báo dùng chung cho các trạng thái: đang tải / chưa đăng nhập / chưa có đơn hàng */
+.lshd-thong-bao {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.lshd-thong-bao i {
+    display: block;
+    font-size: 40px;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+.lshd-thong-bao a {
+    color: var(--accent-color);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Nút "Xem chi tiết" trong bảng đơn hàng của khách hàng */
+.btn-action.lshd-view {
+    color: #1abc9c;
+}
+
+.btn-action.lshd-view:hover {
+    background-color: #e8f8f5;
+}

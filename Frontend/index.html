@@ -64,6 +64,43 @@
             70% { box-shadow: 0 0 0 14px rgba(0, 104, 255, 0); }
             100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); }
         }
+
+        /* ===== Nền động (slideshow) cho Hero Section - chỉ áp dụng ở trang chủ ===== */
+        /* Ảnh nền gốc trong .hero-section (style.css) được giữ nguyên làm nền mặc định.
+           5 ảnh bên dưới sẽ lần lượt hiện lên (crossfade) phía trên ảnh nền gốc đó. */
+        .hero-bg-slideshow {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .hero-bg-slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.8s ease-in-out;
+        }
+
+        .hero-bg-slide.active {
+            opacity: 1;
+        }
+
+        /* Lớp phủ tối để chữ luôn dễ đọc trên mọi ảnh nền (giống độ tối của ảnh nền gốc) */
+        .hero-bg-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -89,6 +126,9 @@
                 
                 <!-- Đã xóa mục Khuyến Mãi theo mô hình PDM -->
                 <a href="#" class="zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">Liên Hệ</a>
+
+                <!-- Chỉ hiển thị với tài khoản Admin (Quản trị Hệ thống) - do js/auth-guard.js (applyRoleBasedUI) điều khiển ẩn/hiện theo Role -->
+                <a href="bangdieukhien.html" data-role="Quản trị Hệ thống" style="display: none;"><i class="fas fa-store"></i> Quản Lý Cửa Hàng</a>
             </div>
             
             <!-- Khu vực thao tác -->
@@ -107,7 +147,17 @@
     </nav>
 
     <!-- Khu vực Banner chính (Hero Section) -->
-    <section class="hero-section">
+    <!-- Ảnh nền gốc vẫn được giữ nguyên (khai báo trong style.css qua class .hero-section).
+         5 ảnh bên dưới được thêm vào để tạo hiệu ứng nền động (crossfade) phía trên ảnh nền gốc đó. -->
+    <section class="hero-section" style="position: relative;">
+        <div class="hero-bg-slideshow">
+            <img class="hero-bg-slide" src="https://images.unsplash.com/photo-1768609239321-1cfe14893e80?w=1600" alt="Không gian nội thất hiện đại 1">
+            <img class="hero-bg-slide" src="https://images.unsplash.com/photo-1759238136854-a43787126db7?w=1600" alt="Không gian nội thất hiện đại 2">
+            <img class="hero-bg-slide" src="https://images.unsplash.com/photo-1772475385317-09f9ef320474?w=1600" alt="Không gian nội thất hiện đại 3">
+            <img class="hero-bg-slide" src="https://images.unsplash.com/photo-1746549859958-faa2558a765c?w=1600" alt="Không gian nội thất hiện đại 4">
+            <img class="hero-bg-slide" src="https://images.unsplash.com/photo-1634253539586-c1f20bdeca7d?w=1600" alt="Không gian nội thất hiện đại 5">
+        </div>
+        <div class="hero-bg-overlay"></div>
         <div class="hero-content">
             <h1>Định Hình Không Gian Sống Của Bạn</h1>
             <p>Khám phá bộ sưu tập nội thất cao cấp mang phong cách tối giản và tinh tế.</p>
@@ -262,5 +312,39 @@
 
     <!-- Modal mã QR Zalo dùng chung cho icon nổi + mục "Liên Hệ" trên navbar -->
     <script src="js/zalo-contact.js"></script>
+
+    <!-- Hiệu ứng nền động (slideshow) cho Hero Section: giữ nguyên ảnh nền gốc,
+         lần lượt hiện 5 ảnh mới đè lên trên rồi quay lại ảnh nền gốc, lặp vô hạn. -->
+    <script>
+        (function () {
+            const heroSlides = document.querySelectorAll(".hero-bg-slide");
+            if (!heroSlides.length) return;
+
+            const THOI_GIAN_MOI_ANH = 4000; // 4 giây cho mỗi ảnh trong slideshow
+            const THOI_GIAN_ANH_GOC = 3000;  // 3 giây dừng lại ở ảnh nền gốc trước khi lặp lại
+            let viTriHienTai = -1; // -1 nghĩa là đang hiển thị ảnh nền gốc (chưa có slide nào active)
+
+            function hienThiSlide(viTri) {
+                heroSlides.forEach(function (slide, i) {
+                    slide.classList.toggle("active", i === viTri);
+                });
+            }
+
+            function chuyenAnhTiepTheo() {
+                if (viTriHienTai === -1) {
+                    viTriHienTai = 0;
+                } else {
+                    viTriHienTai++;
+                    if (viTriHienTai >= heroSlides.length) {
+                        viTriHienTai = -1;
+                    }
+                }
+                hienThiSlide(viTriHienTai);
+                setTimeout(chuyenAnhTiepTheo, viTriHienTai === -1 ? THOI_GIAN_ANH_GOC : THOI_GIAN_MOI_ANH);
+            }
+
+            setTimeout(chuyenAnhTiepTheo, THOI_GIAN_ANH_GOC);
+        })();
+    </script>
 </body>
 </html>

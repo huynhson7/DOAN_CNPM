@@ -303,12 +303,25 @@ function renderStaffAccountInfoRows(data) {
 function renderCustomerAccountInfoRows(userId) {
     const user = getCurrentUser();
     const hoTen = localStorage.getItem('hoTen');
-    return [
+    const rows = [
         buildAccountInfoRow('Mã Khách Hàng', userId),
         buildAccountInfoRow('Họ Và Tên', hoTen),
         buildAccountInfoRow('Tên Đăng Nhập', user ? user.username : ''),
         buildAccountInfoRow('Email', user ? user.email : '')
     ].join('');
+
+    // Điểm truy cập tới trang "Lịch Sử Đơn Hàng" (lichsudonhang.html) - cho phép
+    // Khách hàng xem lại các hóa đơn đã đặt và theo dõi trạng thái đơn hàng.
+    // Lưu ý: bắt buộc có box-sizing: border-box vì .btn-primary có sẵn
+    // width: 100% + padding: 14px - nếu không có border-box, phần padding sẽ
+    // cộng dồn ra ngoài 100% khiến nút tràn rộng hơn các ô phía trên và lệch
+    // sang phải (gây ra thanh cuộn ngang không mong muốn trong Modal).
+    const lichSuDonHangLink = `
+        <a href="lichsudonhang.html" class="btn-primary" style="box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; margin-top: 10px;">
+            <i class="fas fa-receipt"></i> Xem Lịch Sử Đơn Hàng
+        </a>`;
+
+    return rows + lichSuDonHangLink;
 }
 
 /**

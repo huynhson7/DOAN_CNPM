@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Đơn Hàng - Luxury Furniture</title>
+
+    <!-- Link đến file CSS dùng chung -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- CSS TÁCH RIÊNG CHO MODULE HÓA ĐƠN - dùng lại style hóa đơn/biên nhận (receipt) đã có sẵn -->
+    <link rel="stylesheet" href="hoadon.css">
+
+    <!-- CSS TÁCH RIÊNG CHO TRANG LỊCH SỬ ĐƠN HÀNG (Khách hàng) -->
+    <link rel="stylesheet" href="lichsudonhang.css">
+
+    <!-- Font và Icon -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Khu vực Đăng Nhập / Xin chào + Đăng Xuất bên navbar (đồng bộ với sanpham.html/giohang.html) */
+        .nav-auth-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .nav-user-profile img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .nav-greeting {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar Đồng Nhất -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="index.html" class="logo">LUXURY<span>FURNITURE</span></a>
+
+            <div class="nav-links">
+                <a href="index.html" class="nav-item-trangchu">Trang Chủ</a>
+
+                <!-- Mục Sản Phẩm dạng Dropdown - danh sách được render động từ API
+                     /api/muc-dich-su-dung (lichsudonhang.js), đồng bộ với index.html/sanpham.html -->
+                <div class="dropdown">
+                    <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <div class="dropdown-content" id="dropdownMucDich">
+                    </div>
+                </div>
+
+                <a href="#" class="zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">Liên Hệ</a>
+            </div>
+
+            <div class="nav-actions">
+                <!-- Icon Giỏ Hàng -->
+                <a href="giohang.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+                <div class="nav-auth-area" id="navAuthArea">
+                    <a href="login.html" class="btn-outline" id="btnDangNhap">Đăng Nhập</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Banner Trang -->
+    <div class="page-banner">
+        <h2>Lịch Sử Đơn Hàng</h2>
+        <p>Theo dõi toàn bộ đơn hàng bạn đã đặt và trạng thái xử lý/giao hàng qua hóa đơn của bạn</p>
+    </div>
+
+    <!-- Nội dung Lịch Sử Đơn Hàng -->
+    <main class="container lshd-container">
+
+        <!-- Bộ lọc theo trạng thái đơn hàng -->
+        <div class="invoice-filters">
+            <div class="input-group">
+                <label>Lọc theo trạng thái</label>
+                <select id="filterTrangThaiLSHD" onchange="locDonHangCuaToi()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Chờ thanh toán">Chờ thanh toán</option>
+                    <option value="Đang xử lý">Đang xử lý</option>
+                    <option value="Đã giao hàng">Đã giao hàng</option>
+                    <option value="Đã hủy">Đã hủy</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Trạng thái: Đang tải / Chưa đăng nhập / Chưa có đơn hàng -->
+        <div id="lshdThongBao" class="lshd-thong-bao" style="display:none;"></div>
+
+        <!-- Bảng danh sách đơn hàng của khách hàng đang đăng nhập -->
+        <div class="data-card" id="lshdBangWrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã Đơn Hàng</th>
+                        <th>Ngày Đặt</th>
+                        <th>Ngày Giao Hàng</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="bangDonHangCuaToi">
+                    <tr><td colspan="6" style="text-align:center;">Đang tải danh sách đơn hàng...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal Xem Chi Tiết Đơn Hàng / Hóa Đơn (bao gồm trạng thái đơn hàng) -->
+    <div id="hdModal" class="modal">
+        <div class="modal-content modal-large invoice-modal">
+            <div class="modal-header hide-on-print">
+                <h3 id="hdModalTitle">Chi Tiết Đơn Hàng</h3>
+                <span class="close-btn" onclick="closeHdModal()">&times;</span>
+            </div>
+
+            <div class="modal-body print-area">
+                <div class="receipt-header">
+                    <div class="receipt-logo">LUXURY<span>FURNITURE</span></div>
+                    <p>Địa chỉ: 123 Đường Nội Thất, Quận 1, TP.HCM</p>
+                    <p>Hotline: 1900 8888</p>
+                    <h2 class="receipt-title">HÓA ĐƠN BÁN HÀNG</h2>
+                </div>
+
+                <div class="receipt-info-grid">
+                    <div class="info-box">
+                        <p><strong>Khách hàng:</strong> <span id="hdKhachHangTen"></span></p>
+                        <p><strong>Điện thoại:</strong> <span id="hdKhachHangDT"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span id="hdKhachHangDiaChi"></span></p>
+                    </div>
+                    <div class="info-box text-right">
+                        <p><strong>Mã HĐ:</strong> <span id="hdMaHD"></span></p>
+                        <p><strong>Ngày lập:</strong> <span id="hdNgayLap"></span></p>
+                        <p><strong>Trạng thái:</strong> <span id="hdTrangThai"></span></p>
+                    </div>
+                </div>
+
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-right">Đơn Giá</th>
+                            <th class="text-right">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hdChiTietBody">
+                    </tbody>
+                </table>
+
+                <div class="receipt-summary">
+                    <div class="summary-row">
+                        <span>Cộng tiền hàng:</span>
+                        <span id="hdTongTienHang">0 đ</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>TỔNG CỘNG:</span>
+                        <span id="hdTongCong">0 đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer hide-on-print">
+                <button class="btn-outline" onclick="closeHdModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" style="background-color: #1a1a1a; color: #fff; padding: 40px 0 20px;">
+        <div class="container" style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px;">
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h3 style="margin-bottom: 15px; letter-spacing: 2px;">LUXURY FURNITURE</h3>
+                <p>Định hình không gian sống đẳng cấp và tinh tế.</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h4 style="margin-bottom: 15px;">Liên Hệ</h4>
+                <p>☎ Hotline: 090 123 4567</p>
+                <p>✉ Email: contact@luxuryfurniture.vn</p>
+                <p>📍 Showroom: Quận 1, TP. Hồ Chí Minh</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; margin-bottom: 20px; text-align: left;">
+                <h4 style="margin-bottom: 15px;">Chính Sách</h4>
+                <p>🛡 Bảo mật thông tin</p>
+                <p>🔄 Đổi trả trong 7 ngày</p>
+                <p>🚚 Giao hàng miễn phí</p>
+            </div>
+        </div>
+        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; font-size: 14px;">
+            <p>&copy; 2026 Luxury Furniture. Mọi quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <!-- Script kiểm tra trạng thái đăng nhập: hiện "Xin chào, ..." + cho phép xem thông tin tài khoản/Đăng Xuất -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userRole = localStorage.getItem('userRole');
+            const hoTen = localStorage.getItem('hoTen');
+            const token = localStorage.getItem('token');
+
+            const navAuthArea = document.getElementById('navAuthArea');
+            if (token && navAuthArea) {
+                const displayName = userRole === 'Quản trị Hệ thống' ? 'Admin' : (hoTen || 'Khách hàng');
+                navAuthArea.innerHTML =
+                    `<div class="nav-user-profile" id="navUserProfile" title="Xem thông tin tài khoản">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a1a&color=fff" alt="${displayName}">
+                        <span class="nav-greeting">Xin chào, ${displayName}!</span>
+                     </div>
+                     <a href="#" class="btn-outline" onclick="dangXuatHethong(event)"><i class="fas fa-sign-out-alt"></i> Đăng Xuất</a>`;
+
+                const navUserProfile = document.getElementById('navUserProfile');
+                if (navUserProfile && typeof openAccountInfoModal === 'function') {
+                    navUserProfile.addEventListener('click', openAccountInfoModal);
+                }
+            }
+        });
+
+        function dangXuatHethong(event) {
+            event.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- Module giỏ hàng dùng chung (localStorage) - đồng bộ số lượng trên icon giỏ hàng -->
+    <script src="js/cart.js"></script>
+
+    <!-- Nhận biết Role từ JWT + cung cấp Modal xem thông tin tài khoản dùng chung + requireRole() -->
+    <script src="js/auth-guard.js"></script>
+
+    <!-- Logic riêng của trang Lịch Sử Đơn Hàng -->
+    <script src="lichsudonhang.js"></script>
+
+    <!-- Modal mã QR Zalo dùng chung cho mục "Liên Hệ" trên navbar -->
+    <script src="js/zalo-contact.js"></script>
+</body>
+</html>

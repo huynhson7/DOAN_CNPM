@@ -64,6 +64,9 @@ namespace Backend.Controllers
             var (role, userId) = GetCurrentUser();
             bool isAdmin = role.Contains("Admin", StringComparison.OrdinalIgnoreCase) || 
                            role.Contains("Quản trị", StringComparison.OrdinalIgnoreCase);
+            // Khách hàng: chỉ được xem lịch sử đơn hàng (hóa đơn) CỦA CHÍNH MÌNH,
+            // dùng cho trang "Lịch Sử Đơn Hàng" phía Frontend (lichsudonhang.html)
+            bool isKhachHang = role.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase);
 
             var query = _context.HOADON
                 .AsNoTracking()
@@ -75,8 +78,16 @@ namespace Backend.Controllers
             // LỌC DỮ LIỆU DỰA TRÊN QUYỀN
             if (!isAdmin)
             {
-                // Nếu là nhân viên, chỉ lấy hóa đơn của chính họ HOẶC hóa đơn online (NV01)
-                query = query.Where(hd => hd.MaNV == userId || hd.MaNV == "NV01");
+                if (isKhachHang)
+                {
+                    // Khách hàng chỉ thấy hóa đơn mà họ chính là chủ đơn (MaKhachHang == chính họ)
+                    query = query.Where(hd => hd.MaKhachHang == userId);
+                }
+                else
+                {
+                    // Nếu là nhân viên, chỉ lấy hóa đơn của chính họ HOẶC hóa đơn online (NV01)
+                    query = query.Where(hd => hd.MaNV == userId || hd.MaNV == "NV01");
+                }
             }
             // Nếu là Admin thì query giữ nguyên, không filter -> Thấy toàn bộ
 
@@ -120,13 +131,35 @@ namespace Backend.Controllers
             // Nhân viên (không phải Admin) chỉ được xem hóa đơn do chính mình đã
             // nhận/lập, hoặc hóa đơn online đang chờ trong "kho chung" (NV01).
             // Hóa đơn đã có nhân viên khác nhận thì không được xem.
+            // Khách hàng (không phải Admin) chỉ được xem hóa đơn của CHÍNH MÌNH -
+            // dùng để xem trạng thái đơn hàng của mình trong trang Lịch Sử Đơn Hàng.
             var (role, userId) = GetCurrentUser();
             bool isAdmin = role.Contains("Admin", StringComparison.OrdinalIgnoreCase) ||
                            role.Contains("Quản trị", StringComparison.OrdinalIgnoreCase);
-            if (!isAdmin && hd.MaNV != userId && hd.MaNV != "NV01")
+            bool isKhachHang = role.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase);
+
+            if (!isAdmin)
             {
-                return StatusCode(403, new { message = "Bạn không có quyền xem hóa đơn của người khác." });
+                if (isKhachHang)
+                {
+                    if (hd.MaKhachHang != userId)
+                        return StatusCode(403, new { message = "Bạn không có quyền xem hóa đơn của người khác." });
+                }
+                else if (hd.MaNV != userId && hd.MaNV != "NV01")
+                {
+                    return StatusCode(403, new { message = "Bạn không có quyền xem hóa đơn của người khác." });
+                }
             }
+
+            // Địa chỉ hiển thị trên hóa đơn: ƯU TIÊN địa chỉ giao hàng THỰC TẾ của
+            // chính đơn hàng này (được nhập ở trang thanh toán - thanhtoan.html -
+            // và lưu kèm trong trường MoTa của mỗi dòng chi tiết hóa đơn, xem
+            // hàm buildGhiChuGiaoHang() bên Frontend), vì đây mới là địa chỉ giao
+            // hàng đúng cho đơn này. Nếu đơn không có ghi chú giao hàng (VD: hóa
+            // đơn do Nhân viên/Admin lập tại quầy) thì lấy tạm địa chỉ hồ sơ
+            // (DiaChiKhachHang) của khách hàng làm phương án dự phòng.
+            string? diaChiHienThi = TrichDiaChiGiaoHangTuMoTa(hd.ChiTietHoaDons)
+                ?? hd.KhachHang?.DiaChiKhachHang;
 
             var result = new
             {
@@ -139,7 +172,7 @@ namespace Backend.Controllers
                     hd.KhachHang.MaKhachHang,
                     hd.KhachHang.TenKhachHang,
                     hd.KhachHang.SDTKhachHang,
-                    hd.KhachHang.DiaChiKhachHang
+                    DiaChiKhachHang = diaChiHienThi
                 },
                 NhanVien = hd.NhanVien == null ? null : new
                 {
@@ -160,6 +193,34 @@ namespace Backend.Controllers
             };
 
             return Ok(result);
+        }
+
+        // =====================================================
+        // Hàm hỗ trợ: trích chuỗi "Địa chỉ giao hàng: ..." đã được Frontend
+        // (thanhtoan.js -> buildGhiChuGiaoHang) đính kèm vào đầu trường MoTa
+        // của dòng chi tiết hóa đơn, dạng:
+        // "Người nhận: X | SĐT: Y | Địa chỉ giao hàng: Z | Ghi chú: W"
+        // Trả về null nếu không tìm thấy (hóa đơn không có ghi chú giao hàng).
+        // =====================================================
+        private static string? TrichDiaChiGiaoHangTuMoTa(IEnumerable<CHITIETHOADON> chiTietHoaDons)
+        {
+            const string nhan = "Địa chỉ giao hàng:";
+
+            var moTaCoDiaChi = chiTietHoaDons
+                .Select(ct => ct.MoTa)
+                .FirstOrDefault(mt => !string.IsNullOrWhiteSpace(mt) && mt.Contains(nhan));
+
+            if (moTaCoDiaChi == null)
+                return null;
+
+            int viTriBatDau = moTaCoDiaChi.IndexOf(nhan, StringComparison.OrdinalIgnoreCase) + nhan.Length;
+            string phanConLai = moTaCoDiaChi.Substring(viTriBatDau);
+
+            // Địa chỉ kết thúc trước dấu " | " tiếp theo (nếu có "Ghi chú" theo sau), hoặc hết chuỗi
+            int viTriKetThuc = phanConLai.IndexOf('|');
+            string diaChi = (viTriKetThuc >= 0 ? phanConLai.Substring(0, viTriKetThuc) : phanConLai).Trim();
+
+            return string.IsNullOrWhiteSpace(diaChi) ? null : diaChi;
         }
 
         // =====================================================
