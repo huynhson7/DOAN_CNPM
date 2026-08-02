@@ -18,6 +18,8 @@ function openNvModal() {
     isEditMode = false;
     document.getElementById('nvForm').reset();
     document.getElementById('maNV').readOnly = false;
+    document.getElementById('nvPassword').required = true;
+    document.getElementById('nvConfirmPassword').required = true;
     document.querySelector('button[form="nvForm"]').innerText = "Lưu Nhân Viên";
     nvModal.style.display = "flex";
 }
@@ -132,7 +134,15 @@ async function openEditModal(maNV) {
         document.getElementById('maNV').readOnly = true;
 
         document.getElementById('tenDangNhap').value = nv.tenDangNhap;
-        document.getElementById('nvPassword').value = nv.matKhau;
+        document.getElementById('nvEmail').value = nv.email;
+
+        // Mật khẩu đã mã hoá không được Backend trả về (bảo mật), nên để trống 2 ô này khi Sửa
+        // và không bắt buộc nhập lại vì việc cập nhật thông tin không làm thay đổi mật khẩu.
+        document.getElementById('nvPassword').value = "";
+        document.getElementById('nvPassword').required = false;
+        document.getElementById('nvConfirmPassword').value = "";
+        document.getElementById('nvConfirmPassword').required = false;
+
         document.getElementById('tenNV').value = nv.tenNV;
 
         if (nv.ngaySinh) {

@@ -168,14 +168,26 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "Tên đăng nhập đã tồn tại." });
             }
 
-            // Cập nhật các thông tin cơ bản - KHÔNG cho phép ghi đè MatKhau/SecurityStamp qua endpoint này
-            // (đổi mật khẩu phải đi qua AuthController.ChangePassword để đảm bảo Hash + thu hồi JWT đúng quy trình)
+            // Cập nhật các thông tin cơ bản
             employee.TenDangNhap = model.TenDangNhap;
             employee.TenNV = model.TenNV;
             employee.NgaySinh = model.NgaySinh;
             employee.GioiTinh = model.GioiTinh;
             employee.SoDT = model.SoDT;
             employee.DiaChiNV = model.DiaChiNV;
+            employee.TrangThaiLamViec = model.TrangThaiLamViec;
+
+            // [SỬA] Admin có thể đặt mật khẩu mới cho nhân viên ngay tại form Sửa.
+            // Nếu ô mật khẩu để trống thì giữ nguyên mật khẩu cũ, không ghi đè.
+            if (!string.IsNullOrWhiteSpace(model.MatKhau))
+            {
+                var passwordErrors = PasswordPolicy.Validate(model.MatKhau);
+                if (passwordErrors.Count > 0)
+                    return BadRequest(new { message = string.Join(" ", passwordErrors) });
+
+                employee.MatKhau = _passwordHasher.HashPassword(new object(), model.MatKhau);
+                employee.SecurityStamp = Guid.NewGuid().ToString(); // Thu hồi JWT cũ của nhân viên này
+            }
 
             // Nếu form có gửi Vai trò/Khu vực phụ trách (chức danh hiển thị) thì mới cập nhật, không thì giữ nguyên
             //if (!string.IsNullOrEmpty(model.VaiTroKhuVucPhuTrach))
