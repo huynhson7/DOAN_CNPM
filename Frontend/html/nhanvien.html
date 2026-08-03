@@ -16,6 +16,16 @@
 
 <body class="admin-body">
 
+    <!-- Bảo vệ trang: CHỈ Role "Quản trị Hệ thống" mới được xem trang Quản Lý Nhân Viên
+         (theo TỔNG HỢP PHÂN QUYỀN HỆ THỐNG - mục Quản lý Nhân viên chỉ dành cho Admin).
+         Đặt ngay đầu <body> và chạy ngay lập tức (không đợi DOMContentLoaded) để Nhân
+         viên/Khách hàng bị điều hướng đi trước khi kịp thấy nội dung, giống cách
+         bangdieukhien.html đã làm. -->
+    <script src="../js/auth-guard.js"></script>
+    <script>
+        requireRole(['Quản trị Hệ thống']);
+    </script>
+
     <!-- Sidebar Admin -->
     <aside class="sidebar">
         <div class="sidebar-header">
