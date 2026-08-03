@@ -194,6 +194,26 @@ namespace Backend.Controllers
             employee.GioiTinh = model.GioiTinh;
             employee.SoDT = model.SoDT;
             employee.DiaChiNV = model.DiaChiNV;
+
+            // [SỬA - FIX BUG] Đồng bộ TrangThai (cột dùng để chặn đăng nhập/thu hồi phiên) theo
+            // TrangThaiLamViec: trước đây Admin đổi "Đang làm việc" -> "Đã nghỉ việc" nhưng cột
+            // TrangThai vẫn giữ = 1 nên nhân viên đã nghỉ việc VẪN đăng nhập được và các JWT đang
+            // giữ vẫn còn hiệu lực. Giờ khi chuyển sang "Đã nghỉ việc": khóa tài khoản (TrangThai = 0)
+            // và cấp SecurityStamp mới để thu hồi NGAY LẬP TỨC mọi JWT nhân viên này đang giữ (middleware
+            // ở Program.cs so khớp SecurityStamp mỗi request). Khi chuyển ngược lại "Đang làm việc" thì
+            // mở khóa tài khoản (TrangThai = 1) để họ đăng nhập lại được bình thường.
+            if (employee.TrangThaiLamViec != model.TrangThaiLamViec)
+            {
+                if (model.TrangThaiLamViec == "Đã nghỉ việc")
+                {
+                    employee.TrangThai = 0;
+                    employee.SecurityStamp = Guid.NewGuid().ToString(); // Thu hồi JWT hiện tại của nhân viên này
+                }
+                else if (model.TrangThaiLamViec == "Đang làm việc")
+                {
+                    employee.TrangThai = 1;
+                }
+            }
             employee.TrangThaiLamViec = model.TrangThaiLamViec;
 
             // [SỬA] Admin có thể đặt mật khẩu mới cho nhân viên ngay tại form Sửa.

@@ -84,20 +84,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
                 string? currentStamp = null;
+                int? currentTrangThai = null;
 
                 if (role == "Quản trị Hệ thống" || role == "NV Bán Hàng")
                 {
-                    currentStamp = (await dbContext.NHANVIEN.FindAsync(userId))?.SecurityStamp;
+                    var nv = await dbContext.NHANVIEN.FindAsync(userId);
+                    currentStamp = nv?.SecurityStamp;
+                    currentTrangThai = nv?.TrangThai;
                 }
                 else
                 {
-                    currentStamp = (await dbContext.KHACHHANG.FindAsync(userId))?.SecurityStamp;
+                    var kh = await dbContext.KHACHHANG.FindAsync(userId);
+                    currentStamp = kh?.SecurityStamp;
+                    currentTrangThai = kh?.TrangThai;
                 }
 
                 if (currentStamp == null || currentStamp != securityStampClaim)
                 {
                     // Mật khẩu đã được đổi/reset sau khi Token này được cấp -> Token cũ bị vô hiệu ngay lập tức.
                     context.Fail("Phiên đăng nhập đã hết hiệu lực. Vui lòng đăng nhập lại.");
+                    return;
+                }
+
+                // [THÊM MỚI - FIX BUG] Chặn ngay lập tức tài khoản đã bị khóa/nghỉ việc (TrangThai = 0),
+                // kể cả khi Token vẫn còn mang đúng SecurityStamp hiện tại (ví dụ TrangThai bị đổi bởi
+                // một luồng khác mà không rotate SecurityStamp). Không chờ Token hết hạn mới bị chặn.
+                if (currentTrangThai == 0)
+                {
+                    context.Fail("Tài khoản đã bị khóa hoặc ngừng hoạt động.");
                 }
             }
         };
