@@ -11,13 +11,26 @@ const vlModalTitle = document.getElementById("vlModalTitle");
 const vlForm = document.getElementById("vlForm");
 const vlMaCode = document.getElementById("vlMaCode");
 const vlTenVL = document.getElementById("vlTenVL");
-const vlMoTa = document.getElementById("vlMoTa");
 const searchInput = document.getElementById("searchVatLieuInput");
 const vlTableBody = document.getElementById("vlTableBody");
 const vlNoResultRow = document.getElementById("vlNoResultRow");
 const btnLuuVL = document.querySelector('button[form="vlForm"]');
 
 let isEditMode = false; // false = đang Thêm mới, true = đang Sửa
+
+// ==========================================
+// 2b. PHÂN QUYỀN THEO ROLE (VATLIEU - vatlieu.html)
+// - Quản trị Hệ thống: Toàn quyền thêm, sửa, xóa.
+// - NV Bán Hàng: Chỉ xem, không được thêm/sửa/xóa
+//   (khớp với Backend: POST/PUT/DELETE api/vat-lieu chỉ Admin gọi được).
+// ==========================================
+const isAdminVL = (localStorage.getItem('userRole') || '') === 'Quản trị Hệ thống';
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (isAdminVL) return;
+    const btnAddVL = document.querySelector('button[onclick="openAddVlModal()"]');
+    if (btnAddVL) btnAddVL.style.display = 'none';
+});
 
 // ==========================================
 // 3. HÀM HỖ TRỢ: GẮN TOKEN ĐĂNG NHẬP (NẾU CÓ) VÀO REQUEST
@@ -52,9 +65,6 @@ async function openEditVlModal(maVL) {
         vlMaCode.value = item.maVL;
         vlMaCode.readOnly = true; // Khóa không cho sửa Mã VL (khóa chính)
         vlTenVL.value = item.tenVL;
-        // Lưu ý: bảng VATLIEU trong CSDL hiện chỉ có 2 cột MaVL, TenVL,
-        // chưa có cột lưu mô tả nên không có dữ liệu để điền ở đây.
-        vlMoTa.value = "";
 
         isEditMode = true;
         vlModalTitle.innerHTML = '<i class="fas fa-cubes"></i> Sửa Vật Liệu';
@@ -105,8 +115,10 @@ function renderVlTable(list) {
             <td><strong>${item.maVL}</strong></td>
             <td><span class="material-name"><i class="fas fa-cube"></i> ${item.tenVL}</span></td>
             <td style="text-align: center;">
-                <button class="btn-action edit" title="Sửa" onclick="openEditVlModal('${item.maVL}')"><i class="fas fa-pen"></i></button>
-                <button class="btn-action delete" title="Xóa" onclick="deleteVatLieu('${item.maVL}')"><i class="fas fa-trash"></i></button>
+                ${isAdminVL
+                    ? `<button class="btn-action edit" title="Sửa" onclick="openEditVlModal('${item.maVL}')"><i class="fas fa-pen"></i></button>
+                <button class="btn-action delete" title="Xóa" onclick="deleteVatLieu('${item.maVL}')"><i class="fas fa-trash"></i></button>`
+                    : `<span style="color:#9e9e9e; font-size:13px;">Chỉ xem</span>`}
             </td>
         `;
         vlTableBody.insertBefore(tr, vlNoResultRow);
@@ -159,8 +171,6 @@ vlForm.addEventListener("submit", async function (event) {
     const payload = {
         maVL: vlMaCode.value.trim(),
         tenVL: vlTenVL.value.trim()
-        // Lưu ý: bảng VATLIEU trong CSDL hiện chưa có cột lưu mô tả,
-        // nên trường "Đặc Tính / Mô Tả" tạm thời chưa gửi lên server.
     };
 
     if (!payload.maVL || !payload.tenVL) return;

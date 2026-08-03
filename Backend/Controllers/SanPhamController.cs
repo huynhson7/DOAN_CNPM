@@ -174,10 +174,17 @@ namespace Backend.Controllers
                 .Select(x => x.MaVL)
                 .ToListAsync();
 
-            var maNhaCungCaps = await _context.CUNGCAP
+            var nhaCungCaps = await _context.CUNGCAP
                 .Where(x => x.MaSP == id)
-                .Select(x => x.MaNcc)
+                .Include(x => x.NhaCungCap)
+                .Select(x => new
+                {
+                    MaNcc = x.MaNcc,
+                    TenNcc = x.NhaCungCap != null ? x.NhaCungCap.TenNcc : null
+                })
                 .ToListAsync();
+
+            var maNhaCungCaps = nhaCungCaps.Select(x => x.MaNcc).ToList();
 
             return Ok(new
             {
@@ -194,7 +201,12 @@ namespace Backend.Controllers
                 // PublicId KHÔNG trả cho Frontend vì Frontend không sử dụng (theo yêu cầu) -
                 // toàn bộ logic đổi/xoá ảnh cũ dùng PublicId đọc thẳng từ DB ở phía Backend.
                 MaVatLieus = maVatLieus,
-                MaNhaCungCaps = maNhaCungCaps
+                MaNhaCungCaps = maNhaCungCaps,
+                // [SỬA] Tên Nhà Cung Cấp (chỉ Mã + Tên, KHÔNG có thông tin nội bộ khác) để trang
+                // Chi Tiết Sản Phẩm (chitiet-sanpham.html) hiển thị công khai cho Khách hàng -
+                // đây là dữ liệu hiển thị nguồn gốc/xuất xứ sản phẩm, khác với việc "quản lý Nhà
+                // Cung Cấp" (vẫn chỉ Admin/Nhân viên mới được truy cập qua NhaCungCapController).
+                NhaCungCaps = nhaCungCaps
             });
         }
 

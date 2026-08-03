@@ -88,7 +88,7 @@ namespace Backend.Controllers
 
         // PUT: api/vat-lieu/VL001
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Update(string id, [FromBody] VATLIEU model)
         {
             if (id != model.MaVL)
@@ -132,7 +132,7 @@ namespace Backend.Controllers
 
         // DELETE: api/vat-lieu/VL001
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> Delete(string id)
         {
             var material = await _context.VATLIEU.FindAsync(id);

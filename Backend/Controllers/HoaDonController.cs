@@ -109,7 +109,46 @@ namespace Backend.Controllers
 
             return Ok(list);
         }
-        
+
+
+        // =====================================================
+        // GET: api/hoa-don/san-pham-ban-chay -> Top sản phẩm bán chạy nhất
+        // (Tổng hợp SoLuongBan từ CHITIETHOADON của mọi hóa đơn CHƯA bị hủy,
+        // dùng cho mục "Sản Phẩm Bán Chạy" ở trang Bảng Điều Khiển)
+        // =====================================================
+        [HttpGet("san-pham-ban-chay")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
+        public async Task<IActionResult> GetSanPhamBanChay(int top = 5)
+        {
+            var thongKe = await _context.CHITIETHOADON
+                .AsNoTracking()
+                .Where(ct => ct.HoaDon != null && ct.HoaDon.TrangThaiGiaoHang != TrangThaiHoaDon.DaHuy)
+                .GroupBy(ct => ct.MaSP)
+                .Select(g => new
+                {
+                    MaSP = g.Key,
+                    SoLuongDaBan = g.Sum(x => x.SoLuongBan ?? 0)
+                })
+                .OrderByDescending(x => x.SoLuongDaBan)
+                .Take(top)
+                .ToListAsync();
+
+            var maSPs = thongKe.Select(x => x.MaSP).ToList();
+            var tenSPs = await _context.SANPHAM
+                .AsNoTracking()
+                .Where(sp => maSPs.Contains(sp.MaSP))
+                .ToDictionaryAsync(sp => sp.MaSP, sp => sp.TenSP);
+
+            var ketQua = thongKe.Select(x => new
+            {
+                x.MaSP,
+                TenSP = tenSPs.TryGetValue(x.MaSP, out var ten) ? ten : x.MaSP,
+                x.SoLuongDaBan
+            });
+
+            return Ok(ketQua);
+        }
+
 
         // =====================================================
         // GET: api/hoa-don/{id} -> Chi tiết 1 hóa đơn
@@ -229,6 +268,16 @@ namespace Backend.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] TaoHoaDonRequest request)
         {
+            // [SỬA] Nếu người gọi là Khách hàng: ép MaKhachHang = chính họ (không tin Client
+            // gửi lên - tránh việc 1 khách hàng đặt hàng "giùm" người khác), đồng thời bỏ qua
+            // MaNV Client gửi (đơn khách tự đặt luôn coi là "đơn online" -> mặc định NV01).
+            var (currentRole, currentUserId) = GetCurrentUser();
+            if (currentRole.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase))
+            {
+                request.MaKhachHang = currentUserId;
+                request.MaNV = string.Empty;
+            }
+
             if (string.IsNullOrWhiteSpace(request.MaKhachHang))
                 return BadRequest(new { message = "Vui lòng chọn khách hàng." });
 
@@ -349,6 +398,12 @@ namespace Backend.Controllers
             var (role, userId) = GetCurrentUser();
             bool isAdmin = role.Contains("Admin", StringComparison.OrdinalIgnoreCase) || 
                            role.Contains("Quản trị", StringComparison.OrdinalIgnoreCase);
+
+            // [SỬA] Khách hàng KHÔNG có quyền sửa/cập nhật hóa đơn (chỉ được Tạo đơn và Xem
+            // lịch sử/trạng thái đơn của chính mình) - việc cập nhật TrangThaiGiaoHang/NgayGiaoHang
+            // và "nhận đơn" chỉ dành cho Nhân viên/Admin.
+            if (role.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase))
+                return StatusCode(403, new { message = "Khách hàng không có quyền cập nhật hóa đơn." });
 
             var hoaDon = await _context.HOADON
                 .Include(x => x.ChiTietHoaDons)

@@ -264,6 +264,34 @@ function buildAccountInfoRow(label, value) {
     </div>`;
 }
 
+/**
+ * Dựng 1 dòng thông tin dạng ô nhập CHO PHÉP SỬA, dùng cho Form "Khách hàng tự
+ * sửa thông tin cá nhân" (Họ Tên/SĐT/Địa chỉ) trong Modal Thông Tin Tài Khoản.
+ */
+function buildAccountInfoEditableRow(label, inputId, value, options) {
+    options = options || {};
+    const type = options.type || 'text';
+    const required = options.required !== false; // mặc định bắt buộc nhập
+    return `<div class="input-group">
+        <label for="${inputId}">${escapeHtmlForAccountInfo(label)}</label>
+        <input type="${type}" id="${inputId}" value="${escapeHtmlForAccountInfo(value)}" ${required ? 'required' : ''}>
+    </div>`;
+}
+
+/**
+ * Dựng 1 dòng dạng <select> CHO PHÉP CHỌN, dùng cho Giới Tính trong Form Nhân viên
+ * tự sửa hồ sơ của chính mình trong Modal Thông Tin Tài Khoản.
+ */
+function buildAccountInfoSelectRow(label, inputId, value, choices) {
+    const optionsHtml = choices.map(choice =>
+        `<option value="${escapeHtmlForAccountInfo(choice)}" ${choice === value ? 'selected' : ''}>${escapeHtmlForAccountInfo(choice)}</option>`
+    ).join('');
+    return `<div class="input-group">
+        <label for="${inputId}">${escapeHtmlForAccountInfo(label)}</label>
+        <select id="${inputId}" style="width:100%; box-sizing:border-box;">${optionsHtml}</select>
+    </div>`;
+}
+
 /** Định dạng Ngày Sinh kiểu ISO ("yyyy-MM-ddTHH:mm:ss") về dd/mm/yyyy cho dễ đọc. */
 function formatNgaySinhForAccountInfo(value) {
     if (!value) return '';
@@ -274,54 +302,189 @@ function formatNgaySinhForAccountInfo(value) {
 }
 
 /**
- * Dựng nội dung thông tin cho tài khoản Admin/Nhân viên (dữ liệu lấy từ
- * GET /api/nhan-vien/{id} - endpoint đã tồn tại sẵn, chỉ yêu cầu đã đăng nhập).
+ * [SỬA - FIX BUG] Trước đây hàm này chỉ dựng các dòng readonly - Nhân viên/Admin bấm vào avatar/
+ * "Xin chào" xem được thông tin nhưng KHÔNG sửa được gì cả (dù Backend đã có sẵn API
+ * PUT /api/nhan-vien/profile/{id} để tự sửa hồ sơ của chính mình). Giờ dựng thành 1 Form cho
+ * phép sửa Tên Đăng Nhập/Họ Tên/Ngày Sinh/Giới Tính/SĐT/Địa Chỉ rồi lưu qua API đó. Mã Nhân Viên/
+ * Email/Vai Trò/Trạng Thái Làm Việc/Trạng Thái Tài Khoản vẫn chỉ hiển thị readonly - đúng theo tài
+ * liệu phân quyền: Nhân viên "Không tự đổi VaiTroKhuVucPhuTrach, TrangThaiLamViec".
  */
-function renderStaffAccountInfoRows(data) {
+function renderStaffAccountInfoForm(data, bodyEl) {
     const trangThaiText = (data.trangThai === 1 || data.trangThai === '1') ? 'Đang hoạt động' : 'Đã khóa';
-    return [
-        buildAccountInfoRow('Mã Nhân Viên', data.maNV),
-        buildAccountInfoRow('Tên Đăng Nhập', data.tenDangNhap),
-        buildAccountInfoRow('Họ Và Tên', data.tenNV),
-        buildAccountInfoRow('Email', data.email),
-        buildAccountInfoRow('Ngày Sinh', formatNgaySinhForAccountInfo(data.ngaySinh)),
-        buildAccountInfoRow('Giới Tính', data.gioiTinh),
-        buildAccountInfoRow('Số Điện Thoại', data.soDT),
-        buildAccountInfoRow('Địa Chỉ', data.diaChiNV),
-        buildAccountInfoRow('Vai Trò', data.vaiTro),
-        buildAccountInfoRow('Trạng Thái Làm Việc', data.trangThaiLamViec),
-        buildAccountInfoRow('Trạng Thái Tài Khoản', trangThaiText)
-    ].join('');
+
+    bodyEl.innerHTML = `
+        <form id="staffProfileForm">
+            ${buildAccountInfoRow('Mã Nhân Viên', data.maNV)}
+            ${buildAccountInfoEditableRow('Tên Đăng Nhập', 'staffProfileTenDangNhap', data.tenDangNhap)}
+            ${buildAccountInfoRow('Email', data.email)}
+            ${buildAccountInfoEditableRow('Họ Và Tên', 'staffProfileTenNV', data.tenNV)}
+            ${buildAccountInfoEditableRow('Ngày Sinh', 'staffProfileNgaySinh', formatNgaySinhForInputAccountInfo(data.ngaySinh), { type: 'date', required: false })}
+            ${buildAccountInfoSelectRow('Giới Tính', 'staffProfileGioiTinh', data.gioiTinh, ['Nam', 'Nữ'])}
+            ${buildAccountInfoEditableRow('Số Điện Thoại', 'staffProfileSDT', data.soDT, { type: 'tel', required: false })}
+            ${buildAccountInfoEditableRow('Địa Chỉ', 'staffProfileDiaChi', data.diaChiNV, { required: false })}
+            ${buildAccountInfoRow('Vai Trò', data.vaiTro)}
+            ${buildAccountInfoRow('Trạng Thái Làm Việc', data.trangThaiLamViec)}
+            ${buildAccountInfoRow('Trạng Thái Tài Khoản', trangThaiText)}
+            <p id="staffProfileFormMessage" style="margin: 8px 0 4px; font-size: 14px; min-height: 18px;"></p>
+            <button type="submit" class="btn-primary" style="box-sizing:border-box; width:100%;">
+                <i class="fas fa-save"></i> Lưu Thay Đổi
+            </button>
+        </form>`;
+
+    const formEl = document.getElementById('staffProfileForm');
+    const msgEl = document.getElementById('staffProfileFormMessage');
+
+    formEl.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        msgEl.style.color = '';
+        msgEl.textContent = '';
+
+        const ngaySinhValue = document.getElementById('staffProfileNgaySinh').value;
+
+        const payload = {
+            maNV: data.maNV,
+            tenDangNhap: document.getElementById('staffProfileTenDangNhap').value.trim(),
+            email: data.email,
+            tenNV: document.getElementById('staffProfileTenNV').value.trim(),
+            ngaySinh: ngaySinhValue || null,
+            gioiTinh: document.getElementById('staffProfileGioiTinh').value,
+            soDT: document.getElementById('staffProfileSDT').value.trim(),
+            diaChiNV: document.getElementById('staffProfileDiaChi').value.trim()
+        };
+
+        const submitBtn = formEl.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        try {
+            const token = localStorage.getItem('token');
+            const putRes = await fetch(`http://localhost:5129/api/nhan-vien/profile/${data.maNV}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const putData = await putRes.json();
+
+            if (putRes.ok) {
+                msgEl.style.color = '#27ae60';
+                msgEl.textContent = putData.message || 'Cập nhật thông tin thành công.';
+
+                // Đồng bộ lại tên hiển thị trên Header nếu Nhân viên vừa đổi Họ Tên
+                localStorage.setItem('hoTen', payload.tenNV);
+                renderAccountGreeting();
+            } else {
+                msgEl.style.color = '#c0392b';
+                msgEl.textContent = putData.message || 'Cập nhật thất bại.';
+            }
+        } catch (err) {
+            console.error('Lỗi cập nhật thông tin nhân viên:', err);
+            msgEl.style.color = '#c0392b';
+            msgEl.textContent = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+/** Định dạng Ngày Sinh kiểu ISO ("yyyy-MM-ddTHH:mm:ss") về yyyy-MM-dd cho ô <input type="date">. */
+function formatNgaySinhForInputAccountInfo(value) {
+    if (!value) return '';
+    return String(value).split('T')[0];
 }
 
 /**
- * Dựng nội dung thông tin cho tài khoản Khách hàng. Backend hiện chỉ cho phép
- * Admin/Nhân viên tra cứu bảng KHACHHANG (dữ liệu nhạy cảm - xem
- * KhachHangController), nên Khách hàng tự xem thông tin CỦA MÌNH bằng chính
- * dữ liệu đã có sẵn từ phiên đăng nhập (JWT + localStorage), không cần gọi API.
+ * [SỬA] Tải thông tin CỦA CHÍNH Khách hàng đang đăng nhập từ API riêng
+ * GET /api/khach-hang/me (chỉ role "Khách hàng" mới gọi được, Backend tự lấy
+ * đúng hồ sơ từ Token - không cần/không tin id truyền từ Client), và dựng
+ * thành 1 Form cho phép Khách hàng SỬA Họ Tên/SĐT/Địa chỉ của chính mình rồi
+ * lưu qua PUT /api/khach-hang/me. Mã Khách Hàng/Tên Đăng Nhập/Email vẫn chỉ
+ * hiển thị readonly (không cho sửa qua Form này).
  */
-function renderCustomerAccountInfoRows(userId) {
-    const user = getCurrentUser();
-    const hoTen = localStorage.getItem('hoTen');
-    const rows = [
-        buildAccountInfoRow('Mã Khách Hàng', userId),
-        buildAccountInfoRow('Họ Và Tên', hoTen),
-        buildAccountInfoRow('Tên Đăng Nhập', user ? user.username : ''),
-        buildAccountInfoRow('Email', user ? user.email : '')
-    ].join('');
+async function loadAndRenderCustomerAccountInfo(bodyEl) {
+    const token = localStorage.getItem('token');
 
-    // Điểm truy cập tới trang "Lịch Sử Đơn Hàng" (lichsudonhang.html) - cho phép
-    // Khách hàng xem lại các hóa đơn đã đặt và theo dõi trạng thái đơn hàng.
-    // Lưu ý: bắt buộc có box-sizing: border-box vì .btn-primary có sẵn
-    // width: 100% + padding: 14px - nếu không có border-box, phần padding sẽ
-    // cộng dồn ra ngoài 100% khiến nút tràn rộng hơn các ô phía trên và lệch
-    // sang phải (gây ra thanh cuộn ngang không mong muốn trong Modal).
-    const lichSuDonHangLink = `
-        <a href="lichsudonhang.html" class="btn-primary" style="box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; margin-top: 10px;">
-            <i class="fas fa-receipt"></i> Xem Lịch Sử Đơn Hàng
-        </a>`;
+    try {
+        const res = await fetch('http://localhost:5129/api/khach-hang/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Không thể tải thông tin.');
+        const data = await res.json();
 
-    return rows + lichSuDonHangLink;
+        bodyEl.innerHTML = `
+            <form id="customerProfileForm">
+                ${buildAccountInfoRow('Mã Khách Hàng', data.maKhachHang)}
+                ${buildAccountInfoEditableRow('Tên Đăng Nhập', 'customerProfileTenDangNhap', data.tenDangNhap)}
+                ${buildAccountInfoRow('Email', data.email)}
+                ${buildAccountInfoEditableRow('Họ Và Tên', 'customerProfileTenKH', data.tenKhachHang)}
+                ${buildAccountInfoEditableRow('Số Điện Thoại', 'customerProfileSDT', data.sdtKhachHang, { type: 'tel' })}
+                ${buildAccountInfoEditableRow('Địa Chỉ', 'customerProfileDiaChi', data.diaChiKhachHang, { required: false })}
+                <p id="customerProfileFormMessage" style="margin: 8px 0 4px; font-size: 14px; min-height: 18px;"></p>
+                <button type="submit" class="btn-primary" style="box-sizing:border-box; width:100%;">
+                    <i class="fas fa-save"></i> Lưu Thay Đổi
+                </button>
+            </form>
+            <a href="lichsudonhang.html" class="btn-outline" style="box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; margin-top: 10px;">
+                <i class="fas fa-receipt"></i> Xem Lịch Sử Đơn Hàng
+            </a>`;
+
+        const formEl = document.getElementById('customerProfileForm');
+        const msgEl = document.getElementById('customerProfileFormMessage');
+
+        formEl.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            msgEl.style.color = '';
+            msgEl.textContent = '';
+
+            const payload = {
+                maKhachHang: data.maKhachHang,
+                // [SỬA - FIX BUG] Lấy Tên Đăng Nhập từ chính ô nhập (giờ đã cho phép sửa),
+                // không lấy lại giá trị cũ cố định từ lần tải đầu tiên nữa.
+                tenDangNhap: document.getElementById('customerProfileTenDangNhap').value.trim(),
+                email: data.email,
+                tenKhachHang: document.getElementById('customerProfileTenKH').value.trim(),
+                sdtKhachHang: document.getElementById('customerProfileSDT').value.trim(),
+                diaChiKhachHang: document.getElementById('customerProfileDiaChi').value.trim()
+            };
+
+            const submitBtn = formEl.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            try {
+                const putRes = await fetch('http://localhost:5129/api/khach-hang/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const putData = await putRes.json();
+
+                if (putRes.ok) {
+                    msgEl.style.color = '#27ae60';
+                    msgEl.textContent = putData.message || 'Cập nhật thông tin thành công.';
+
+                    // Đồng bộ lại tên hiển thị trên Header nếu Khách hàng vừa đổi Họ Tên
+                    localStorage.setItem('hoTen', payload.tenKhachHang);
+                    renderAccountGreeting();
+                } else {
+                    msgEl.style.color = '#c0392b';
+                    msgEl.textContent = putData.message || 'Cập nhật thất bại.';
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật thông tin khách hàng:', err);
+                msgEl.style.color = '#c0392b';
+                msgEl.textContent = 'Không thể kết nối tới máy chủ. Vui lòng thử lại sau.';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    } catch (err) {
+        console.error('Lỗi tải thông tin tài khoản:', err);
+        bodyEl.innerHTML = '<p style="text-align:center;color:#e74c3c;">Không thể tải thông tin tài khoản. Vui lòng thử lại.</p>';
+    }
 }
 
 /**
@@ -353,12 +516,14 @@ async function openAccountInfoModal() {
             });
             if (!res.ok) throw new Error('Không thể tải thông tin.');
             const data = await res.json();
-            bodyEl.innerHTML = renderStaffAccountInfoRows(data);
+            renderStaffAccountInfoForm(data, bodyEl);
         } catch (err) {
             console.error('Lỗi tải thông tin tài khoản:', err);
             bodyEl.innerHTML = '<p style="text-align:center;color:#e74c3c;">Không thể tải thông tin tài khoản. Vui lòng thử lại.</p>';
         }
     } else {
-        bodyEl.innerHTML = renderCustomerAccountInfoRows(userId);
+        // [SỬA] Khách hàng: tải + hiển thị Form CHO PHÉP SỬA (Họ Tên/SĐT/Địa chỉ)
+        // qua GET/PUT /api/khach-hang/me, thay vì chỉ hiển thị readonly như trước.
+        await loadAndRenderCustomerAccountInfo(bodyEl);
     }
 }

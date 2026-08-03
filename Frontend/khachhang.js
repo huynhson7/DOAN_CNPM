@@ -5,15 +5,6 @@ const khModal = document.getElementById("khModal");
 const formKhachHang = document.getElementById('khForm');
 let isEditModeKH = false;
 
-function openKhModal() {
-    isEditModeKH = false;
-    formKhachHang.reset();
-    document.getElementById('maKhachHang').readOnly = false;
-    document.getElementById('sdtError').style.display = "none"; // Ẩn lỗi cũ đi
-    document.querySelector('button[form="khForm"]').innerText = "Lưu Khách Hàng";
-    khModal.style.display = "flex";
-}
-
 function closeKhModal() {
     khModal.style.display = "none";
 }
@@ -26,6 +17,14 @@ window.onclick = function (event) {
 // 2. CẤU HÌNH API
 // ==========================================
 const API_KHACH_HANG = "http://localhost:5129/api/khach-hang";
+
+// ==========================================
+// 2b. PHÂN QUYỀN THEO ROLE (KHACHHANG - khachhang.html)
+// - Quản trị Hệ thống: Toàn quyền sửa, xóa.
+// - NV Bán Hàng: Chỉ được XEM thông tin cơ bản, không được sửa/xóa
+//   (khớp với Backend: PUT/DELETE api/khach-hang/{id} chỉ Admin gọi được).
+// ==========================================
+const isAdminKH = (localStorage.getItem('userRole') || '') === 'Quản trị Hệ thống';
 
 // ==========================================
 // 3. HIỂN THỊ DANH SÁCH (GET)
@@ -67,8 +66,10 @@ async function loadDanhSachKH() {
                     <td>${kh.diaChiKhachHang || ''}</td>
                     <td>${trangThaiHTML}</td>
                     <td>
-                        <button class="btn-action edit" title="Sửa" onclick="openEditModalKH('${kh.maKhachHang}')"><i class="fas fa-pen"></i></button>
-                        <button class="btn-action delete" title="Xóa" onclick="deleteKhachHang('${kh.maKhachHang}')"><i class="fas fa-trash"></i></button>
+                        ${isAdminKH
+                            ? `<button class="btn-action edit" title="Sửa" onclick="openEditModalKH('${kh.maKhachHang}')"><i class="fas fa-pen"></i></button>
+                        <button class="btn-action delete" title="Xóa" onclick="deleteKhachHang('${kh.maKhachHang}')"><i class="fas fa-trash"></i></button>`
+                            : `<span style="color:#9e9e9e; font-size:13px;">Chỉ xem</span>`}
                     </td>
                 </tr>
             `;
@@ -104,7 +105,9 @@ async function openEditModalKH(maKH) {
         document.getElementById('maKhachHang').readOnly = true;
 
         document.getElementById('tenDangNhap').value = kh.tenDangNhap;
-        document.getElementById('matKhau').value = kh.matKhau;
+        // [SỬA - FIX BUG] Không đổ MatKhau vào Form nữa: Backend không trả MatKhau về Client
+        // (dữ liệu nhạy cảm) và Admin cũng không có quyền xem/sửa mật khẩu Khách hàng - ô này
+        // luôn để trống và bị khóa (disabled) trong khachhang.html.
         document.getElementById('tenKhachHang').value = kh.tenKhachHang;
         document.getElementById('sdtKhachHang').value = kh.sdtKhachHang;
         document.getElementById('diaChiKhachHang').value = kh.diaChiKhachHang;
@@ -166,10 +169,11 @@ formKhachHang.addEventListener('submit', async function (event) {
     }
 
     // ĐÓNG GÓI DỮ LIỆU JSON CHUẨN DB
+    // [SỬA - FIX BUG] Bỏ trường matKhau khỏi payload: Admin không có quyền xem/sửa mật khẩu
+    // Khách hàng, và Backend (UpdateKhachHangDto) giờ cũng không còn nhận trường này nữa.
     const payload = {
         maKhachHang: document.getElementById('maKhachHang').value.trim(),
         tenDangNhap: document.getElementById('tenDangNhap').value.trim(),
-        matKhau: document.getElementById('matKhau').value.trim(),
         tenKhachHang: document.getElementById('tenKhachHang').value.trim(),
         sdtKhachHang: sdtValue,
         diaChiKhachHang: document.getElementById('diaChiKhachHang').value.trim(),

@@ -118,7 +118,7 @@
                 <!-- Mục Sản Phẩm dạng Dropdown -->
                 <div class="dropdown">
                     <!-- href="#" giúp ấn vào không bị chuyển trang -->
-                    <a href="#" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
+                    <a href="sanpham.html" class="dropbtn">Sản Phẩm <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></a>
                     <div class="dropdown-content" id="dropdownMucDich">
                         <!-- Danh sách Mục Đích Sử Dụng được render động từ API /api/muc-dich-su-dung (index.js) -->
                     </div>
@@ -129,6 +129,11 @@
 
                 <!-- Chỉ hiển thị với tài khoản Admin (Quản trị Hệ thống) - do js/auth-guard.js (applyRoleBasedUI) điều khiển ẩn/hiện theo Role -->
                 <a href="bangdieukhien.html" data-role="Quản trị Hệ thống" style="display: none;"><i class="fas fa-store"></i> Quản Lý Cửa Hàng</a>
+
+                <!-- Chỉ hiển thị với tài khoản Nhân viên (NV Bán Hàng) - do js/auth-guard.js (applyRoleBasedUI) điều khiển ẩn/hiện theo Role.
+                     Nhân viên không có quyền xem Bảng điều khiển (bangdieukhien.html - dành riêng cho Admin) nên bấm vào sẽ vào thẳng
+                     trang Quản lý Hóa Đơn (hoadon.html); từ đó Menu bên trái sẽ tự ẩn các mục Nhân viên không có quyền (Bảng điều khiển, Nhân Viên). -->
+                <a href="hoadon.html" data-role="NV Bán Hàng" style="display: none;"><i class="fas fa-store"></i> Quản Lý Cửa Hàng</a>
             </div>
             
             <!-- Khu vực thao tác -->

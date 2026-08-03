@@ -4,13 +4,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
     [Route("api/khach-hang")]
     [ApiController]
-    [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")] // [SỬA] Dữ liệu khách hàng là thông tin nhạy cảm - chỉ nội bộ (Admin/NhanVien) được truy cập.
-                                          // Khách hàng tự đăng ký/xem thông tin của MÌNH đi qua AuthController + KhachHangController.GetMe (bên dưới).
+    // [SỬA] Bỏ Authorize ở mức Controller (class) - chuyển xuống từng API riêng, vì giờ có
+    // thêm 2 API "me" (GetMe/UpdateMe) dành riêng cho role Khách hàng tự thao tác trên hồ sơ
+    // của chính mình. Dữ liệu khách hàng vẫn là thông tin nhạy cảm - GetAll/GetById/Create/Update
+    // theo ID cụ thể vẫn chỉ dành cho nội bộ (Admin/Nhân viên) như cũ.
     public class KhachHangController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -23,6 +26,7 @@ namespace Backend.Controllers
 
         // GET: api/khach-hang
         [HttpGet]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetAll()
         {
             // [SỬA] Không trả MatKhau về Client
@@ -46,6 +50,7 @@ namespace Backend.Controllers
 
         // GET: api/khach-hang/KH001
         [HttpGet("{id}")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
             var item = await _context.KHACHHANG
@@ -72,10 +77,84 @@ namespace Backend.Controllers
             return Ok(item);
         }
 
+        // =====================================================
+        // GET: api/khach-hang/me -> Khách hàng tự xem thông tin của CHÍNH MÌNH
+        // =====================================================
+        [HttpGet("me")]
+        [Authorize(Roles = "Khách hàng")]
+        public async Task<IActionResult> GetMe()
+        {
+            var myId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(myId))
+                return Unauthorized();
+
+            var item = await _context.KHACHHANG
+                .AsNoTracking()
+                .Where(x => x.MaKhachHang == myId)
+                .Select(x => new
+                {
+                    x.MaKhachHang,
+                    x.TenDangNhap,
+                    x.TenKhachHang,
+                    x.Email,
+                    x.SDTKhachHang,
+                    x.DiaChiKhachHang,
+                    x.TrangThai
+                })
+                .FirstOrDefaultAsync();
+
+            if (item == null)
+                return NotFound(new { message = "Không tìm thấy tài khoản." });
+
+            return Ok(item);
+        }
+
+        // =====================================================
+        // PUT: api/khach-hang/me -> Khách hàng tự sửa thông tin cá nhân của CHÍNH MÌNH
+        // (tên, SĐT, địa chỉ). KHÔNG cho sửa MatKhau/VaiTro/TrangThai qua API này -
+        // đổi mật khẩu đi qua AuthController.ChangePassword, TrangThai (khóa/mở) do
+        // Admin quản lý qua PUT api/khach-hang/{id} bên dưới.
+        // =====================================================
+        [HttpPut("me")]
+        [Authorize(Roles = "Khách hàng")]
+        public async Task<IActionResult> UpdateMe([FromBody] KHACHHANG model)
+        {
+            var myId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(myId))
+                return Unauthorized();
+
+            var customer = await _context.KHACHHANG.FindAsync(myId);
+            if (customer == null)
+                return NotFound(new { message = "Không tìm thấy tài khoản." });
+
+            bool tenDangNhapTonTai = await _context.KHACHHANG
+                .AnyAsync(x => x.TenDangNhap == model.TenDangNhap && x.MaKhachHang != myId);
+
+            if (tenDangNhapTonTai)
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại." });
+
+            bool soDienThoaiTonTai = await _context.KHACHHANG
+                .AnyAsync(x => x.SDTKhachHang == model.SDTKhachHang && x.MaKhachHang != myId);
+
+            if (soDienThoaiTonTai)
+                return Conflict(new { message = "Số điện thoại này đã được đăng ký" });
+
+            // CHỈ CẬP NHẬT CÁC TRƯỜNG CHO PHÉP - không đụng MatKhau/VaiTro/TrangThai/SecurityStamp
+            customer.TenDangNhap = model.TenDangNhap;
+            customer.TenKhachHang = model.TenKhachHang;
+            customer.SDTKhachHang = model.SDTKhachHang;
+            customer.DiaChiKhachHang = model.DiaChiKhachHang;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật thông tin cá nhân thành công." });
+        }
+
         // POST: api/khach-hang
         // [SỬA] Dùng khi Nhân viên tạo hồ sơ khách hàng tại quầy (KHÔNG PHẢI đăng ký tự do - đăng ký công khai
         // đã chuyển sang AuthController.Register). VaiTro/SecurityStamp luôn bị ép, không nhận từ Client.
         [HttpPost]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> Create([FromBody] KHACHHANG model)
         {
             if (!ModelState.IsValid)
@@ -83,6 +162,11 @@ namespace Backend.Controllers
 
             if (!PasswordPolicy.IsValidUsername(model.TenDangNhap))
                 return BadRequest(new { message = "Tên đăng nhập chỉ gồm chữ, số, dấu gạch dưới, độ dài 4-20 ký tự." });
+
+            // [SỬA] Kiểm tra null/rỗng tường minh trước khi validate/hash để hết cảnh báo
+            // CS8604 (Possible null reference argument) khi gọi _passwordHasher.HashPassword bên dưới.
+            if (string.IsNullOrWhiteSpace(model.MatKhau))
+                return BadRequest(new { message = "Vui lòng nhập mật khẩu." });
 
             var passwordErrors = PasswordPolicy.Validate(model.MatKhau);
             if (passwordErrors.Count > 0)
@@ -130,14 +214,16 @@ namespace Backend.Controllers
         }
 
         // PUT: api/khach-hang/KH001
+        // [SỬA] Chỉ Admin được sửa hồ sơ khách hàng qua route theo ID cụ thể (bao gồm cả
+        // khóa/mở TrangThai) - theo tài liệu phân quyền, NV Bán Hàng chỉ được XEM thông tin
+        // cơ bản của khách hàng, không được sửa.
+        // [SỬA - FIX BUG] Đổi sang nhận UpdateKhachHangDto (không có Email/MatKhau/VaiTro) thay vì
+        // Entity KHACHHANG đầy đủ - trước đây Email là [Required] trên Entity nhưng Form Sửa Khách
+        // hàng không có ô Email nên chỉ cần đổi Trạng Thái rồi Lưu là ModelState tự trả lỗi 400.
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] KHACHHANG model)
+        [Authorize(Roles = "Quản trị Hệ thống")]
+        public async Task<IActionResult> Update(string id, [FromBody] Backend.DTOs.UpdateKhachHangDto model)
         {
-            if (id != model.MaKhachHang)
-            {
-                return BadRequest(new { message = "Mã khách hàng không khớp." });
-            }
-
             var customer = await _context.KHACHHANG.FindAsync(id);
 
             if (customer == null)
@@ -167,6 +253,14 @@ namespace Backend.Controllers
             customer.TenKhachHang = model.TenKhachHang;
             customer.SDTKhachHang = model.SDTKhachHang;
             customer.DiaChiKhachHang = model.DiaChiKhachHang;
+
+            // [SỬA - FIX BUG] Nếu Admin vừa khóa tài khoản (TrangThai chuyển từ khác 0 -> 0),
+            // phải đổi SecurityStamp để JWT khách hàng đang giữ (nếu có) bị vô hiệu ngay lập tức,
+            // không phải đợi token hết hạn mới hết hiệu lực.
+            if (customer.TrangThai != 0 && model.TrangThai == 0)
+            {
+                customer.SecurityStamp = Guid.NewGuid().ToString();
+            }
             customer.TrangThai = model.TrangThai;
 
             await _context.SaveChangesAsync();

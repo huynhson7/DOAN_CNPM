@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -22,7 +23,9 @@ namespace Backend.Controllers
         }
 
         // GET: api/nhan-vien
+        // [SỬA] Chỉ Admin/Nhân viên được xem danh sách Nhân viên - Khách hàng KHÔNG có quyền truy cập.
         [HttpGet]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetAll()
         {
             // [SỬA] Không trả MatKhau (dữ liệu nhạy cảm) về Client
@@ -49,7 +52,9 @@ namespace Backend.Controllers
         }
 
         // GET: api/nhan-vien/NV001
+        // [SỬA] Chỉ Admin/Nhân viên được xem chi tiết Nhân viên - Khách hàng KHÔNG có quyền truy cập.
         [HttpGet("{id}")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
             var item = await _context.NHANVIEN
@@ -209,12 +214,20 @@ namespace Backend.Controllers
 
         // PUT: api/nhan-vien/profile/NV001
         [HttpPut("profile/{id}")]
-        [Authorize] // Bất kỳ ai đăng nhập cũng được gọi, nhưng chỉ sửa thông tin của mình
+        [Authorize] // Bất kỳ ai đăng nhập cũng được gọi, nhưng chỉ sửa thông tin của chính mình
         public async Task<IActionResult> UpdateProfile(string id, [FromBody] NHANVIEN model)
         {
             if (id != model.MaNV)
             {
                 return BadRequest(new { message = "Mã nhân viên không khớp." });
+            }
+
+            // [SỬA] Chặn Nhân viên sửa hồ sơ của Nhân viên KHÁC: id trên URL bắt buộc phải
+            // trùng với chính tài khoản đang đăng nhập (lấy từ Token, không tin Client).
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(currentUserId) || currentUserId != id)
+            {
+                return StatusCode(403, new { message = "Bạn chỉ được sửa thông tin của chính mình." });
             }
 
             var employee = await _context.NHANVIEN.FindAsync(id);
@@ -245,6 +258,12 @@ namespace Backend.Controllers
         }
 
         // DELETE: api/nhan-vien/NV001
+        // [SỬA - FIX BUG] Trước đây xóa thẳng (hard delete) nên nhân viên nào đã từng lập
+        // Hóa đơn (HOADON.MaNV tham chiếu tới, ràng buộc DeleteBehavior.Restrict trong AppDbContext)
+        // sẽ làm SQL Server chặn xóa (lỗi khóa ngoại) - hay gặp nhất ở nhân viên "Đã nghỉ việc" vì
+        // họ thường đã có thời gian làm việc/lập hóa đơn trước đó. Giờ kiểm tra trước: nếu còn Hóa đơn
+        // liên quan thì chuyển sang xóa mềm (khóa tài khoản + đánh dấu Đã nghỉ việc) để vẫn giữ toàn vẹn
+        // dữ liệu Hóa đơn cũ; nếu không còn liên quan gì thì xóa cứng như cũ.
         [HttpDelete("{id}")]
         [Authorize(Roles = "Quản trị Hệ thống")] // Chỉ tài khoản Admin mới được Xóa
         public async Task<IActionResult> Delete(string id)
@@ -254,6 +273,24 @@ namespace Backend.Controllers
             if (employee == null)
             {
                 return NotFound(new { message = "Không tìm thấy nhân viên." });
+            }
+
+            bool coHoaDonLienQuan = await _context.HOADON.AnyAsync(x => x.MaNV == id);
+
+            if (coHoaDonLienQuan)
+            {
+                // Không thể xóa cứng vì sẽ vi phạm khóa ngoại với Hóa đơn đã lập - xóa mềm thay thế.
+                employee.TrangThai = 0;
+                employee.TrangThaiLamViec = "Đã nghỉ việc";
+                employee.SecurityStamp = Guid.NewGuid().ToString(); // Thu hồi JWT hiện tại của nhân viên này
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Nhân viên này đã có Hóa đơn liên quan nên không thể xóa hoàn toàn. " +
+                               "Hệ thống đã khóa tài khoản và chuyển trạng thái sang \"Đã nghỉ việc\" thay thế."
+                });
             }
 
             _context.NHANVIEN.Remove(employee);

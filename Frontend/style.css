@@ -1205,6 +1205,8 @@ body {
 
 .product-meta {
     display: flex;
+    flex-wrap: wrap;
+    row-gap: 8px;
     gap: 20px;
     font-size: 14px;
     color: var(--text-muted);

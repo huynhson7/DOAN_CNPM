@@ -2,6 +2,7 @@ const API_BASE = "http://localhost:5129/api";
 const API_SAN_PHAM = `${API_BASE}/san-pham`;
 const API_HOA_DON = `${API_BASE}/hoa-don`;
 const API_KHACH_HANG = `${API_BASE}/khach-hang`;
+const API_SAN_PHAM_BAN_CHAY = `${API_HOA_DON}/san-pham-ban-chay`;
 
 let dsSanPhamCache = [];
 let dsKhachHangCache = [];
@@ -114,6 +115,38 @@ async function taiHoaDonVaCapNhatBangDieuKhien() {
         elDonHangMoi.textContent = '0';
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Không thể tải dữ liệu đơn hàng.</td></tr>';
         veBieuDoDoanhThu([]);
+    }
+}
+
+async function taiSanPhamBanChay() {
+    const ul = document.getElementById('dsSanPhamBanChay');
+    if (!ul) return;
+
+    try {
+        const res = await fetch(`${API_SAN_PHAM_BAN_CHAY}?top=5`, { headers: getAuthHeaders(), cache: 'no-store' });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const dsBanChay = Array.isArray(data) ? data : [];
+
+        ul.innerHTML = '';
+
+        if (dsBanChay.length === 0) {
+            ul.innerHTML = '<li class="no-border"><span>Chưa có dữ liệu sản phẩm bán chạy.</span></li>';
+            return;
+        }
+
+        dsBanChay.forEach((sp, index) => {
+            const li = document.createElement('li');
+            if (index === dsBanChay.length - 1) li.classList.add('no-border');
+            li.innerHTML = `
+                <i class="fas fa-couch"></i>
+                <span>${sp.tenSP ?? ''}</span>
+                <span class="sold-count">${sp.soLuongDaBan ?? 0} đã bán</span>
+            `;
+            ul.appendChild(li);
+        });
+    } catch (e) {
+        ul.innerHTML = '<li class="no-border"><span>Không thể tải dữ liệu sản phẩm bán chạy.</span></li>';
     }
 }
 
@@ -349,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     taiTongSanPham();
     taiTongKhachHang();
     taiHoaDonVaCapNhatBangDieuKhien();
+    taiSanPhamBanChay();
     khoiTaoThanhTimKiem();
 
     const btnXuatExcel = document.getElementById('btnXuatExcelDoanhThu');

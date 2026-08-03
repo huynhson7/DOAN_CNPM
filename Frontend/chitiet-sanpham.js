@@ -112,6 +112,7 @@ function renderProductDetail(p) {
     const tenMD = mucDichSuDung ? (mucDichSuDung.tenMD || mucDichSuDung.TenMD) : "";
 
     const tenVatLieuList = getVatLieuNames(p);
+    const tenNhaCungCapList = getNhaCungCapNames(p);
 
     // Breadcrumb + tiêu đề trang
     document.title = `${tenSP || "Chi tiết sản phẩm"} - Luxury Furniture`;
@@ -123,6 +124,7 @@ function renderProductDetail(p) {
 
     setText("metaNhom", tenNhomSP ? `Nhóm: ${tenNhomSP}` : "", "fas fa-layer-group");
     setText("metaVatLieu", tenVatLieuList ? `Vật liệu: ${tenVatLieuList}` : "", "fas fa-couch");
+    setText("metaNhaCungCap", tenNhaCungCapList ? `Nhà cung cấp: ${tenNhaCungCapList}` : "", "fas fa-industry");
     setText("metaMucDich", tenMD ? `Mục đích: ${tenMD}` : "", "fas fa-bullseye");
 
     const stockEl = document.getElementById("metaStock");
@@ -338,6 +340,17 @@ function getVatLieuNames(p) {
             const vatLieu = l.vatLieu || l.VatLieu;
             return vatLieu ? (vatLieu.tenVL || vatLieu.TenVL) : null;
         })
+        .filter(Boolean)
+        .join(", ");
+}
+
+// Đọc danh sách tên Nhà Cung Cấp từ trường "nhaCungCaps"/"NhaCungCaps" mà
+// GET /api/san-pham/{id} trả về (dạng [{ maNcc, tenNcc }, ...]), nối lại
+// thành 1 chuỗi hiển thị (VD: "Nội Thất Việt, Gỗ Hoàng Anh").
+function getNhaCungCapNames(p) {
+    const nhaCungCaps = p.nhaCungCaps || p.NhaCungCaps || [];
+    return nhaCungCaps
+        .map(n => n.tenNcc || n.TenNcc)
         .filter(Boolean)
         .join(", ");
 }

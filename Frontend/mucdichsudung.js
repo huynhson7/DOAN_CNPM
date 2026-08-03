@@ -80,6 +80,14 @@ let isEditMode = false;
 // Mã đang sửa
 let editingId = null;
 
+// ==========================================================
+// 2b. PHÂN QUYỀN THEO ROLE (MUCDICHSUDUNG - mucdichsudung.html)
+// - Quản trị Hệ thống: Toàn quyền thêm, sửa, xóa.
+// - NV Bán Hàng: Chỉ xem, không được thêm/sửa/xóa
+//   (khớp với Backend: POST/PUT/DELETE api/muc-dich-su-dung chỉ Admin gọi được).
+// ==========================================================
+const isAdminMD = (localStorage.getItem('userRole') || '') === 'Quản trị Hệ thống';
+
 
 
 // ==========================================================
@@ -123,6 +131,12 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
 
     bindEvents();
+
+    if (!isAdminMD && btnAdd) {
+
+        btnAdd.style.display = "none";
+
+    }
 
     await loadPurposes();
 
@@ -326,6 +340,7 @@ function renderTable(data) {
 
                 <td style="text-align:center;">
 
+                    ${isAdminMD ? `
                     <button
                         class="btn-action edit"
                         data-id="${maMD}"
@@ -343,6 +358,7 @@ function renderTable(data) {
                         <i class="fas fa-trash"></i>
 
                     </button>
+                    ` : `<span style="color:#9e9e9e; font-size:13px;">Chỉ xem</span>`}
 
                 </td>
 

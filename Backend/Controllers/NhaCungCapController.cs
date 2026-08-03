@@ -18,11 +18,11 @@ namespace Backend.Controllers
         }
 
         // =====================================================
-        // 1. GET: Lấy danh sách (Mở khóa để Frontend tải Dropdown)
+        // 1. GET: Lấy danh sách (chỉ Admin/Nhân viên được truy cập -
+        // Khách hàng không có quyền truy cập Nhà cung cấp)
         // =====================================================
         [HttpGet]
-        // Đã tắt dòng chặn dưới đây để JS lấy được dữ liệu không cần đính kèm Token
-        // [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetAll()
         {
             var list = await _context.NHACUNGCAP
@@ -33,10 +33,10 @@ namespace Backend.Controllers
         }
 
         // =====================================================
-        // 2. GET: Lấy chi tiết theo ID 
+        // 2. GET: Lấy chi tiết theo ID (chỉ Admin/Nhân viên được truy cập)
         // =====================================================
         [HttpGet("{id}")]
-        // [Authorize(Roles = "Quản trị Hệ thống, NV Bán Hàng")]
+        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
             var item = await _context.NHACUNGCAP

@@ -207,9 +207,16 @@ function setupPriceFormatting() {
 async function loadDropdownData() {
     async function fetchSafe(urls) {
         const urlArray = Array.isArray(urls) ? urls : [urls];
+        // [SỬA] Đính kèm Token đăng nhập (Authorization: Bearer ...) vào mọi request tải
+        // danh mục dropdown. Trước đây các API này (đặc biệt Nhà Cung Cấp) không cần Token,
+        // nhưng sau khi sửa lại đúng phân quyền (chỉ Admin/Nhân viên được xem Nhà Cung Cấp),
+        // nếu không gửi Token thì Backend trả 401 -> danh sách rỗng ("-- Trống --").
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
         for (let url of urlArray) {
             try {
-                const res = await fetch(url);
+                const res = await fetch(url, { headers });
                 if (res.ok) {
                     return await res.json();
                 }

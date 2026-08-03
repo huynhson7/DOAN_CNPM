@@ -59,7 +59,6 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Danh Sách Khách Hàng</h2>
-                <button class="btn-primary" onclick="openKhModal()"><i class="fas fa-user-plus"></i> Thêm Khách Hàng</button>
             </div>
 
             <!-- Bảng danh sách khách hàng -->
@@ -106,7 +105,7 @@
                         </div>
                         <div class="input-group" style="flex: 1; min-width: 0;">
                             <label>Mật Khẩu</label>
-                            <input type="password" id="matKhau" placeholder="Nhập mật khẩu..." style="width: 100%; box-sizing: border-box;">
+                            <input type="password" id="matKhau" placeholder="Quản trị viên không có quyền xem/sửa mật khẩu khách hàng" style="width: 100%; box-sizing: border-box; background-color: #f0f0f0; cursor: not-allowed;" disabled readonly>
                         </div>
                     </div>
 
@@ -148,21 +147,11 @@
     <!-- Gọi file JS tách rời -->
     <script src="js/auth-guard.js"></script>
     <script src="khachhang.js"></script>
-    <!-- SCRIPT XỬ LÝ GIAO DIỆN CHUNG (TÊN USER VÀ ĐĂNG XUẤT) -->
+    <!-- SCRIPT XỬ LÝ GIAO DIỆN CHUNG (ĐĂNG XUẤT) -->
+    <!-- Lời chào "Xin chào, ..." góc phải Header đã được js/auth-guard.js (renderAccountGreeting)
+         tự động xử lý đồng bộ với mọi trang Admin khác - Admin luôn hiện "Xin chào, Admin!" -->
     <script>
-        // 1. Lấy tên hiển thị lên góc phải
-        document.addEventListener("DOMContentLoaded", function() {
-            const currentHoTen = localStorage.getItem('hoTen') || 'Quản trị viên';
-            const headerUserName = document.getElementById('headerUserName');
-            const headerUserIcon = document.getElementById('headerUserIcon');
-            
-            if(headerUserName && headerUserIcon) {
-                headerUserName.innerText = `Xin chào, ${currentHoTen}!`;
-                headerUserIcon.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentHoTen)}&background=1a1a1a&color=fff`;
-            }
-        });
-
-        // 2. Xử lý nút Đăng xuất
+        // Xử lý nút Đăng xuất
         function dangXuatHethong(event) {
             event.preventDefault(); 
             localStorage.clear(); // Xóa toàn bộ token và dữ liệu phiên làm việc

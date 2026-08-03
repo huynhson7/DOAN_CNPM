@@ -146,5 +146,27 @@ using (var scope = app.Services.CreateScope())
     db.SaveChanges();
 
     Console.WriteLine("Đã hash xong toàn bộ mật khẩu nhân viên.");
+
+    // [SỬA - FIX BUG] Trước đây chỉ hash lại mật khẩu dạng thường cho NHANVIEN, bỏ sót KHACHHANG.
+    // Khách hàng nào còn MatKhau ở dạng thường (VD: dữ liệu mẫu trong SqlCNPM.sql) khi đăng nhập sẽ
+    // làm PasswordHasher.VerifyHashedPassword ném lỗi định dạng (không phải hash hợp lệ) -> Server trả
+    // về lỗi 500 không phải JSON -> Frontend hiểu nhầm thành "Không thể kết nối tới máy chủ".
+    // Hash lại tương tự NHANVIEN ở trên để khách hàng đăng nhập được bình thường.
+    var khachHangHasher = new PasswordHasher<KHACHHANG>();
+
+    var khachHangs = db.KHACHHANG.ToList();
+
+    foreach (var kh in khachHangs)
+    {
+        if (!string.IsNullOrEmpty(kh.MatKhau) &&
+            !kh.MatKhau.StartsWith("AQAAAA"))
+        {
+            kh.MatKhau = khachHangHasher.HashPassword(kh, kh.MatKhau);
+        }
+    }
+
+    db.SaveChanges();
+
+    Console.WriteLine("Đã hash xong toàn bộ mật khẩu khách hàng.");
 }
 app.Run();

@@ -72,7 +72,7 @@
     <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
     <li><a href="hoadon.html" class="active"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
     <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
-    <li><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
+    <li data-role="Quản trị Hệ thống"><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
 </ul>
         <div class="sidebar-footer">
             <a href="#" onclick="dangXuatHethong(event)"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
@@ -326,15 +326,9 @@
                         </div>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="input-group half-width">
-                            <label>Họ và Tên</label>
-                            <input type="text" id="profTenNV" required>
-                        </div>
-                        <div class="input-group half-width">
-                            <label>Mật Khẩu</label>
-                            <input type="password" id="profMatKhau" required>
-                        </div>
+                    <div class="input-group">
+                        <label>Họ và Tên</label>
+                        <input type="text" id="profTenNV" required>
                     </div>
 
                     <div class="form-row">
@@ -412,7 +406,6 @@
             .then(data => {
                 document.getElementById('profMaNV').value = data.maNV;
                 document.getElementById('profTenDangNhap').value = data.tenDangNhap;
-                document.getElementById('profMatKhau').value = data.matKhau;
                 document.getElementById('profTenNV').value = data.tenNV;
                 document.getElementById('profNgaySinh').value = data.ngaySinh ? data.ngaySinh.split('T')[0] : '';
                 document.getElementById('profGioiTinh').value = data.gioiTinh;
@@ -458,10 +451,6 @@
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const currentHoTen = localStorage.getItem('hoTen') || 'User';
-            document.getElementById('headerUserName').innerText = `Xin chào, ${currentHoTen}!`;
-            document.getElementById('headerUserIcon').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentHoTen)}&background=1a1a1a&color=fff`;
-
             const currentRole = localStorage.getItem('userRole');
             if (!currentRole || (!currentRole.toLowerCase().includes('quản trị') && !currentRole.toLowerCase().includes('admin'))) {
                 const menuNhanVien = document.querySelector('a[href="nhanvien.html"]');
@@ -479,7 +468,6 @@
             const updatedData = {
                 maNV: document.getElementById('profMaNV').value,
                 tenDangNhap: document.getElementById('profTenDangNhap').value,
-                matKhau: document.getElementById('profMatKhau').value,
                 tenNV: document.getElementById('profTenNV').value,
                 ngaySinh: document.getElementById('profNgaySinh').value,
                 gioiTinh: document.getElementById('profGioiTinh').value,
@@ -503,8 +491,10 @@
                 if(res.ok) {
                     alert("Cập nhật thông tin thành công!");
                     localStorage.setItem('hoTen', updatedData.tenNV);
-                    document.getElementById('headerUserName').innerText = `Xin chào, ${updatedData.tenNV}!`;
-                    document.getElementById('headerUserIcon').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedData.tenNV)}&background=1a1a1a&color=fff`;
+                    const currentRoleSauCapNhat = localStorage.getItem('userRole');
+                    const tenHienThiSauCapNhat = currentRoleSauCapNhat === 'Quản trị Hệ thống' ? 'Admin' : updatedData.tenNV;
+                    document.getElementById('headerUserName').innerText = `Xin chào, ${tenHienThiSauCapNhat}!`;
+                    document.getElementById('headerUserIcon').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tenHienThiSauCapNhat)}&background=1a1a1a&color=fff`;
                     closeProfileModal();
                 } else {
                     alert(result.message || "Lỗi cập nhật!");

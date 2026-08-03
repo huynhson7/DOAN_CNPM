@@ -187,7 +187,11 @@ async function deleteNhanVien(maNV) {
             }
 
             if (response.ok) {
-                alert("Xóa nhân viên thành công!");
+                // [SỬA - FIX BUG] Backend giờ có 2 trường hợp khi Xóa: xóa cứng hẳn, hoặc xóa mềm
+                // (khóa + chuyển "Đã nghỉ việc") nếu nhân viên còn Hóa đơn liên quan - hiển thị đúng
+                // thông báo Backend trả về thay vì luôn cố định 1 câu như trước.
+                const okData = await response.json();
+                alert(okData.message || "Xóa nhân viên thành công!");
                 loadDanhSachNhanVien();
             } else {
                 const errorData = await response.json();
