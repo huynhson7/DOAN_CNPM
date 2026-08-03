@@ -20,6 +20,8 @@ function openNvModal() {
     document.getElementById('maNV').readOnly = false;
     document.getElementById('nvPassword').required = true;
     document.getElementById('nvConfirmPassword').required = true;
+    document.getElementById('lblNvPassword').innerHTML = 'Mật Khẩu Mặc Định <span style="color:red">*</span>';
+    document.getElementById('lblNvConfirmPassword').innerHTML = 'Xác Nhận Mật Khẩu <span style="color:red">*</span>';
     document.querySelector('button[form="nvForm"]').innerText = "Lưu Nhân Viên";
     nvModal.style.display = "flex";
 }
@@ -142,6 +144,8 @@ async function openEditModal(maNV) {
         document.getElementById('nvPassword').required = false;
         document.getElementById('nvConfirmPassword').value = "";
         document.getElementById('nvConfirmPassword').required = false;
+        document.getElementById('lblNvPassword').innerHTML = 'Mật Khẩu Cũ <span style="color:red">*</span>';
+        document.getElementById('lblNvConfirmPassword').innerHTML = 'Mật Khẩu Mới <span style="color:red">*</span>';
 
         document.getElementById('tenNV').value = nv.tenNV;
 
@@ -219,8 +223,8 @@ formNhanVien.addEventListener('submit', async function (event) {
         maNV: document.getElementById('maNV').value.trim(),
         tenDangNhap: document.getElementById('tenDangNhap').value.trim(),
         email: document.getElementById('nvEmail').value.trim(),
-        matKhau: document.getElementById('nvPassword').value,
-        confirmMatKhau: document.getElementById('nvConfirmPassword').value,
+        matKhau: isEditMode ? document.getElementById('nvConfirmPassword').value : document.getElementById('nvPassword').value,
+        confirmMatKhau: isEditMode ? document.getElementById('nvPassword').value : document.getElementById('nvConfirmPassword').value,
         tenNV: document.getElementById('tenNV').value.trim(),
         ngaySinh: ngaySinhISO,
         gioiTinh: document.getElementById('gioiTinh').value,

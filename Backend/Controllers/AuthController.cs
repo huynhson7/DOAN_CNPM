@@ -85,10 +85,10 @@ namespace Backend.Controllers
             // (tránh Open Redirect / Host Header Injection).
             //var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
 
-            // [SỬA] Đã xác nhận với người dùng: gốc Live Server đang chạy là thư mục DOAN_CNPM
+            // [SỬA] Đã xác nhận với người dùng: gốc Live Server đang chạy ở thư mục cha của DOAN_CNPM
             // (chứa cả Backend lẫn Frontend) - ví dụ trang "Quên mật khẩu" đang chạy ở
-            // http://127.0.0.1:5500/Frontend/forgot-password.html - nên tiền tố đúng là "/Frontend".
-            var frontendBaseUrl = "http://127.0.0.1:5500/Frontend";
+            // http://127.0.0.1:5500/DOAN_CNPM/Frontend/forgot-password.html - nên tiền tố đúng là "/DOAN_CNPM/Frontend".
+            var frontendBaseUrl = "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
 
             await _authService.ForgotPasswordAsync(request, frontendBaseUrl);
 

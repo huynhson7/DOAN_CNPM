@@ -23,9 +23,10 @@ namespace Backend.Controllers
         }
 
         // GET: api/nhan-vien
-        // [SỬA] Chỉ Admin/Nhân viên được xem danh sách Nhân viên - Khách hàng KHÔNG có quyền truy cập.
+        // [SỬA] Chỉ Admin được xem danh sách Nhân viên - theo tài liệu phân quyền, "Quản lý Nhân viên"
+        // thuộc riêng Admin, NV Bán Hàng/Khách hàng KHÔNG có quyền truy cập.
         [HttpGet]
-        [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
+        [Authorize(Roles = "Quản trị Hệ thống")]
         public async Task<IActionResult> GetAll()
         {
             // [SỬA] Không trả MatKhau (dữ liệu nhạy cảm) về Client
@@ -52,11 +53,24 @@ namespace Backend.Controllers
         }
 
         // GET: api/nhan-vien/NV001
-        // [SỬA] Chỉ Admin/Nhân viên được xem chi tiết Nhân viên - Khách hàng KHÔNG có quyền truy cập.
+        // [SỬA] Theo tài liệu phân quyền, "Quản lý Nhân viên" (xem hồ sơ nhân viên KHÁC) thuộc
+        // riêng Admin. Tuy nhiên NV Bán Hàng vẫn cần xem được HỒ SƠ CỦA CHÍNH MÌNH (dùng cho modal
+        // "Thông Tin Tài Khoản" phía Frontend trước khi Sửa) - nên cho phép NV Bán Hàng gọi API này
+        // nhưng chỉ khi id trên URL trùng với chính tài khoản đang đăng nhập; nếu không sẽ bị chặn 403.
         [HttpGet("{id}")]
         [Authorize(Roles = "Quản trị Hệ thống,NV Bán Hàng")]
         public async Task<IActionResult> GetById(string id)
         {
+            bool isAdmin = User.IsInRole("Quản trị Hệ thống");
+            if (!isAdmin)
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(currentUserId) || currentUserId != id)
+                {
+                    return StatusCode(403, new { message = "Bạn chỉ được xem thông tin của chính mình." });
+                }
+            }
+
             var item = await _context.NHANVIEN
                 .AsNoTracking()
                 .Where(x => x.MaNV == id)

@@ -269,6 +269,10 @@ namespace Backend.Controllers
         }
 
         // DELETE: api/khach-hang/KH001
+        // [SỬA] Theo tài liệu phân quyền: "Xóa cứng chỉ với tài khoản chưa từng phát sinh hóa đơn".
+        // Kiểm tra tường minh trước khi xóa - nếu khách hàng đã có Hóa đơn liên quan thì từ chối
+        // xóa cứng (trả thông báo rõ ràng), thay vì để SQL Server tự chặn bằng lỗi khóa ngoại
+        // (DeleteBehavior.Restrict giữa HOADON-KHACHHANG trong AppDbContext).
         [HttpDelete("{id}")]
         [Authorize(Roles = "Quản trị Hệ thống")] // [SỬA] Chỉ Admin được xoá khách hàng
         public async Task<IActionResult> Delete(string id)
@@ -278,6 +282,18 @@ namespace Backend.Controllers
             if (customer == null)
             {
                 return NotFound(new { message = "Không tìm thấy khách hàng." });
+            }
+
+            bool coHoaDonLienQuan = await _context.HOADON.AnyAsync(x => x.MaKhachHang == id);
+
+            if (coHoaDonLienQuan)
+            {
+                return BadRequest(new
+                {
+                    message = "Không thể xóa khách hàng này vì đã có Hóa đơn liên quan. " +
+                               "Chỉ được xóa cứng tài khoản khách hàng chưa từng phát sinh hóa đơn " +
+                               "(có thể dùng chức năng Khóa tài khoản thay thế)."
+                });
             }
 
             _context.KHACHHANG.Remove(customer);
