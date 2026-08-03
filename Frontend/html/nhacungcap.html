@@ -1,17 +1,19 @@
-<!DOCTYPE html>
+a<!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Vật Liệu - Luxury Admin</title>
-    <!-- CSS chung -->
-    <link rel="stylesheet" href="style.css">
-    <!-- CSS TÁCH RIÊNG CHO MODULE VẬT LIỆU -->
-    <link rel="stylesheet" href="vatlieu.css">
-    
+    <title>Quản Lý Nhà Cung Cấp - Luxury Admin</title>
+    <!-- CSS dùng chung -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- CSS TÁCH RIÊNG CHO MODULE NHÀ CUNG CẤP -->
+    <link rel="stylesheet" href="../css/nhacungcap.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body class="admin-body">
 
     <!-- Sidebar Admin -->
@@ -19,7 +21,7 @@
         <div class="sidebar-header">
             <a href="index.html" class="logo">LUXURY<span>ADMIN</span></a>
         </div>
-        <ul class="sidebar-menu">
+       <ul class="sidebar-menu">
     <li class="menu-title">TỔNG QUAN</li>
     <li data-role="Quản trị Hệ thống"><a href="bangdieukhien.html"><i class="fas fa-chart-line"></i> Bảng điều khiển</a></li>
     <li><a href="sanpham.html"><i class="fas fa-store"></i> Xem Cửa Hàng</a></li>
@@ -27,15 +29,16 @@
     <li class="menu-title">QUẢN LÝ SẢN PHẨM</li>
     <li><a href="admin_sanpham.html"><i class="fas fa-couch"></i> Danh sách Sản phẩm</a></li>
     <li><a href="quantri.html"><i class="fas fa-tags"></i> Nhóm Sản phẩm</a></li>
-    <li><a href="vatlieu.html" class="active"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
+    <li><a href="vatlieu.html"><i class="fas fa-cubes"></i> Vật Liệu</a></li>
     <li><a href="mucdichsudung.html"><i class="fas fa-bullseye"></i> Mục Đích Sử Dụng</a></li>
-    <li><a href="nhacungcap.html"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
+    <li><a href="nhacungcap.html" class="active"><i class="fas fa-truck"></i> Nhà Cung Cấp</a></li>
 
     <li class="menu-title">BÁN HÀNG & NHÂN SỰ</li>
     <li><a href="hoadon.html"><i class="fas fa-file-invoice-dollar"></i> Quản lý Hóa Đơn</a></li>
     <li><a href="khachhang.html"><i class="fas fa-users"></i> Khách Hàng</a></li>
     <li data-role="Quản trị Hệ thống"><a href="nhanvien.html"><i class="fas fa-user-tie"></i> Nhân Viên</a></li>
 </ul>
+
         <div class="sidebar-footer">
             <a href="login.html"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
         </div>
@@ -46,7 +49,7 @@
         <header class="top-header">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchVatLieuInput" placeholder="Tìm kiếm tên vật liệu...">
+                <input type="text" id="timKiemNCC" placeholder="Tìm kiếm nhà cung cấp...">
             </div>
             <div class="user-profile">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1a1a1a&color=fff" alt="Admin">
@@ -57,63 +60,67 @@
         <!-- Nội dung chính -->
         <div class="content-wrapper">
             <div class="page-header">
-                <h2>Danh Mục Vật Liệu</h2>
-                <button class="btn-primary" onclick="openAddVlModal()"><i class="fas fa-plus"></i> Thêm Vật Liệu Mới</button>
+                <h2>Quản Lý Nhà Cung Cấp</h2>
+                <button class="btn-primary" onclick="openNccModal()"><i class="fas fa-plus"></i> Thêm Nhà Cung
+                    Cấp</button>
             </div>
 
-            <!-- Bảng danh sách vật liệu -->
             <div class="data-card">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 20%;">Mã VL</th>
-                            <th style="width: 55%;">Tên Vật Liệu</th>
-                            <th style="width: 25%; text-align: center;">Thao Tác</th>
+                            <th style="width: 20%;">Mã NCC</th>
+                            <th style="width: 35%;">Tên Nhà Cung Cấp</th>
+                            <th style="width: 30%;">Mô Tả / Ghi Chú</th>
+                            <th style="width: 15%;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody id="vlTableBody">
-                        <tr id="vlNoResultRow" style="display: none;">
-                            <td colspan="3" style="text-align: center; padding: 30px; color: #999;">
-                                <i class="fas fa-box-open" style="margin-right: 8px;"></i>
-                                Không tìm thấy vật liệu phù hợp.
-                            </td>
-                        </tr>
+                    <tbody id="bangNhaCungCap">
+                        <!-- JS nhacungcap.js sẽ đổ dữ liệu động vào đây -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Modal Thêm/Sửa Vật Liệu -->
-    <div id="vlModal" class="modal">
+    <!-- Modal Thêm/Sửa Nhà Cung Cấp -->
+    <div id="nccModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="vlModalTitle"><i class="fas fa-cubes"></i> Thông Tin Vật Liệu</h3>
-                <span class="close-btn" onclick="closeVlModal()">&times;</span>
+                <h3>Thêm Nhà Cung Cấp</h3>
+                <span class="close-btn" onclick="closeNccModal()">&times;</span>
             </div>
-            
+
             <div class="modal-body">
-                <form id="vlForm">
+                <form id="nccForm">
                     <div class="input-group">
-                        <label>Mã Vật Liệu <span style="color:red">*</span></label>
-                        <input type="text" id="vlMaCode" placeholder="VD: VL04" required>
+                        <label>Mã Nhà Cung Cấp <span style="color:red">*</span></label>
+                        <input type="text" id="maNCC" placeholder="Ví dụ: NCC001" required maxlength="255">
                     </div>
 
                     <div class="input-group">
-                        <label>Tên Vật Liệu <span style="color:red">*</span></label>
-                        <input type="text" id="vlTenVL" placeholder="Nhập tên vật liệu..." required>
+                        <label>Tên Nhà Cung Cấp <span style="color:red">*</span></label>
+                        <input type="text" id="tenNCC" placeholder="Nhập tên nhà cung cấp..." required maxlength="100">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Mô Tả / Ghi Chú</label>
+                        <!-- Sử dụng input text hoặc đổi thành textarea tùy ý bạn, ở đây dùng luôn cấu trúc input đồng bộ với dự án -->
+                        <textarea id="moTaNCC" maxlength="500" rows="3" class="... (giữ nguyên các class CSS cũ của bạn) ..."></textarea>
                     </div>
                 </form>
             </div>
-            
+
             <div class="modal-footer">
-                <button class="btn-outline" onclick="closeVlModal()">Hủy Bỏ</button>
-                <button type="submit" form="vlForm" class="btn-primary" style="width: auto;">Lưu Thông Tin</button>
+                <button class="btn-outline" onclick="closeNccModal()">Hủy Bỏ</button>
+                <button type="submit" form="nccForm" class="btn-primary" style="width: auto;">Lưu Nhà Cung Cấp</button>
             </div>
         </div>
     </div>
 
-    <script src="js/auth-guard.js"></script>
-    <script src="vatlieu.js"></script>
+    <!-- GỌI FILE JAVASCRIPT BÊN NGOÀI -->
+    <script src="../js/auth-guard.js"></script>
+    <script src="../js/nhacungcap.js"></script>
 </body>
+
 </html>

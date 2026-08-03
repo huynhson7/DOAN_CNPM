@@ -13,7 +13,7 @@
 // thông tin tài khoản).
 // ============================================================
 
-const ZALO_QR_IMAGE_PATH = "img/zalo-qr.png";
+const ZALO_QR_IMAGE_PATH = "../img/zalo-qr.png";
 
 document.addEventListener("DOMContentLoaded", setupZaloContactTriggers);
 
