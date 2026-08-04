@@ -110,8 +110,8 @@ function renderOrderSummary(cart) {
             const thanhTien = (item.soLuong || 0) * (item.giaBan || 0);
             total += thanhTien;
             return `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
-                    <span>${escapeHtmlCart(item.tenSP)} x ${item.soLuong}</span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; gap: 10px;">
+                    <span style="flex: 1; min-width: 0;">${escapeHtmlCart(item.tenSP)} <span style="white-space: nowrap;">x ${item.soLuong}</span></span>
                     <span style="white-space: nowrap; margin-left: 10px;">${formatCurrencyVND(thanhTien)}</span>
                 </div>
             `;
