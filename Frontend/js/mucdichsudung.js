@@ -130,6 +130,16 @@ document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
 
+    // PHÂN QUYỀN TRUY CẬP TRANG: chỉ Quản trị Hệ thống + NV Bán Hàng được vào
+    // trang này (khớp tài liệu phân quyền - Khách hàng/chưa đăng nhập không được).
+    const userRoleMD = localStorage.getItem('userRole') || '';
+    const isAllowedMD = userRoleMD === 'Quản trị Hệ thống' || userRoleMD === 'NV Bán Hàng';
+    if (!isAllowedMD) {
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     bindEvents();
 
     if (!isAdminMD && btnAdd) {

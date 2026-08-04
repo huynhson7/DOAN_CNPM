@@ -271,12 +271,29 @@ namespace Backend.Controllers
             // [SỬA] Nếu người gọi là Khách hàng: ép MaKhachHang = chính họ (không tin Client
             // gửi lên - tránh việc 1 khách hàng đặt hàng "giùm" người khác), đồng thời bỏ qua
             // MaNV Client gửi (đơn khách tự đặt luôn coi là "đơn online" -> mặc định NV01).
+            //
+            // [SỬA - FIX BUG] Nếu người gọi là NHÂN VIÊN (không phải Admin) lập hóa đơn trực
+            // tiếp tại quầy: LUÔN tự động ép MaNV = chính nhân viên đang đăng nhập (không tin/
+            // không dùng MaNV do Client gửi lên). Trước đây nếu Nhân viên để trống (hoặc field
+            // bị gửi rỗng) ô "Chọn Nhân Viên" trên Form, Backend chỉ dựa vào việc MaNV có rỗng
+            // hay không để coi đó là "đơn online" -> mặc định gán nhầm cho NV01 (Admin) thay vì
+            // chính nhân viên vừa lập đơn. Chỉ đơn hàng do KHÁCH HÀNG tự đặt online (Role =
+            // "Khách hàng") mới thật sự rơi vào nhánh "đơn online" -> mặc định NV01 bên dưới.
             var (currentRole, currentUserId) = GetCurrentUser();
-            if (currentRole.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase))
+            bool laKhachHangDangTao = currentRole.Contains("Khách hàng", StringComparison.OrdinalIgnoreCase);
+            bool laNhanVienDangTao = currentRole.Contains("NV Bán Hàng", StringComparison.OrdinalIgnoreCase);
+
+            if (laKhachHangDangTao)
             {
                 request.MaKhachHang = currentUserId;
                 request.MaNV = string.Empty;
             }
+            else if (laNhanVienDangTao)
+            {
+                request.MaNV = currentUserId;
+            }
+            // Admin lập hóa đơn tại quầy: vẫn được tự chọn Nhân viên phụ trách qua request.MaNV
+            // (Frontend bắt buộc Admin phải chọn 1 Nhân viên trước khi gửi).
 
             if (string.IsNullOrWhiteSpace(request.MaKhachHang))
                 return BadRequest(new { message = "Vui lòng chọn khách hàng." });
@@ -441,11 +458,24 @@ namespace Backend.Controllers
                 }
 
                 // BƯỚC 2: Cập nhật Trạng thái giao hàng
-                if (!string.IsNullOrWhiteSpace(request.TrangThaiGiaoHang) && TrangThaiHoaDon.HopLe.Contains(request.TrangThaiGiaoHang))
+                // [SỬA - FIX LỖI PHÂN QUYỀN] Theo tài liệu phân quyền: chỉ Admin mới được "Sửa/hủy
+                // hóa đơn khi cần xử lý sai sót, khiếu nại"; Nhân viên "Không được xóa hóa đơn đã lập"
+                // (việc Hủy hóa đơn - tương đương xóa mềm - chỉ dành riêng cho Admin qua API
+                // PUT api/hoa-don/huy/{id}). Trước đây Nhân viên có thể tự ý gửi TrangThaiGiaoHang =
+                // "Đã hủy" ngay qua API cập nhật đơn hàng này (vì "Đã hủy" nằm trong TrangThaiHoaDon.HopLe),
+                // vừa vượt quyền vừa không hoàn lại tồn kho như luồng Hủy hóa đơn đúng chuẩn. Chặn lại:
+                // Nhân viên chỉ được đặt các trạng thái ngoại trừ "Đã hủy".
+                if (!string.IsNullOrWhiteSpace(request.TrangThaiGiaoHang)
+                    && TrangThaiHoaDon.HopLe.Contains(request.TrangThaiGiaoHang)
+                    && request.TrangThaiGiaoHang != TrangThaiHoaDon.DaHuy)
                 {
                     hoaDon.TrangThaiGiaoHang = request.TrangThaiGiaoHang;
                     if (request.TrangThaiGiaoHang == TrangThaiHoaDon.DaGiaoHang)
                         hoaDon.NgayGiaoHang = DateTime.Now;
+                }
+                else if (request.TrangThaiGiaoHang == TrangThaiHoaDon.DaHuy)
+                {
+                    return StatusCode(403, new { message = "Chỉ Quản trị viên mới có quyền hủy hóa đơn. Vui lòng dùng chức năng Hủy hóa đơn dành cho Admin." });
                 }
                 
                 await _context.SaveChangesAsync();

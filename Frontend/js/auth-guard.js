@@ -219,12 +219,13 @@ function ensureAccountInfoModalDom() {
     modalEl.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-id-card"></i> Thông Tin Tài Khoản</h3>
+                <h3><i class="fas fa-user-edit"></i> Thông Tin Cá Nhân</h3>
                 <span class="close-btn" id="accountInfoModalCloseIcon">&times;</span>
             </div>
             <div class="modal-body" id="accountInfoModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn-outline" id="accountInfoModalCloseBtn">Đóng</button>
+                <button type="button" class="btn-outline" id="accountInfoModalCloseBtn">Hủy Bỏ</button>
+                <button type="submit" class="btn-primary" id="accountInfoModalSaveBtn">Lưu Thay Đổi</button>
             </div>
         </div>
     `;
@@ -244,6 +245,16 @@ function ensureAccountInfoModalDom() {
 function closeAccountInfoModal() {
     const modalEl = document.getElementById('accountInfoModal');
     if (modalEl) modalEl.style.display = 'none';
+}
+
+/**
+ * Gắn nút "Lưu Thay Đổi" ở modal-footer (nằm ngoài <form>, giống hoadon.html
+ * dùng thuộc tính form="profileForm") vào đúng <form> vừa được dựng trong Body
+ * (staffProfileForm hoặc customerProfileForm) để bấm là submit được Form đó.
+ */
+function bindAccountInfoSaveButtonToForm(formId) {
+    const saveBtn = document.getElementById('accountInfoModalSaveBtn');
+    if (saveBtn) saveBtn.setAttribute('form', formId);
 }
 
 /** Escape chuỗi trước khi chèn vào HTML để tránh lỗi hiển thị/XSS. */
@@ -310,29 +321,31 @@ function formatNgaySinhForAccountInfo(value) {
  * liệu phân quyền: Nhân viên "Không tự đổi VaiTroKhuVucPhuTrach, TrangThaiLamViec".
  */
 function renderStaffAccountInfoForm(data, bodyEl) {
-    const trangThaiText = (data.trangThai === 1 || data.trangThai === '1') ? 'Đang hoạt động' : 'Đã khóa';
-
     bodyEl.innerHTML = `
         <form id="staffProfileForm">
-            ${buildAccountInfoRow('Mã Nhân Viên', data.maNV)}
-            ${buildAccountInfoEditableRow('Tên Đăng Nhập', 'staffProfileTenDangNhap', data.tenDangNhap)}
+            <div class="form-row">
+                <div class="half-width">${buildAccountInfoRow('Mã NV (Khóa)', data.maNV)}</div>
+                <div class="half-width">${buildAccountInfoEditableRow('Tên Đăng Nhập', 'staffProfileTenDangNhap', data.tenDangNhap)}</div>
+            </div>
             ${buildAccountInfoRow('Email', data.email)}
-            ${buildAccountInfoEditableRow('Họ Và Tên', 'staffProfileTenNV', data.tenNV)}
-            ${buildAccountInfoEditableRow('Ngày Sinh', 'staffProfileNgaySinh', formatNgaySinhForInputAccountInfo(data.ngaySinh), { type: 'date', required: false })}
-            ${buildAccountInfoSelectRow('Giới Tính', 'staffProfileGioiTinh', data.gioiTinh, ['Nam', 'Nữ'])}
+            ${buildAccountInfoEditableRow('Họ và Tên', 'staffProfileTenNV', data.tenNV)}
+            <div class="form-row">
+                <div class="half-width">${buildAccountInfoEditableRow('Ngày Sinh', 'staffProfileNgaySinh', formatNgaySinhForInputAccountInfo(data.ngaySinh), { type: 'date', required: false })}</div>
+                <div class="half-width">${buildAccountInfoSelectRow('Giới Tính', 'staffProfileGioiTinh', data.gioiTinh, ['Nam', 'Nữ', 'Khác'])}</div>
+            </div>
             ${buildAccountInfoEditableRow('Số Điện Thoại', 'staffProfileSDT', data.soDT, { type: 'tel', required: false })}
             ${buildAccountInfoEditableRow('Địa Chỉ', 'staffProfileDiaChi', data.diaChiNV, { required: false })}
-            ${buildAccountInfoRow('Vai Trò', data.vaiTro)}
-            ${buildAccountInfoRow('Trạng Thái Làm Việc', data.trangThaiLamViec)}
-            ${buildAccountInfoRow('Trạng Thái Tài Khoản', trangThaiText)}
+            ${buildAccountInfoRow('Vai Trò / Khu Vực (Khóa)', data.vaiTro)}
+            <div class="form-row">
+                <div class="half-width">${buildAccountInfoRow('Trạng Thái LV (Khóa)', data.trangThaiLamViec)}</div>
+                <div class="half-width">${buildAccountInfoRow('Trạng Thái (Khóa)', data.trangThai)}</div>
+            </div>
             <p id="staffProfileFormMessage" style="margin: 8px 0 4px; font-size: 14px; min-height: 18px;"></p>
-            <button type="submit" class="btn-primary" style="box-sizing:border-box; width:100%;">
-                <i class="fas fa-save"></i> Lưu Thay Đổi
-            </button>
         </form>`;
 
     const formEl = document.getElementById('staffProfileForm');
     const msgEl = document.getElementById('staffProfileFormMessage');
+    bindAccountInfoSaveButtonToForm('staffProfileForm');
 
     formEl.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -414,16 +427,15 @@ async function loadAndRenderCustomerAccountInfo(bodyEl) {
 
         bodyEl.innerHTML = `
             <form id="customerProfileForm">
-                ${buildAccountInfoRow('Mã Khách Hàng', data.maKhachHang)}
-                ${buildAccountInfoEditableRow('Tên Đăng Nhập', 'customerProfileTenDangNhap', data.tenDangNhap)}
+                <div class="form-row">
+                    <div class="half-width">${buildAccountInfoRow('Mã Khách Hàng', data.maKhachHang)}</div>
+                    <div class="half-width">${buildAccountInfoEditableRow('Tên Đăng Nhập', 'customerProfileTenDangNhap', data.tenDangNhap)}</div>
+                </div>
                 ${buildAccountInfoRow('Email', data.email)}
                 ${buildAccountInfoEditableRow('Họ Và Tên', 'customerProfileTenKH', data.tenKhachHang)}
                 ${buildAccountInfoEditableRow('Số Điện Thoại', 'customerProfileSDT', data.sdtKhachHang, { type: 'tel' })}
                 ${buildAccountInfoEditableRow('Địa Chỉ', 'customerProfileDiaChi', data.diaChiKhachHang, { required: false })}
                 <p id="customerProfileFormMessage" style="margin: 8px 0 4px; font-size: 14px; min-height: 18px;"></p>
-                <button type="submit" class="btn-primary" style="box-sizing:border-box; width:100%;">
-                    <i class="fas fa-save"></i> Lưu Thay Đổi
-                </button>
             </form>
             <a href="lichsudonhang.html" class="btn-outline" style="box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; margin-top: 10px;">
                 <i class="fas fa-receipt"></i> Xem Lịch Sử Đơn Hàng
@@ -431,6 +443,7 @@ async function loadAndRenderCustomerAccountInfo(bodyEl) {
 
         const formEl = document.getElementById('customerProfileForm');
         const msgEl = document.getElementById('customerProfileFormMessage');
+        bindAccountInfoSaveButtonToForm('customerProfileForm');
 
         formEl.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -448,7 +461,16 @@ async function loadAndRenderCustomerAccountInfo(bodyEl) {
                 diaChiKhachHang: document.getElementById('customerProfileDiaChi').value.trim()
             };
 
-            const submitBtn = formEl.querySelector('button[type="submit"]');
+            // [SỬA - FIX BUG] Nút "Lưu Thay Đổi" (id="accountInfoModalSaveBtn") nằm ở
+            // modal-footer, BÊN NGOÀI <form id="customerProfileForm"> (chỉ được liên kết
+            // với Form qua thuộc tính HTML "form", không phải con cháu của Form) - nên
+            // formEl.querySelector('button[type="submit"]') luôn trả về null (Form không
+            // hề chứa nút submit nào bên trong nó cả). Dòng "submitBtn.disabled = true"
+            // ngay sau đó vì vậy bị lỗi (gọi thuộc tính trên null) và làm dừng đột ngột
+            // toàn bộ hàm xử lý submit NGAY TỪ ĐẦU - trước khi kịp gọi API lưu - khiến
+            // Khách hàng bấm "Lưu Thay Đổi" nhưng không thấy phản hồi gì. Lấy đúng nút
+            // thật theo id thay vì tìm bên trong Form.
+            const submitBtn = document.getElementById('accountInfoModalSaveBtn');
             submitBtn.disabled = true;
 
             try {

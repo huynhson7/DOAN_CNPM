@@ -26,7 +26,17 @@ let isEditMode = false; // false = đang Thêm mới, true = đang Sửa
 // ==========================================
 const isAdminVL = (localStorage.getItem('userRole') || '') === 'Quản trị Hệ thống';
 
+// PHÂN QUYỀN TRUY CẬP TRANG: chỉ Quản trị Hệ thống + NV Bán Hàng được vào
+// trang này (khớp tài liệu phân quyền - Khách hàng/chưa đăng nhập không được).
 document.addEventListener("DOMContentLoaded", function () {
+    const userRoleVL = localStorage.getItem('userRole') || '';
+    const isAllowedVL = userRoleVL === 'Quản trị Hệ thống' || userRoleVL === 'NV Bán Hàng';
+    if (!isAllowedVL) {
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     if (isAdminVL) return;
     const btnAddVL = document.querySelector('button[onclick="openAddVlModal()"]');
     if (btnAddVL) btnAddVL.style.display = 'none';

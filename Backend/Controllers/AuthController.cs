@@ -88,7 +88,7 @@ namespace Backend.Controllers
             // [SỬA] Đã xác nhận với người dùng: gốc Live Server đang chạy ở thư mục cha của DOAN_CNPM
             // (chứa cả Backend lẫn Frontend) - ví dụ trang "Quên mật khẩu" đang chạy ở
             // http://127.0.0.1:5500/DOAN_CNPM/Frontend/forgot-password.html - nên tiền tố đúng là "/DOAN_CNPM/Frontend".
-            var frontendBaseUrl = "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
+            var frontendBaseUrl = "http://127.0.0.1:5500/DOAN_CNPM/Frontend/html";
 
             await _authService.ForgotPasswordAsync(request, frontendBaseUrl);
 

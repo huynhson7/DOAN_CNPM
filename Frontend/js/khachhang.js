@@ -26,6 +26,17 @@ const API_KHACH_HANG = "http://localhost:5129/api/khach-hang";
 // ==========================================
 const isAdminKH = (localStorage.getItem('userRole') || '') === 'Quản trị Hệ thống';
 
+// PHÂN QUYỀN TRUY CẬP TRANG: chỉ Quản trị Hệ thống + NV Bán Hàng được vào
+// trang này (khớp tài liệu phân quyền - Khách hàng không được quản lý danh sách khách hàng).
+document.addEventListener("DOMContentLoaded", () => {
+    const userRoleKH = localStorage.getItem('userRole') || '';
+    const isAllowedKH = userRoleKH === 'Quản trị Hệ thống' || userRoleKH === 'NV Bán Hàng';
+    if (!isAllowedKH) {
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+    }
+});
+
 // ==========================================
 // 3. HIỂN THỊ DANH SÁCH (GET)
 // ==========================================

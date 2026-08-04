@@ -963,6 +963,44 @@ body {
     padding: 10px 24px;
 }
 
+/* TÙY CHỈNH KÍCH THƯỚC VÀ THANH CUỘN CHO MODAL "THÔNG TIN TÀI KHOẢN" DÙNG CHUNG
+   (auth-guard.js) - đồng bộ với #profileModal của hoadon.html để hiển thị gọn
+   gàng giống nhau trên mọi trang. */
+#accountInfoModal .modal-content {
+    width: 650px;
+    max-width: 95%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+#accountInfoModal .modal-body {
+    overflow-y: auto;
+    padding-right: 15px;
+}
+#accountInfoModal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+#accountInfoModal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+#accountInfoModal .modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 8px;
+}
+#accountInfoModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+#accountInfoModal .input-group {
+    margin-bottom: 16px;
+}
+#accountInfoModal .input-group input,
+#accountInfoModal .input-group select {
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+}
+
 /* =========================================
    CSS CHO TRANG CỬA HÀNG (SHOP PAGE)
 ========================================= */

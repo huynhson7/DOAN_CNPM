@@ -245,7 +245,10 @@ async function resetFormTaoHoaDon() {
     
     // Mở khóa toàn bộ form (phòng trường hợp trước đó vừa bấm Sửa bị khóa mờ)
     document.getElementById('selectKhachHang').disabled = false;
-    document.getElementById('selectNhanVien').disabled = false;
+    // [SỬA - FIX BUG] Nhân viên lập hóa đơn trực tiếp tại quầy: khóa cứng ô "Nhân viên phụ
+    // trách" (luôn là chính họ, Backend cũng đã ép cứng giá trị này bất kể Client gửi gì lên) -
+    // chỉ Admin mới được phép tự chọn/đổi Nhân viên phụ trách khi lập hóa đơn.
+    document.getElementById('selectNhanVien').disabled = !IS_ADMIN;
     document.getElementById('selectSanPham').disabled = false;
     document.getElementById('inputSoLuong').disabled = false;
     const btnAddSp = document.querySelector('.btn-add-sp');
@@ -327,6 +330,29 @@ async function taiDanhSachSanPham() {
 // Tải danh sách nhân viên vào <select> để chọn/đổi nhân viên phụ trách hóa đơn.
 async function taiDanhSachNhanVien(maNVChon, tenNVChon) {
     const select = document.getElementById('selectNhanVien');
+
+    // [SỬA - FIX BUG] API GET /api/nhan-vien (danh sách TOÀN BỘ Nhân viên) chỉ dành riêng
+    // cho Admin theo tài liệu phân quyền ("Quản lý Nhân viên" thuộc riêng Admin) - Nhân
+    // viên gọi API này luôn bị chặn 403, khiến ô "Nhân Viên" rơi vào nhánh lỗi bên dưới và
+    // hiện "Không tải được danh sách" thay vì tên của họ. Vì hóa đơn do Nhân viên lập/sửa
+    // LUÔN được Backend tự động gán/giữ nguyên đúng người đang phụ trách (không phụ thuộc
+    // lựa chọn trên Form, ô này cũng đã bị khóa - disabled - ở nơi gọi hàm), Nhân viên
+    // không cần gọi API danh sách toàn bộ Nhân viên - chỉ cần hiển thị đúng 1 dòng là
+    // mã/tên được truyền vào (hoặc chính họ, lấy từ localStorage, nếu không có gì được
+    // truyền - tức đang ở màn Tạo hóa đơn mới).
+    if (!IS_ADMIN) {
+        const maHienThi = (maNVChon || MA_NV_HIEN_TAI || '').trim();
+        const tenHienThi = tenNVChon || localStorage.getItem('hoTen') || maHienThi;
+
+        select.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = maHienThi;
+        option.innerText = tenHienThi;
+        select.appendChild(option);
+        select.value = maHienThi;
+        return;
+    }
+
     try {
         const res = await fetch(API_NHAN_VIEN, {
             method: 'GET',
@@ -679,6 +705,15 @@ document.getElementById('createHdForm').addEventListener('submit', async functio
 // 8. KHỞI CHẠY KHI TRANG TẢI XONG
 // ==========================================
 document.addEventListener('DOMContentLoaded', function () {
+    // PHÂN QUYỀN TRUY CẬP TRANG: chỉ Quản trị Hệ thống + NV Bán Hàng được vào
+    // trang này (khớp tài liệu phân quyền - Khách hàng xem đơn của mình ở lichsudonhang.html).
+    const isAllowedHD = ROLE_HIEN_TAI === 'Quản trị Hệ thống' || ROLE_HIEN_TAI === 'NV Bán Hàng';
+    if (!isAllowedHD) {
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     taiDanhSachHoaDon();
 
     const btnLoc = document.getElementById('btnLocHoaDon');

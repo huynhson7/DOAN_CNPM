@@ -10,8 +10,16 @@ if (!token) {
     window.location.href = "login.html"; // Thay đổi tên file login của bạn nếu khác
 }
 
-// Ẩn nút "Thêm mới" nếu là NV Bán Hàng
+// PHÂN QUYỀN TRUY CẬP TRANG: chỉ Quản trị Hệ thống + NV Bán Hàng được vào
+// trang này (khớp tài liệu phân quyền - Khách hàng không có quyền truy cập Nhà cung cấp).
 document.addEventListener("DOMContentLoaded", () => {
+    const isAllowedNCC = userRole === "Quản trị Hệ thống" || userRole === "NV Bán Hàng";
+    if (!isAllowedNCC) {
+        alert("Bạn không có quyền truy cập trang quản trị này! Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     if (userRole !== "Quản trị Hệ thống") {
         const btnThem = document.querySelector('button[onclick="openNccModal()"]');
         if (btnThem) btnThem.style.display = 'none';

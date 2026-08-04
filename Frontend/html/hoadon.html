@@ -325,7 +325,12 @@
                             <input type="text" id="profTenDangNhap" required>
                         </div>
                     </div>
-                    
+
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="text" id="profEmail" readonly style="background-color: #f5f5f5;">
+                    </div>
+
                     <div class="input-group">
                         <label>Họ và Tên</label>
                         <input type="text" id="profTenNV" required>
@@ -406,12 +411,13 @@
             .then(data => {
                 document.getElementById('profMaNV').value = data.maNV;
                 document.getElementById('profTenDangNhap').value = data.tenDangNhap;
+                document.getElementById('profEmail').value = data.email;
                 document.getElementById('profTenNV').value = data.tenNV;
                 document.getElementById('profNgaySinh').value = data.ngaySinh ? data.ngaySinh.split('T')[0] : '';
                 document.getElementById('profGioiTinh').value = data.gioiTinh;
                 document.getElementById('profSoDT').value = data.soDT;
                 document.getElementById('profDiaChi').value = data.diaChiNV;
-                document.getElementById('profVaiTro').value = data.vaiTroKhuVucPhuTrach;
+                document.getElementById('profVaiTro').value = data.vaiTro;
                 document.getElementById('profTrangThaiLV').value = data.trangThaiLamViec;
                 document.getElementById('profTrangThai').value = data.trangThai;
                 
@@ -473,7 +479,7 @@
                 gioiTinh: document.getElementById('profGioiTinh').value,
                 soDT: document.getElementById('profSoDT').value,
                 diaChiNV: document.getElementById('profDiaChi').value,
-                vaiTroKhuVucPhuTrach: document.getElementById('profVaiTro').value,
+                vaiTro: document.getElementById('profVaiTro').value,
                 trangThaiLamViec: document.getElementById('profTrangThaiLV').value,
                 trangThai: document.getElementById('profTrangThai').value
             };

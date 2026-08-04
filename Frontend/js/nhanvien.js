@@ -18,6 +18,8 @@ function openNvModal() {
     isEditMode = false;
     document.getElementById('nvForm').reset();
     document.getElementById('maNV').readOnly = false;
+    // [SỬA] Chế độ Thêm mới: hiện lại ô "Mật Khẩu Mặc Định" (đã có thể bị ẩn ở lần Sửa trước đó)
+    document.getElementById('groupNvPassword').style.display = '';
     document.getElementById('nvPassword').required = true;
     document.getElementById('nvConfirmPassword').required = true;
     document.getElementById('lblNvPassword').innerHTML = 'Mật Khẩu Mặc Định <span style="color:red">*</span>';
@@ -140,6 +142,10 @@ async function openEditModal(maNV) {
 
         // Mật khẩu đã mã hoá không được Backend trả về (bảo mật), nên để trống 2 ô này khi Sửa
         // và không bắt buộc nhập lại vì việc cập nhật thông tin không làm thay đổi mật khẩu.
+        // [SỬA] Không thể hiển thị lại mật khẩu hiện tại (đã bị hash một chiều, không thể phục
+        // hồi được dữ liệu gốc) nên ẩn hẳn ô "Mật Khẩu Cũ" (không dùng tới) ở chế độ Sửa - chỉ
+        // giữ lại ô "Mật Khẩu Mới" (nvConfirmPassword) để Admin cấp mật khẩu mới cho nhân viên.
+        document.getElementById('groupNvPassword').style.display = 'none';
         document.getElementById('nvPassword').value = "";
         document.getElementById('nvPassword').required = false;
         document.getElementById('nvConfirmPassword').value = "";
