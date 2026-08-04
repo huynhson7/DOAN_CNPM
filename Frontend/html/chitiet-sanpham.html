@@ -60,6 +60,12 @@
                 </div>
 
                 <a href="#" class="zalo-contact-trigger" title="Chat Zalo với nhân viên chăm sóc khách hàng">Liên Hệ</a>
+
+                <!-- Chỉ hiển thị với tài khoản Admin (Quản trị Hệ thống) - do js/auth-guard.js (applyRoleBasedUI) điều khiển ẩn/hiện theo Role -->
+                <a href="bangdieukhien.html" data-role="Quản trị Hệ thống" style="display: none;"><i class="fas fa-store"></i> Quản Lý Cửa Hàng</a>
+
+                <!-- Chỉ hiển thị với tài khoản Nhân viên (NV Bán Hàng) - do js/auth-guard.js (applyRoleBasedUI) điều khiển ẩn/hiện theo Role -->
+                <a href="hoadon.html" data-role="NV Bán Hàng" style="display: none;"><i class="fas fa-store"></i> Quản Lý Cửa Hàng</a>
             </div>
 
             <div class="nav-actions">
@@ -187,6 +193,23 @@
                 const navUserProfile = document.getElementById('navUserProfile');
                 if (navUserProfile && typeof openAccountInfoModal === 'function') {
                     navUserProfile.addEventListener('click', openAccountInfoModal);
+                }
+            }
+
+            // Chỉ Khách hàng (hoặc khách chưa đăng nhập) mới được Mua Ngay/Thêm Vào Giỏ Hàng.
+            // Admin (Quản trị Hệ thống)/Nhân viên (NV Bán Hàng) rê chuột vào 2 nút này sẽ thấy
+            // biểu tượng cấm chọn (not-allowed) và không bấm được, nhờ thuộc tính "disabled"
+            // (đã có sẵn CSS .btn-buy-now:disabled/.add-cart-btn:disabled xử lý giao diện này).
+            if (userRole === 'Quản trị Hệ thống' || userRole === 'NV Bán Hàng') {
+                const buyNowBtnEl = document.getElementById('buyNowBtn');
+                const addToCartBtnEl = document.getElementById('addToCartBtn');
+                if (buyNowBtnEl) buyNowBtnEl.disabled = true;
+                if (addToCartBtnEl) addToCartBtnEl.disabled = true;
+
+                // Ẩn icon Giỏ Hàng trên navbar (đồng bộ với sanpham.html)
+                const cartIconEl = document.querySelector('.nav-actions .cart-icon');
+                if (cartIconEl) {
+                    cartIconEl.style.display = 'none';
                 }
             }
         });

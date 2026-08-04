@@ -287,6 +287,14 @@
                 }
             }
 
+            // Ẩn icon Giỏ Hàng khi đăng nhập bằng tài khoản Admin (Quản trị Hệ thống) hoặc Nhân viên (NV Bán Hàng)
+            if (userRole === 'Quản trị Hệ thống' || userRole === 'NV Bán Hàng') {
+                const cartIconEl = document.querySelector('.nav-actions .cart-icon');
+                if (cartIconEl) {
+                    cartIconEl.style.display = 'none';
+                }
+            }
+
             // Nếu đã đăng nhập: hiện "Xin chào, ..." + nút Đăng Xuất thay cho nút Đăng Nhập
             const navAuthArea = document.getElementById('navAuthArea');
             if (token && navAuthArea) {
