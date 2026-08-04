@@ -83,17 +83,24 @@ function buildFeaturedCardHtml(p) {
     const nhomSanPham = p.nhomSanPham || p.NhomSanPham;
     const tenNhomSP = nhomSanPham ? (nhomSanPham.tenNhomSP || nhomSanPham.TenNhomSP) : "";
 
+    // Admin (Quản trị Hệ thống) và Nhân viên (NV Bán Hàng) không cần thao tác mua hàng
+    // nên ẩn hẳn 2 icon hiện khi rê chuột (Thêm vào giỏ, Xem chi tiết) - chỉ Khách hàng
+    // (hoặc khách chưa đăng nhập) mới thấy, đồng bộ với khu vực "Sản Phẩm" (sanpham.html).
+    const currentUserRole = localStorage.getItem('userRole');
+    const isStaffRole = currentUserRole === 'Quản trị Hệ thống' || currentUserRole === 'NV Bán Hàng';
+    const productActionsHtml = isStaffRole ? "" : `
+                <div class="product-actions">
+                    <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtmlCart(maSP)}"><i class="fas fa-cart-plus"></i></button>
+                    <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                </div>`;
+
     return `
         <div class="product-card">
             <div class="product-image">
                 <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" title="Xem chi tiết">
                     <img src="${escapeHtmlCart(hinhAnh)}" alt="${escapeHtmlCart(tenSP)}"
                          onerror="this.onerror=null;this.src='${CART_DEFAULT_IMAGE}';">
-                </a>
-                <div class="product-actions">
-                    <button class="btn-icon" title="Thêm vào giỏ" data-ma-sp="${escapeHtmlCart(maSP)}"><i class="fas fa-cart-plus"></i></button>
-                    <a href="chitiet-sanpham.html?id=${encodeURIComponent(maSP)}" class="btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
-                </div>
+                </a>${productActionsHtml}
             </div>
             <div class="product-info">
                 <span class="product-category">${escapeHtmlCart(tenNhomSP)}</span>
