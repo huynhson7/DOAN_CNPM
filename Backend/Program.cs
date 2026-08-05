@@ -126,6 +126,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // [THÊM MỚI] Truy cập "/" (trang gốc) sẽ tự động chuyển sang "/swagger"
+    // để khi bấm link cổng 5129 trên Docker Desktop là vào thẳng Swagger UI,
+    // không cần tự gõ thêm "/swagger" vào URL.
+    app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 
 app.UseHttpsRedirection();

@@ -1,0 +1,79 @@
+services:
+  # 1) SQL Server - lưu trữ database HTQLCHBNT
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cnpm_db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+    ports:
+      - "1433:1433"   # để mở SSMS/Azure Data Studio kết nối localhost,1433 khi cần xem dữ liệu
+    volumes:
+      - mssql_data:/var/opt/mssql                              # dữ liệu DB được lưu bền vững qua các lần restart
+      - ./Backend/Database/BAK:/var/opt/mssql/backup/BAK:ro     # file backup, chỉ dùng khi USE_BACKUP=true
+    networks:
+      - cnpm_net
+    restart: unless-stopped
+
+  # 2) Container tạm: chỉ chạy 1 lần để khởi tạo/khôi phục database rồi tự thoát
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cnpm_db_init
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      SA_PASSWORD: ${SA_PASSWORD}
+      USE_BACKUP: ${USE_BACKUP:-false}
+    volumes:
+      - ./Backend/Database:/scripts:ro
+    # Dùng "sh -c" + sed để loại bỏ ký tự \r (Windows CRLF) khỏi init-db.sh trước khi chạy,
+    # vì thư mục /scripts được mount chỉ đọc (:ro) nên không sửa trực tiếp file gốc được.
+    # Cách này giúp script chạy đúng dù file được checkout bởi Git trên Windows hay Linux/Mac.
+    entrypoint: ["/bin/sh", "-c", "sed 's/\\r$//' /scripts/init-db.sh > /tmp/init-db.sh && chmod +x /tmp/init-db.sh && /bin/bash /tmp/init-db.sh"]
+    networks:
+      - cnpm_net
+
+  # 3) Backend API (ASP.NET Core)
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: cnpm_backend
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      # Ghi đè đúng 1 chỗ cần thiết: trỏ connection string về service "db" trong mạng docker
+      # thay vì "LAPTOP-B89HCA46\SQLEXPRESS" (SQL Server cài trên máy Windows của tác giả).
+      ConnectionStrings__DefaultConnection: "Server=db;Database=HTQLCHBNT;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+    ports:
+      - "5129:8080"
+    networks:
+      - cnpm_net
+    restart: unless-stopped
+
+  # 4) Frontend tĩnh (HTML/CSS/JS) - phục vụ bằng Nginx, không cần build image riêng
+  frontend:
+    image: nginx:alpine
+    container_name: cnpm_frontend
+    volumes:
+      - ./Frontend:/usr/share/nginx/html:ro
+      # [THÊM MỚI] Cấu hình Nginx tùy chỉnh để "/" tự phục vụ html/index.html
+      - ./Frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "5500:80"   # trùng với port 5500 đã được cấu hình sẵn trong Backend/appsettings.json (CORS)
+    depends_on:
+      - backend
+    networks:
+      - cnpm_net
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+
+networks:
+  cnpm_net:
+    driver: bridge

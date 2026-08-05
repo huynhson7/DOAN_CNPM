@@ -1,0 +1,4 @@
+# Ép các file script Linux luôn dùng LF (\n), không bị Git trên Windows tự chuyển thành CRLF (\r\n).
+# Nếu không có file này, các thành viên clone bằng Windows có thể gặp lỗi
+# "$'\r': command not found" khi container chạy file .sh (do bash không hiểu \r).
+*.sh text eol=lf
