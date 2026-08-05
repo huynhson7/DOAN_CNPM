@@ -1501,3 +1501,324 @@ textarea:focus {
     width: 100%;
     margin-top: 15px;
 }
+
+/* =========================================================================
+   ĐỒNG BỘ GIAO DIỆN ĐIỆN THOẠI & MÁY TÍNH BẢNG (RESPONSIVE)
+   Toàn bộ khối bên dưới CHỈ THÊM MỚI các quy tắc trong @media, không sửa/xóa
+   bất kỳ dòng CSS nào ở phía trên. Vì @media chỉ có tác dụng khi màn hình
+   đúng kích thước khai báo nên không ảnh hưởng tới giao diện máy tính (Desktop)
+   hiện có.
+========================================================================= */
+
+/* Nút Hamburger: mặc định ẩn trên Desktop, chỉ hiện trong @media mobile bên dưới */
+.nav-toggle {
+    display: none;
+}
+
+/* ============ MÁY TÍNH BẢNG (Tablet) - màn hình <= 992px ============ */
+@media (max-width: 992px) {
+
+    .container,
+    .nav-container {
+        padding: 0 16px;
+    }
+
+    .hero-content h1 {
+        font-size: 38px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    /* Trang Cửa Hàng: bộ lọc bên trái co lại cho vừa màn hình tablet */
+    .shop-container {
+        gap: 24px;
+    }
+
+    .shop-sidebar {
+        width: 210px;
+    }
+
+    /* Trang Chi Tiết Sản Phẩm */
+    .product-detail-section {
+        gap: 30px;
+    }
+
+    .main-image-wrapper {
+        height: 400px;
+    }
+
+    /* Giỏ hàng: bỏ bề rộng tối thiểu cứng để không tràn ngang trên tablet */
+    .cart-items {
+        min-width: 0;
+        flex: 1 1 100%;
+    }
+
+    .cart-summary {
+        flex: 1 1 100%;
+        position: static;
+    }
+}
+
+/* ============ ĐIỆN THOẠI (Mobile) - màn hình <= 768px ============ */
+@media (max-width: 768px) {
+
+    /* --- Navbar: chuyển sang menu dạng Hamburger --- */
+    .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        order: 1;
+    }
+
+    .nav-actions {
+        order: 2;
+        gap: 12px;
+    }
+
+    .nav-toggle {
+        order: 3;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-left: 6px;
+        background: none;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        color: var(--primary-color);
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    .nav-links {
+        order: 4;
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    /* Khi bấm vào nút Hamburger, JS (nav-responsive.js) sẽ thêm class "nav-open"
+       vào thẻ <nav class="navbar">, lúc đó menu mới hiện ra đầy đủ chiều rộng */
+    .navbar.nav-open .nav-links {
+        display: flex;
+    }
+
+    .nav-links a {
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    /* Mục "Sản Phẩm" dạng dropdown: trên mobile hiển thị luôn danh sách con,
+       không cần rê chuột (vì thiết bị cảm ứng không có hành vi hover) */
+    .dropdown {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 0;
+    }
+
+    .dropdown-content {
+        display: block;
+        position: static;
+        box-shadow: none;
+        border: none;
+        min-width: 0;
+        width: 100%;
+        padding: 0 0 0 15px;
+        box-sizing: border-box;
+    }
+
+    .dropdown-content a {
+        padding: 8px 0 !important;
+    }
+
+    /* --- Hero Section --- */
+    .hero-section {
+        height: auto;
+        min-height: 420px;
+        padding: 60px 20px;
+    }
+
+    .hero-content h1 {
+        font-size: 30px;
+    }
+
+    .hero-content p {
+        font-size: 15px;
+    }
+
+    /* --- Danh sách sản phẩm --- */
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
+    }
+
+    .featured-products {
+        padding: 50px 0;
+    }
+
+    .section-title {
+        font-size: 26px;
+    }
+
+    /* --- Trang Cửa Hàng (bộ lọc + danh sách) --- */
+    .shop-container {
+        flex-direction: column;
+        padding: 30px 16px;
+    }
+
+    .shop-sidebar {
+        width: 100%;
+    }
+
+    .shop-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* --- Trang Chi Tiết Sản Phẩm: xếp chồng thay vì 2 cột --- */
+    .product-detail-section {
+        flex-direction: column;
+        padding: 30px 16px;
+        gap: 25px;
+    }
+
+    .product-gallery {
+        max-width: 100%;
+    }
+
+    .main-image-wrapper {
+        height: 320px;
+    }
+
+    .product-title {
+        font-size: 24px;
+    }
+
+    .product-price-large {
+        font-size: 28px;
+    }
+
+    .cart-action-row {
+        flex-direction: column;
+    }
+
+    /* --- Giỏ hàng --- */
+    .cart-wrapper {
+        padding: 25px 16px 50px;
+        gap: 20px;
+    }
+
+    .cart-items,
+    .cart-summary {
+        padding: 18px;
+        min-width: 0;
+    }
+
+    /* Bảng giỏ hàng cuộn ngang trên màn hình nhỏ thay vì bị bóp méo */
+    .cart-items {
+        overflow-x: auto;
+    }
+
+    .cart-table {
+        min-width: 520px;
+    }
+
+    /* --- Trang Thanh Toán: form 2 cột -> 1 cột trên mobile.
+       Dùng !important vì trang thanhtoan.html đang khai báo
+       "grid-template-columns: 2fr 1fr" trực tiếp bằng inline style. --- */
+    #checkoutForm {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* --- Đăng ký (form 2 cột) --- */
+    #registerForm {
+        grid-template-columns: 1fr;
+    }
+
+    body.login-page {
+        overflow: auto;
+        padding: 30px 16px;
+    }
+
+    /* --- Đăng nhập / Đăng ký / Quên-Đặt lại-Đổi mật khẩu --- */
+    .login-container {
+        padding: 28px 22px;
+    }
+
+    /* --- Bảng dữ liệu dùng chung (VD: Lịch sử đơn hàng) - cho phép cuộn ngang --- */
+    .data-card {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        min-width: 560px;
+    }
+
+    .lshd-container .invoice-filters {
+        max-width: 100%;
+    }
+
+    /* --- Modal (VD: modal Thông tin tài khoản) --- */
+    .modal-content {
+        width: 94%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+/* ============ ĐIỆN THOẠI NHỎ - màn hình <= 480px ============ */
+@media (max-width: 480px) {
+
+    .hero-content h1 {
+        font-size: 24px;
+    }
+
+    .hero-btn {
+        padding: 13px 30px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+
+    .product-name {
+        font-size: 14px;
+    }
+
+    .product-price {
+        font-size: 15px;
+    }
+
+    .login-container {
+        padding: 24px 16px;
+    }
+
+    .login-container h2 {
+        font-size: 22px;
+    }
+
+    .nav-greeting {
+        display: none;
+    }
+}

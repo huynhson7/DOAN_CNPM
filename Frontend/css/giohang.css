@@ -127,3 +127,46 @@
     cursor: not-allowed;
     pointer-events: auto; /* vẫn nhận click để hiện thông báo lỗi */
 }
+
+/* =========================================================================
+   RESPONSIVE - ĐIỆN THOẠI & MÁY TÍNH BẢNG
+   File này được load SAU style.css nên các quy tắc min-width bên dưới cần
+   được ghi đè ngay tại đây (ghi đè trong style.css sẽ không có tác dụng
+   vì cùng độ ưu tiên nhưng style.css load trước).
+========================================================================= */
+@media (max-width: 992px) {
+    .cart-items {
+        min-width: 0;
+        flex: 1 1 100%;
+    }
+
+    .cart-summary {
+        flex: 1 1 100%;
+        position: static;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-wrapper {
+        gap: 20px;
+    }
+
+    .cart-items {
+        padding: 18px;
+        overflow-x: auto;
+    }
+
+    .cart-summary {
+        padding: 20px;
+    }
+
+    .cart-table {
+        min-width: 520px;
+    }
+
+    .cart-product-info img {
+        width: 70px;
+        height: 70px;
+    }
+}

@@ -85,10 +85,11 @@ namespace Backend.Controllers
             // (tránh Open Redirect / Host Header Injection).
             //var frontendBaseUrl = _configuration["Frontend:BaseUrl"] ?? "http://127.0.0.1:5500/DOAN_CNPM/Frontend";
 
-            // [SỬA] Đã xác nhận với người dùng: gốc Live Server đang chạy ở thư mục cha của DOAN_CNPM
-            // (chứa cả Backend lẫn Frontend) - ví dụ trang "Quên mật khẩu" đang chạy ở
-            // http://127.0.0.1:5500/DOAN_CNPM/Frontend/forgot-password.html - nên tiền tố đúng là "/DOAN_CNPM/Frontend".
-            var frontendBaseUrl = "http://127.0.0.1:5500/DOAN_CNPM/Frontend/html";
+            // [SỬA LẦN 2] Hệ thống hiện chạy bằng Docker + Nginx (xem docker-compose.yml), Nginx đang
+            // mount thẳng thư mục "./Frontend" làm root ("/usr/share/nginx/html"), KHÔNG còn tiền tố
+            // "/DOAN_CNPM/Frontend" như thời chạy Live Server nữa. Do đó trang "reset-password.html"
+            // thực tế nằm ở "http://127.0.0.1:5500/html/reset-password.html" - tiền tố đúng là "/html".
+            var frontendBaseUrl = "http://127.0.0.1:5500/html";
 
             await _authService.ForgotPasswordAsync(request, frontendBaseUrl);
 

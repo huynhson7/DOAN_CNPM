@@ -180,3 +180,26 @@ body.login-page {
     color: var(--accent-color);
     text-decoration: underline;
 }
+
+/* =========================================================================
+   RESPONSIVE - ĐIỆN THOẠI & MÁY TÍNH BẢNG
+   File này load SAU style.css nên cần ghi đè trực tiếp tại đây.
+========================================================================= */
+@media (max-width: 768px) {
+    body.login-page {
+        overflow: auto;
+        padding: 24px 14px;
+        align-items: flex-start;
+    }
+
+    .login-container {
+        max-width: 100%;
+        padding: 24px 18px;
+        margin-top: 10px;
+    }
+
+    #registerForm {
+        grid-template-columns: 1fr;
+        gap: 4px 0;
+    }
+}

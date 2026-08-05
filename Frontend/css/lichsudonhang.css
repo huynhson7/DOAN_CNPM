@@ -49,3 +49,19 @@
 .btn-action.lshd-view:hover {
     background-color: #e8f8f5;
 }
+
+
+/* =========================================================================
+   RESPONSIVE - ĐIỆN THOẠI & MÁY TÍNH BẢNG
+   File này load SAU style.css nên cần ghi đè trực tiếp tại đây.
+========================================================================= */
+@media (max-width: 768px) {
+    .lshd-container {
+        padding-top: 25px;
+        padding-bottom: 40px;
+    }
+
+    .lshd-container .invoice-filters {
+        max-width: 100%;
+    }
+}
