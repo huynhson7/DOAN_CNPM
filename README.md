@@ -457,15 +457,15 @@ dotnet run
 
 | Trang chủ |
 |---|
-| ![Trang chủ](.\Frontend\img\TrangChu.png) |
+| ![Trang chủ](https://github.com/huynhson7/DOAN_CNPM/blob/e06a3fecb6a6cbd0a9efaf8bafabb8fcde7b743c/Frontend/img/TrangChu.png) |
 
 | Trang sản phẩm | 
 |---|
-| ![Dashboard](.\Frontend\img\TrangSanPham.png) 
+| ![Dashboard](https://github.com/huynhson7/DOAN_CNPM/blob/e06a3fecb6a6cbd0a9efaf8bafabb8fcde7b743c/Frontend/img/TrangSanPham.png) | 
 
 | Chi tiết sản phẩm |
 |---|
-| ![Chi tiết sản phẩm](.\Frontend\img\TrangChiTietSanPham.png) |
+| ![Chi tiết sản phẩm](https://github.com/huynhson7/DOAN_CNPM/blob/e06a3fecb6a6cbd0a9efaf8bafabb8fcde7b743c/Frontend/img/TrangChiTietSanPham.png) |
 
 ---
 
